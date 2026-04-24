@@ -4,8 +4,36 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from enum import Enum
+from typing import Optional
 from pydantic import BaseModel, Field
 from uuid import uuid4
+
+
+class ActionType(str, Enum):
+    """Types of auditable agent actions."""
+
+    OUTBOUND_MESSAGE = "outbound_message"
+    TOOL_CALL = "tool_call"
+    TOOL_OBSERVATION = "tool_observation"
+    MEMORY_WRITE = "memory_write"
+    MEMORY_READ = "memory_read"
+    SUMMARY_WRITE = "summary_write"
+    REFUSAL = "refusal"
+
+
+class TaintLabel(BaseModel):
+    """Information taint label tracking provenance and risk.
+
+    Attached to messages as they flow through agent interactions.
+    Tracks which sensitive domains are involved, how far the information
+    has traveled, and the compound inference risk at the current point.
+    """
+
+    domains: set[str] = Field(default_factory=set)
+    max_sensitivity: int = Field(default=0, ge=0, le=5)
+    origin_boundary: str = ""  # pseudonymized user/source identifier
+    hop_count: int = 0
+    inference_risk: float = Field(default=0.0, ge=0.0, le=1.0)
 
 
 def _now() -> datetime:
@@ -19,6 +47,7 @@ class AuditEntry(BaseModel):
     trace_id: str
     agent_id: str
     action: str  # e.g. "llm_call", "tool_use", "message_send"
+    action_type: ActionType = ActionType.OUTBOUND_MESSAGE
     input_text: str = ""
     output_text: str = ""
     timestamp: datetime = Field(default_factory=_now)
@@ -92,6 +121,7 @@ class DesensitizedEdge(BaseModel):
     local_violation: bool = False  # did local audit flag this?
     local_action: str = "allow"  # "allow", "block", "redact"
     content_hash: str = ""  # hash of original content for integrity, not content itself
+    taint: Optional[TaintLabel] = None  # information flow taint label
 
 
 class LocalAuditReport(BaseModel):
@@ -114,6 +144,10 @@ class LocalAuditReport(BaseModel):
     leakage_rate: float = 0.0
     # cryptographic commitment to full local audit log
     merkle_root: str = ""
+    # cross-epoch continuity (epoch commitment chain)
+    epoch_id: int = 0
+    epoch_commitment: str = ""  # H(prev_token || token)
+    epoch_pseudonym_root: str = ""  # H(token || "pseudonym")
     # domains this agent operates in
     domains: list[str] = Field(default_factory=list)
 

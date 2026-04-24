@@ -23,6 +23,7 @@ from .schemas import (
     NetworkAuditResult,
     PropagationPath,
 )
+from .compound_attack import CompoundAttackDetector
 
 
 class NetworkAuditor:
@@ -67,6 +68,11 @@ class NetworkAuditor:
         risks = []
         risks.extend(self._detect_cross_domain_flows())
         risks.extend(self._detect_aggregation_risks())
+        risks.extend(self._detect_taint_flows())
+
+        # compound attack detection
+        compound_risks = self._detect_compound_attacks()
+        risks.extend([cr.base_risk for cr in compound_risks])
 
         propagation = self._detect_propagation_paths()
         scores = self._compute_risk_scores(risks, propagation)
@@ -199,6 +205,129 @@ class NetworkAuditor:
                 ))
 
         return paths
+
+    def _detect_taint_flows(self) -> list[CompositionalRisk]:
+        """Detect risky taint propagation patterns across the network.
+
+        Checks for:
+        - Taint spreading: same origin reaches 3+ agents
+        - Long-distance flow: hop_count >= 4
+        - Inference risk accumulation at hub agents
+        """
+        risks: list[CompositionalRisk] = []
+
+        # Collect all edges with taint labels
+        all_edges = self._collect_all_edges()
+        tainted_edges = [e for e in all_edges if e.taint is not None]
+
+        if not tainted_edges:
+            return risks
+
+        # Check 1: taint spreading — same origin boundary reaching 3+ agents
+        origin_agents: dict[str, set[str]] = defaultdict(set)
+        origin_edges: dict[str, list[str]] = defaultdict(list)
+        for edge in tainted_edges:
+            origin = edge.taint.origin_boundary
+            if origin and origin != "multi":
+                origin_agents[origin].add(edge.to_agent)
+                origin_agents[origin].add(edge.from_agent)
+                origin_edges[origin].append(edge.edge_id)
+
+        for origin, agents in origin_agents.items():
+            if len(agents) >= 3:
+                risks.append(CompositionalRisk(
+                    risk_type="taint_spreading",
+                    involved_agents=sorted(agents),
+                    involved_edges=origin_edges[origin],
+                    description=(
+                        f"Taint from origin '{origin}' has spread to "
+                        f"{len(agents)} agents: {sorted(agents)}"
+                    ),
+                    severity=min(1.0, len(agents) * 0.2),
+                    source_domain="privacy",
+                    target_domain="privacy",
+                ))
+
+        # Check 2: long-distance flow — hop_count >= 4
+        for edge in tainted_edges:
+            if edge.taint.hop_count >= 4:
+                risks.append(CompositionalRisk(
+                    risk_type="long_distance_taint",
+                    involved_agents=[edge.from_agent, edge.to_agent],
+                    involved_edges=[edge.edge_id],
+                    description=(
+                        f"Taint on edge {edge.from_agent}->{edge.to_agent} "
+                        f"has hop_count={edge.taint.hop_count} (>= 4 hops)"
+                    ),
+                    severity=min(1.0, edge.taint.hop_count * 0.15),
+                    source_domain="privacy",
+                    target_domain="privacy",
+                ))
+
+        # Check 3: inference risk accumulation at hubs
+        agent_max_inference: dict[str, float] = defaultdict(float)
+        for edge in tainted_edges:
+            risk = edge.taint.inference_risk
+            if risk > agent_max_inference[edge.to_agent]:
+                agent_max_inference[edge.to_agent] = risk
+
+        for agent, inf_risk in agent_max_inference.items():
+            if inf_risk >= 0.5:
+                risks.append(CompositionalRisk(
+                    risk_type="inference_accumulation",
+                    involved_agents=[agent],
+                    involved_edges=[],
+                    description=(
+                        f"Agent {agent} has accumulated inference_risk="
+                        f"{inf_risk:.2f} from incoming taint"
+                    ),
+                    severity=inf_risk,
+                    source_domain="privacy",
+                    target_domain="privacy",
+                ))
+
+        return risks
+
+    def _detect_compound_attacks(self) -> list:
+        """Detect cross-harm-class compound attacks using CompoundAttackDetector.
+
+        Checks for:
+        - Injection-driven leaks (security x privacy)
+        - Scope escalation compounds (governance x privacy)
+        """
+        detector = CompoundAttackDetector()
+        all_edges = self._collect_all_edges()
+        results = []
+
+        # Find agents flagged for injection (local_violation on outbound edges)
+        flagged_agents: set[str] = set()
+        for edge in all_edges:
+            if edge.local_violation:
+                flagged_agents.add(edge.from_agent)
+
+        if flagged_agents:
+            results.extend(
+                detector.detect_injection_driven_leak(flagged_agents, all_edges)
+            )
+
+        # Scope compound: use reported domains as authorized scope
+        agent_scopes: dict[str, set[str]] = {}
+        for agent_id, report in self._reports.items():
+            agent_scopes[agent_id] = set(report.domains)
+
+        if agent_scopes:
+            results.extend(
+                detector.detect_scope_compound(agent_scopes, all_edges)
+            )
+
+        return results
+
+    def _collect_all_edges(self) -> list[DesensitizedEdge]:
+        """Collect all desensitized edges from ingested reports."""
+        edges: list[DesensitizedEdge] = []
+        for report in self._reports.values():
+            edges.extend(report.edges)
+        return edges
 
     def _compute_risk_scores(
         self,
