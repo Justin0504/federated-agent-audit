@@ -1,0 +1,74 @@
+[
+  {
+    "name": "audit_outgoing (single)",
+    "iterations": 500,
+    "p50_ms": 0.113,
+    "p95_ms": 0.168,
+    "p99_ms": 0.211,
+    "throughput": 8930.5,
+    "memory_kb": 0.0
+  },
+  {
+    "name": "audit_outgoing (redaction)",
+    "iterations": 500,
+    "p50_ms": 0.12,
+    "p95_ms": 0.171,
+    "p99_ms": 0.202,
+    "throughput": 8497.7,
+    "memory_kb": 0.0
+  },
+  {
+    "name": "produce_report (100 entries)",
+    "iterations": 100,
+    "p50_ms": 0.234,
+    "p95_ms": 0.25,
+    "p99_ms": 0.306,
+    "throughput": 4275.3,
+    "memory_kb": 0.0
+  },
+  {
+    "name": "network_audit (10 agents)",
+    "iterations": 50,
+    "p50_ms": 0.106,
+    "p95_ms": 0.134,
+    "p99_ms": 0.912,
+    "throughput": 8064.2,
+    "memory_kb": 0.0
+  },
+  {
+    "name": "network_audit (50 agents)",
+    "iterations": 10,
+    "p50_ms": 0.625,
+    "p95_ms": 0.86,
+    "p99_ms": 0.86,
+    "throughput": 1582.7,
+    "memory_kb": 0.0
+  },
+  {
+    "name": "network_audit (100 agents)",
+    "iterations": 5,
+    "p50_ms": 1.561,
+    "p95_ms": 1.615,
+    "p99_ms": 1.615,
+    "throughput": 639.3,
+    "memory_kb": 0.0
+  },
+  {
+    "name": "risk_aggregation (114 risks)",
+    "iterations": 200,
+    "p50_ms": 0.744,
+    "p95_ms": 0.784,
+    "p99_ms": 1.011,
+    "throughput": 1340.1,
+    "memory_kb": 0.0
+  },
+  {
+    "name": "memory (10 agents x 100 msgs)",
+    "iterations": 1,
+    "p50_ms": 0,
+    "p95_ms": 0,
+    "p99_ms": 0,
+    "throughput": 0,
+    "memory_kb": 562.5
+  }
+]

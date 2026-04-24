@@ -197,3 +197,48 @@ class PropagationPath(BaseModel):
     path_edges: list[str]  # edge_ids in order
     propagation_type: str  # "error", "misinformation", "prompt_injection"
     amplified: bool = False  # did the error get worse along the path?
+
+
+# --- Risk aggregation models ---
+
+
+class AlertLevel(str, Enum):
+    """Severity-based alert classification."""
+
+    CRITICAL = "critical"   # severity >= 0.8
+    HIGH = "high"           # severity >= 0.5
+    MEDIUM = "medium"       # severity >= 0.3
+    LOW = "low"             # severity < 0.3
+
+
+class SuppressionRule(BaseModel):
+    """Rule for suppressing or downgrading specific risk types."""
+
+    risk_type: str = ""          # empty = match all types
+    agent_pattern: str = ""      # regex pattern for agent_id; empty = match all
+    action: str = "suppress"     # "suppress" or "downgrade"
+
+
+class Incident(BaseModel):
+    """An aggregated cluster of related risks forming a single actionable alert."""
+
+    incident_id: str = Field(default_factory=lambda: uuid4().hex[:16])
+    alert_level: AlertLevel
+    risk_type: str               # dominant risk_type in cluster
+    involved_agents: list[str]   # union of all member agents
+    member_risks: list[CompositionalRisk]
+    root_cause: str
+    recommended_action: str
+    severity: float              # max(member severities)
+    source_domain: str = ""
+    target_domain: str = ""
+
+
+class AggregatedResult(BaseModel):
+    """Output of the risk aggregation pipeline."""
+
+    original_risk_count: int
+    incident_count: int
+    incidents: list[Incident]
+    suppressed_count: int
+    alert_summary: dict[str, int] = Field(default_factory=dict)  # level -> count

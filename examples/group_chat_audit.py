@@ -35,6 +35,7 @@ from federated_agent_audit.schemas import (
 )
 from federated_agent_audit.local_auditor import LocalAuditor
 from federated_agent_audit.network_auditor import NetworkAuditor
+from federated_agent_audit.risk_aggregator import RiskAggregator
 
 
 def main() -> None:
@@ -218,6 +219,27 @@ def main() -> None:
     ):
         bar = "#" * int(score * 20)
         print(f"  {agent:20s} {score:.3f} {bar}")
+
+    # ── Risk Aggregation (denoising) ────────────────────────────
+    print()
+    print("=" * 60)
+    print("RISK AGGREGATION (denoising)")
+    print("=" * 60)
+    aggregator = RiskAggregator()
+    aggregated = aggregator.aggregate(result)
+    print(f"  Raw risks: {aggregated.original_risk_count} → "
+          f"Incidents: {aggregated.incident_count} "
+          f"(suppressed: {aggregated.suppressed_count})")
+    print(f"  Alert summary: {aggregated.alert_summary}")
+    print()
+    for inc in aggregated.incidents:
+        print(f"  [{inc.alert_level.value.upper()}] {inc.risk_type}")
+        print(f"    Severity: {inc.severity:.2f}")
+        print(f"    Agents: {inc.involved_agents}")
+        print(f"    Root cause: {inc.root_cause}")
+        print(f"    Action: {inc.recommended_action}")
+        print(f"    (clustered from {len(inc.member_risks)} raw risks)")
+        print()
 
     # ── Verify no raw content leaked to central ───────────────────
     print()

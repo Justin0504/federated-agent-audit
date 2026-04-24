@@ -54,6 +54,7 @@ class LocalAuditor:
         canaries: list[str] | None = None,
         semantic_threshold: float = 0.72,
         desens_config: DesensitizationConfig | None = None,
+        similarity_fn=None,
     ) -> None:
         self.agent_id = agent_id
         self.user_id = user_id
@@ -62,6 +63,11 @@ class LocalAuditor:
         self.dp_config = dp_config
         self.canaries = canaries or []
         self.semantic_threshold = semantic_threshold
+
+        # Semantic similarity: use provided fn, auto-detect embeddings, or None (n-gram fallback)
+        self._similarity_fn = similarity_fn
+        if self._similarity_fn is None:
+            self._similarity_fn = self._auto_detect_embeddings(policy)
         self._entries: list[AuditEntry] = []
         self._edges: list[DesensitizedEdge] = []
         self._violations = 0
@@ -104,6 +110,7 @@ class LocalAuditor:
                 sensitive_items=self.policy.must_not_share,
                 canaries=self.canaries,
                 semantic_threshold=self.semantic_threshold,
+                custom_similarity_fn=self._similarity_fn,
             )
             if semantic.level == LeakageLevel.FULL:
                 entry.output_text = ""
@@ -159,6 +166,7 @@ class LocalAuditor:
                 sensitive_items=self.policy.must_not_share,
                 canaries=self.canaries,
                 semantic_threshold=self.semantic_threshold,
+                custom_similarity_fn=self._similarity_fn,
             )
             if semantic.level in (LeakageLevel.FULL, LeakageLevel.PARTIAL):
                 entry.pii_detected = True
@@ -209,6 +217,15 @@ class LocalAuditor:
             local_action=action,
             content_hash=content_hash,
         )
+
+    @staticmethod
+    def _auto_detect_embeddings(policy: PrivacyPolicy):
+        """Auto-detect sentence-transformers and create similarity function."""
+        try:
+            from .embeddings import get_similarity_fn
+            return get_similarity_fn(must_not_share=policy.must_not_share)
+        except ImportError:
+            return None
 
     def _classify_message(self, entry: AuditEntry) -> str:
         """Classify message into semantic type without exposing content."""
