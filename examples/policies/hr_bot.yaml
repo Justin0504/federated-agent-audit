@@ -1,0 +1,16 @@
+agent_id: hr_bot
+must_not_share:
+  - salary
+  - compensation
+  - SSN
+  - performance review
+  - termination
+  - disciplinary
+  - medical leave
+acceptable_abstractions:
+  salary: compensation level
+  SSN: employee identifier
+  performance review: performance summary
+  termination: employment status change
+  medical leave: leave of absence
+sensitivity_threshold: 3

@@ -14,8 +14,11 @@ Pipeline:
 
 from __future__ import annotations
 
+import logging
 import re
 from collections import defaultdict
+
+logger = logging.getLogger(__name__)
 
 from .schemas import (
     AggregatedResult,
@@ -64,6 +67,10 @@ _ROOT_CAUSE_TEMPLATES: dict[str, str] = {
         "Injection-flagged agent {attacker} subsequently emitted "
         "suspicious high-sensitivity communications"
     ),
+    "topology_bottleneck": (
+        "Agent {hub} is a structural bottleneck (cut vertex) handling "
+        "sensitive domains — its compromise disconnects the network"
+    ),
 }
 
 _RECOMMENDED_ACTIONS: dict[str, str] = {
@@ -94,6 +101,10 @@ _RECOMMENDED_ACTIONS: dict[str, str] = {
     "compound_injection_leak": (
         "Immediately quarantine the flagged agent. Audit all communications "
         "following the injection event."
+    ),
+    "topology_bottleneck": (
+        "Add redundant communication paths to reduce single-point-of-failure "
+        "risk. Consider splitting the bottleneck agent's responsibilities."
     ),
 }
 
@@ -151,6 +162,11 @@ class RiskAggregator:
         summary: dict[str, int] = defaultdict(int)
         for inc in incidents:
             summary[inc.alert_level.value] += 1
+
+        logger.info(
+            "Aggregation: %d raw risks → %d incidents (%d suppressed), alerts=%s",
+            original_count, len(incidents), suppressed_count, dict(summary),
+        )
 
         return AggregatedResult(
             original_risk_count=original_count,
@@ -257,6 +273,20 @@ class RiskAggregator:
 
         alert_level = _classify_alert(severity, self._thresholds)
 
+        # Propagate scenario_type (dominant in cluster)
+        scenario_counts: dict[str, int] = defaultdict(int)
+        for risk in cluster:
+            if risk.scenario_type:
+                scenario_counts[risk.scenario_type] += 1
+        dominant_scenario = ""
+        if scenario_counts:
+            dominant_scenario = max(scenario_counts, key=scenario_counts.get)
+
+        # Propagate blame_agents (union from cluster)
+        blame_agents: list[str] = sorted({
+            risk.blame_agent for risk in cluster if risk.blame_agent
+        })
+
         return Incident(
             alert_level=alert_level,
             risk_type=risk_type,
@@ -267,6 +297,8 @@ class RiskAggregator:
             severity=severity,
             source_domain=source_domain,
             target_domain=target_domain,
+            scenario_type=dominant_scenario,
+            blame_agents=blame_agents,
         )
 
     def _generate_root_cause(

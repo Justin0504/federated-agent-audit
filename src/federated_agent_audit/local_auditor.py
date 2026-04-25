@@ -20,8 +20,11 @@ Desensitization pipeline (6 layers):
 from __future__ import annotations
 
 import hashlib
+import logging
 
 from .merkle import MerkleTree
+
+logger = logging.getLogger(__name__)
 from .privacy_gate import PrivacyGate, Decision
 from .semantic_detector import (
     three_tier_detect,
@@ -98,10 +101,18 @@ class LocalAuditor:
             entry.output_text = ""
             entry.metadata["blocked"] = True
             self._violations += 1
+            logger.warning(
+                "BLOCKED outgoing from %s to %s — matched: %s",
+                self.agent_id, to_agent, result.matched_rules,
+            )
         elif result.decision == Decision.REDACT:
             entry.output_text = result.redacted_text or ""
             entry.metadata["redacted_fields"] = result.matched_rules
             self._pii_redacted += len(result.matched_rules)
+            logger.info(
+                "REDACTED %d fields in %s → %s",
+                len(result.matched_rules), self.agent_id, to_agent,
+            )
 
         # Tier 2+3: semantic detection on remaining text (catches rephrasing)
         if result.decision != Decision.BLOCK and entry.output_text:

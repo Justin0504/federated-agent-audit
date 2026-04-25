@@ -12,9 +12,12 @@ and metadata from local audit reports.
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 
 import networkx as nx
+
+logger = logging.getLogger(__name__)
 
 from .schemas import (
     CompositionalRisk,
@@ -23,7 +26,10 @@ from .schemas import (
     NetworkAuditResult,
     PropagationPath,
 )
+from .blame import blame_all
 from .compound_attack import CompoundAttackDetector
+from .scenario_classifier import classify_all, scenario_summary
+from .topology import analyze_topology
 
 
 class NetworkAuditor:
@@ -35,6 +41,11 @@ class NetworkAuditor:
 
     def ingest_report(self, report: LocalAuditReport) -> None:
         """Ingest a local audit report. Only desensitized data is stored."""
+        logger.info(
+            "Ingested report: agent=%s, interactions=%d, violations=%d, edges=%d",
+            report.agent_id, report.total_interactions,
+            report.violations_blocked, len(report.edges),
+        )
         self._reports[report.agent_id] = report
 
         # add agent as node
@@ -65,6 +76,10 @@ class NetworkAuditor:
 
     def audit(self) -> NetworkAuditResult:
         """Run all network-level audits on the desensitized interaction graph."""
+        logger.info(
+            "Starting network audit: %d agents, %d edges",
+            self._graph.number_of_nodes(), self._graph.number_of_edges(),
+        )
         risks = []
         risks.extend(self._detect_cross_domain_flows())
         risks.extend(self._detect_aggregation_risks())
@@ -75,7 +90,24 @@ class NetworkAuditor:
         risks.extend([cr.base_risk for cr in compound_risks])
 
         propagation = self._detect_propagation_paths()
-        scores = self._compute_risk_scores(risks, propagation)
+
+        # Topology analysis
+        topo = analyze_topology(self._graph)
+        risks.extend(self._topology_risks(topo))
+
+        # Scenario classification (AgentSocialBench taxonomy)
+        classifications = classify_all(risks, self._graph, self._reports)
+        sc_summary = scenario_summary(classifications)
+
+        # Causal blame attribution
+        blame_all(risks, self._graph)
+
+        scores = self._compute_risk_scores(risks, propagation, topo)
+
+        logger.info(
+            "Audit complete: %d risks, %d propagation paths, scenario=%s",
+            len(risks), len(propagation), dict(sc_summary),
+        )
 
         return NetworkAuditResult(
             total_agents=self._graph.number_of_nodes(),
@@ -83,6 +115,8 @@ class NetworkAuditor:
             compositional_risks=risks,
             propagation_paths=propagation,
             agent_risk_scores=scores,
+            scenario_summary=sc_summary,
+            topology=topo.to_dict(),
         )
 
     def _detect_cross_domain_flows(self) -> list[CompositionalRisk]:
@@ -322,6 +356,33 @@ class NetworkAuditor:
 
         return results
 
+    def _topology_risks(self, topo) -> list[CompositionalRisk]:
+        """Generate risks from topology analysis (bottleneck agents)."""
+        risks: list[CompositionalRisk] = []
+        sensitive_domains = {"health", "finance", "legal", "identity"}
+
+        for bottleneck in topo.bottlenecks:
+            node_data = self._graph.nodes.get(bottleneck.agent_id, {})
+            agent_domains = set(node_data.get("domains", []))
+            has_sensitive = bool(agent_domains & sensitive_domains)
+
+            if has_sensitive and bottleneck.is_cut_vertex:
+                risks.append(CompositionalRisk(
+                    risk_type="topology_bottleneck",
+                    involved_agents=[bottleneck.agent_id],
+                    involved_edges=[],
+                    description=(
+                        f"Agent {bottleneck.agent_id} is a cut vertex handling "
+                        f"sensitive domains {agent_domains & sensitive_domains}. "
+                        f"Its removal disconnects the network."
+                    ),
+                    severity=min(1.0, bottleneck.flow_fraction + 0.3),
+                    source_domain=next(iter(agent_domains & sensitive_domains), ""),
+                    target_domain="",
+                ))
+
+        return risks
+
     def _collect_all_edges(self) -> list[DesensitizedEdge]:
         """Collect all desensitized edges from ingested reports."""
         edges: list[DesensitizedEdge] = []
@@ -333,6 +394,7 @@ class NetworkAuditor:
         self,
         risks: list[CompositionalRisk],
         paths: list[PropagationPath],
+        topo=None,
     ) -> dict[str, float]:
         """Compute per-agent risk score based on network position and findings."""
         scores: dict[str, float] = {n: 0.0 for n in self._graph.nodes}
@@ -361,6 +423,17 @@ class NetworkAuditor:
         for agent_id, report in self._reports.items():
             if agent_id in scores:
                 scores[agent_id] += report.leakage_rate
+
+        # factor 5: blamed agents get a penalty
+        for risk in risks:
+            if risk.blame_agent and risk.blame_agent in scores:
+                scores[risk.blame_agent] += 0.4
+
+        # factor 6: hub betweenness centrality
+        if topo is not None:
+            for hub in topo.hubs:
+                if hub.agent_id in scores:
+                    scores[hub.agent_id] += hub.betweenness * 0.5
 
         # normalize to [0, 1]
         max_score = max(scores.values()) if scores else 1.0

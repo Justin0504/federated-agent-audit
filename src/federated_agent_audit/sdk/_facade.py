@@ -19,6 +19,7 @@ from ..schemas import (
 from ..local_auditor import LocalAuditor
 from ..dp_mechanism import DPConfig
 from ..desensitizer import DesensitizationConfig
+from ..session_identity import AgentHandle
 from ._entry_builder import extract_privacy_tags, infer_sensitivity
 
 
@@ -40,6 +41,7 @@ class FederatedAudit:
         dp_config: DPConfig | None = None,
         desens_config: DesensitizationConfig | None = None,
         auto_tags: bool = True,
+        agent_handle: AgentHandle | None = None,
     ) -> None:
         self._agent_id = agent_id or policy.agent_id
         self._user_id = user_id
@@ -52,6 +54,9 @@ class FederatedAudit:
             dp_config=dp_config,
             desens_config=desens_config,
         )
+        self._handle = agent_handle
+        if self._handle is not None:
+            self._handle.start_session(self._trace_id)
 
     def record_outgoing(
         self,
@@ -119,11 +124,39 @@ class FederatedAudit:
 
     def get_report(self, apply_dp: bool = True) -> LocalAuditReport:
         """Generate the desensitized report for central audit."""
-        return self._auditor.produce_report(apply_dp=apply_dp)
+        report = self._auditor.produce_report(apply_dp=apply_dp)
+
+        # Populate session fields from AgentHandle
+        if self._handle is not None:
+            # Current session index is session_counter - 1 (counter increments on start)
+            idx = self._handle._session_counter - 1
+            if self._handle._current_session is not None:
+                report.session_id = self._handle._current_session.session_id
+            elif idx >= 0 and idx < len(self._handle._sessions):
+                report.session_id = self._handle._sessions[idx].session_id
+            report.session_pseudonym = self._handle.session_pseudonym(idx)
+            report.session_commitment = self._handle.session_commitment(idx)
+            report.behavioral_drift_score = self._handle.behavioral_drift()
+
+        return report
 
     def new_trace(self) -> str:
         """Start a new trace (conversation/session). Returns the new trace_id."""
+        # End current session if handle is active
+        if self._handle is not None and self._handle._current_session is not None:
+            report = self._auditor.produce_report(apply_dp=False)
+            self._handle.end_session(
+                n_interactions=report.total_interactions,
+                n_violations=report.violations_blocked,
+                domains=report.domains,
+            )
+
         self._trace_id = uuid4().hex[:16]
+
+        # Start new session with handle
+        if self._handle is not None:
+            self._handle.start_session(self._trace_id)
+
         return self._trace_id
 
     @property
@@ -138,6 +171,11 @@ class FederatedAudit:
     def auditor(self) -> LocalAuditor:
         """Access the underlying LocalAuditor for advanced usage."""
         return self._auditor
+
+    @property
+    def handle(self) -> AgentHandle | None:
+        """Access the AgentHandle for cross-session identity."""
+        return self._handle
 
     def _auto_extract_tags(self, output_text: str, input_text: str) -> list[str]:
         """Auto-extract privacy tags from text content."""

@@ -150,6 +150,11 @@ class LocalAuditReport(BaseModel):
     epoch_pseudonym_root: str = ""  # H(token || "pseudonym")
     # domains this agent operates in
     domains: list[str] = Field(default_factory=list)
+    # cross-session identity (populated when AgentHandle is used)
+    session_id: str = ""
+    session_pseudonym: str = ""       # H(handle_secret || session_id)
+    session_commitment: str = ""      # H(prev_session_token || current_token)
+    behavioral_drift_score: float = 0.0  # z-score of recent vs historical
 
 
 class NetworkAuditResult(BaseModel):
@@ -169,6 +174,10 @@ class NetworkAuditResult(BaseModel):
     propagation_paths: list[PropagationPath] = Field(default_factory=list)
     # per-agent risk scores
     agent_risk_scores: dict[str, float] = Field(default_factory=dict)
+    # scenario classification summary (AgentSocialBench taxonomy)
+    scenario_summary: dict[str, int] = Field(default_factory=dict)
+    # topology analysis results
+    topology: dict = Field(default_factory=dict)
 
 
 class CompositionalRisk(BaseModel):
@@ -186,6 +195,12 @@ class CompositionalRisk(BaseModel):
     # which domains are crossed (e.g. health info reaching social domain)
     source_domain: str = ""
     target_domain: str = ""
+    # scenario classification (AgentSocialBench 7-type taxonomy)
+    scenario_type: str = ""  # CD/MC/CU/GC/HS/CM/AM
+    # causal blame attribution
+    blame_agent: str = ""       # agent_id of responsible hop
+    blame_hop: int = -1         # position in chain (-1 = unattributed)
+    blame_reason: str = ""      # why this agent was blamed
 
 
 class PropagationPath(BaseModel):
@@ -232,6 +247,8 @@ class Incident(BaseModel):
     severity: float              # max(member severities)
     source_domain: str = ""
     target_domain: str = ""
+    scenario_type: str = ""      # dominant scenario type (CD/MC/CU/GC/HS/CM/AM)
+    blame_agents: list[str] = Field(default_factory=list)  # union of blame_agents
 
 
 class AggregatedResult(BaseModel):

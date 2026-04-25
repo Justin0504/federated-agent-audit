@@ -1,0 +1,9 @@
+{
+  "agent_id": "finance_bot",
+  "must_not_share": ["bank account", "credit card", "revenue", "runway"],
+  "acceptable_abstractions": {
+    "bank account": "financial account",
+    "revenue": "financial metric"
+  },
+  "sensitivity_threshold": 3
+}
