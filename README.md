@@ -83,6 +83,35 @@ incidents = RiskAggregator().aggregate(result)
 html = generate_html_report(result, incidents, title="My Audit Report")
 ```
 
+### LLM Firewall (Block Sensitive Responses in Real-Time)
+
+```python
+from federated_agent_audit import PrivacyPolicy, LLMFirewall
+
+policy = PrivacyPolicy(
+    agent_id="hr_bot",
+    must_not_share=["salary", "SSN", "email"],
+    acceptable_abstractions={"salary": "compensation info", "SSN": "gov ID"},
+)
+firewall = LLMFirewall(policy, mode="redact")
+
+# Check any LLM response before sending to user
+result = firewall.check("Zhang Wei's salary is $185,000. Email: zhang@corp.com")
+print(result.final_text)
+# → "Zhang Wei's compensation info is [DOLLAR_AMOUNT]. contact info: [EMAIL_ADDRESS]"
+```
+
+Auto-patch OpenAI/Anthropic SDKs (every API call is intercepted transparently):
+
+```python
+firewall.patch_openai()   # patches openai.chat.completions.create()
+firewall.patch_anthropic() # patches anthropic.messages.create()
+
+# Now ALL responses are automatically checked — no manual calls needed
+response = client.chat.completions.create(model="gpt-4o", messages=[...])
+# Sensitive content is already redacted in response.choices[0].message.content
+```
+
 ### YAML Policy Files
 
 ```yaml

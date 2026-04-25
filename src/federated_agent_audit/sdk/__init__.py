@@ -27,9 +27,11 @@ Usage:
 from ._facade import FederatedAudit
 from .generic import audited
 from ._entry_builder import extract_privacy_tags, infer_sensitivity
+from .intercept import LLMFirewall
 
 __all__ = [
     "FederatedAudit",
+    "LLMFirewall",
     "audited",
     "extract_privacy_tags",
     "infer_sensitivity",

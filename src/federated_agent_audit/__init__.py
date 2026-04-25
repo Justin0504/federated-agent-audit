@@ -24,7 +24,7 @@ from .schemas import (
     PrivacyPolicy,
     TaintLabel,
 )
-from .sdk import FederatedAudit, audited
+from .sdk import FederatedAudit, LLMFirewall, audited
 from .local_auditor import LocalAuditor
 from .network_auditor import NetworkAuditor
 from .risk_aggregator import RiskAggregator
@@ -34,6 +34,7 @@ from .config import load_policy, load_policies_dir, validate_policy
 __all__ = [
     # Core facade
     "FederatedAudit",
+    "LLMFirewall",
     "audited",
     # Schemas
     "PrivacyPolicy",
