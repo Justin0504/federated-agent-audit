@@ -6,6 +6,13 @@ but the most dangerous attacks cross class boundaries:
 
 - Security x Privacy: prompt injection leading to data exfiltration
 - Governance x Privacy: scope escalation enabling unauthorized data access
+- Privacy x Privacy: collusion / steganographic covert channels
+- Temporal aggregation: cross-epoch data assembly enabling inference
+- Multi-hop scope escalation: 3+ agents forming transitive domain reach
+
+Based on real-world incidents:
+- EchoLeak (M365 Copilot), Prompt Infection (Morris II), ChatGPT CPRF,
+  Steganographic collusion (NeurIPS 2024), Healthcare semantic composition
 
 This module detects these compound attack patterns.
 """
@@ -146,5 +153,211 @@ class CompoundAttackDetector:
                             base_risk=base,
                             compound_type="governance_privacy",
                         ))
+
+        return risks
+
+    def detect_collusion(
+        self,
+        edges: list[DesensitizedEdge],
+        communication_threshold: int = 5,
+    ) -> list[CompoundAttackRisk]:
+        """Detect privacy x privacy: potential collusion between agents.
+
+        Based on NeurIPS 2024 steganographic collusion research:
+        two agents exchanging unusually high volumes of low-sensitivity
+        data may be hiding covert information in message patterns.
+
+        Also detects the compositional inference pattern from the
+        "Compositional Privacy Risks" paper — where agents with
+        complementary partial data converge at a single point.
+
+        Args:
+            edges: desensitized interaction edges
+            communication_threshold: min edges between a pair to flag
+        """
+        risks: list[CompoundAttackRisk] = []
+
+        # Count communications per agent pair
+        pair_counts: dict[tuple[str, str], list[DesensitizedEdge]] = defaultdict(list)
+        for edge in edges:
+            key = tuple(sorted([edge.from_agent, edge.to_agent]))
+            pair_counts[key].append(edge)
+
+        for (a, b), pair_edges in pair_counts.items():
+            if len(pair_edges) < communication_threshold:
+                continue
+
+            # Check for bidirectional exchange (both send to each other)
+            a_to_b = [e for e in pair_edges if e.from_agent == a]
+            b_to_a = [e for e in pair_edges if e.from_agent == b]
+
+            if not a_to_b or not b_to_a:
+                continue
+
+            # Complementary domains — different domains flowing each way
+            domains_a = set()
+            for e in a_to_b:
+                domains_a.update(e.domains)
+            domains_b = set()
+            for e in b_to_a:
+                domains_b.update(e.domains)
+
+            complementary = domains_a != domains_b and (domains_a | domains_b)
+
+            base = CompositionalRisk(
+                risk_type="compound_collusion",
+                involved_agents=[a, b],
+                involved_edges=[e.edge_id for e in pair_edges],
+                description=(
+                    f"Agents {a} and {b} exchanged {len(pair_edges)} messages "
+                    f"bidirectionally. Domains A→B: {sorted(domains_a)}, "
+                    f"B→A: {sorted(domains_b)}. "
+                    f"{'Complementary domain exchange detected.' if complementary else 'High-volume exchange.'}"
+                ),
+                severity=min(1.0, len(pair_edges) * 0.05 + (0.3 if complementary else 0.0)),
+                source_domain="privacy",
+                target_domain="privacy",
+            )
+            risks.append(CompoundAttackRisk(
+                base_risk=base,
+                compound_type="privacy_privacy",
+            ))
+
+        return risks
+
+    def detect_temporal_aggregation(
+        self,
+        current_edges: list[DesensitizedEdge],
+        historical_edges: list[DesensitizedEdge],
+    ) -> list[CompoundAttackRisk]:
+        """Detect cross-epoch aggregation enabling inference attacks.
+
+        Based on healthcare semantic composition pattern:
+        Agent receives health data in epoch 1, financial data in epoch 2.
+        Neither epoch alone is dangerous, but combined they enable
+        identity/condition inference.
+
+        Args:
+            current_edges: edges from the current audit epoch
+            historical_edges: edges from previous epochs
+        """
+        risks: list[CompoundAttackRisk] = []
+
+        # Build per-agent domain accumulation across epochs
+        historical_domains: dict[str, set[str]] = defaultdict(set)
+        for edge in historical_edges:
+            historical_domains[edge.to_agent].update(edge.domains)
+
+        current_domains: dict[str, set[str]] = defaultdict(set)
+        current_edge_ids: dict[str, list[str]] = defaultdict(list)
+        for edge in current_edges:
+            current_domains[edge.to_agent].update(edge.domains)
+            current_edge_ids[edge.to_agent].append(edge.edge_id)
+
+        sensitive = {"health", "finance", "legal", "identity"}
+
+        for agent_id in current_domains:
+            if agent_id not in historical_domains:
+                continue
+
+            old = historical_domains[agent_id] & sensitive
+            new = current_domains[agent_id] & sensitive
+            combined = old | new
+
+            # New sensitive domains arrived this epoch that complement old ones
+            new_additions = new - old
+            if new_additions and old and len(combined) >= 2:
+                base = CompositionalRisk(
+                    risk_type="compound_temporal_aggregation",
+                    involved_agents=[agent_id],
+                    involved_edges=current_edge_ids.get(agent_id, []),
+                    description=(
+                        f"Agent {agent_id} accumulated sensitive domains "
+                        f"across epochs: historical {sorted(old)}, "
+                        f"new this epoch {sorted(new_additions)}. "
+                        f"Combined {sorted(combined)} enables cross-domain inference."
+                    ),
+                    severity=min(1.0, len(combined) * 0.25 + 0.2),
+                    source_domain=next(iter(sorted(old))),
+                    target_domain=next(iter(sorted(new_additions))),
+                )
+                risks.append(CompoundAttackRisk(
+                    base_risk=base,
+                    compound_type="temporal_aggregation",
+                ))
+
+        return risks
+
+    def detect_multihop_scope_escalation(
+        self,
+        agent_scopes: dict[str, set[str]],
+        edges: list[DesensitizedEdge],
+    ) -> list[CompoundAttackRisk]:
+        """Detect transitive scope escalation across 3+ agent chains.
+
+        Extends detect_scope_compound from pairwise to k-agent analysis.
+        A→B→C chain where combined domains of A+B+C exceed any individual
+        scope, but no pair triggers pairwise detection.
+
+        Args:
+            agent_scopes: agent_id -> set of allowed domains
+            edges: desensitized interaction edges
+        """
+        risks: list[CompoundAttackRisk] = []
+
+        # Build adjacency for chain walking
+        adjacency: dict[str, set[str]] = defaultdict(set)
+        agent_domains: dict[str, set[str]] = defaultdict(set)
+        for edge in edges:
+            adjacency[edge.from_agent].add(edge.to_agent)
+            agent_domains[edge.from_agent].update(edge.domains)
+            agent_domains[edge.to_agent].update(edge.domains)
+
+        # Walk chains of length 3+ using BFS
+        visited_chains: set[frozenset[str]] = set()
+        for start in adjacency:
+            # BFS from each start node
+            queue: list[list[str]] = [[start]]
+            while queue:
+                chain = queue.pop(0)
+                if len(chain) >= 3:
+                    chain_key = frozenset(chain)
+                    if chain_key in visited_chains:
+                        continue
+                    visited_chains.add(chain_key)
+
+                    # Check if combined domains exceed any single scope
+                    combined = set()
+                    for agent in chain:
+                        combined.update(agent_domains.get(agent, set()))
+
+                    exceeds_all = all(
+                        not (combined <= agent_scopes.get(a, set()))
+                        for a in chain
+                    )
+                    if exceeds_all and len(combined) >= 3:
+                        base = CompositionalRisk(
+                            risk_type="compound_multihop_escalation",
+                            involved_agents=list(chain),
+                            involved_edges=[],
+                            description=(
+                                f"Chain {' → '.join(chain)} ({len(chain)} hops) "
+                                f"touches domains {sorted(combined)} which exceeds "
+                                f"any individual agent's scope."
+                            ),
+                            severity=min(1.0, len(chain) * 0.15 + len(combined) * 0.1),
+                            source_domain="governance",
+                            target_domain="privacy",
+                        )
+                        risks.append(CompoundAttackRisk(
+                            base_risk=base,
+                            compound_type="multihop_escalation",
+                        ))
+
+                if len(chain) < 5:  # cap chain length
+                    last = chain[-1]
+                    for neighbor in adjacency.get(last, set()):
+                        if neighbor not in chain:
+                            queue.append(chain + [neighbor])
 
         return risks

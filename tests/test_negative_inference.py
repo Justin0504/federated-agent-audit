@@ -5,7 +5,6 @@ import pytest
 from federated_agent_audit.schemas import TaintLabel
 from federated_agent_audit.negative_inference import (
     NegativeInferenceDetector,
-    NegativeInferenceEvent,
 )
 
 

@@ -23,13 +23,10 @@ import hashlib
 import logging
 
 from .merkle import MerkleTree
-
-logger = logging.getLogger(__name__)
 from .privacy_gate import PrivacyGate, Decision
 from .semantic_detector import (
     three_tier_detect,
     LeakageLevel,
-    SemanticLeakageResult,
 )
 from .dp_mechanism import DPConfig, dp_perturb_report
 from .desensitizer import Desensitizer, DesensitizationConfig
@@ -43,6 +40,8 @@ from .schemas import (
 )
 from .taint_tracker import TaintTracker
 from .negative_inference import NegativeInferenceDetector, NegativeInferenceEvent
+
+logger = logging.getLogger(__name__)
 
 
 class LocalAuditor:
@@ -58,6 +57,7 @@ class LocalAuditor:
         semantic_threshold: float = 0.72,
         desens_config: DesensitizationConfig | None = None,
         similarity_fn=None,
+        llm_judge=None,
     ) -> None:
         self.agent_id = agent_id
         self.user_id = user_id
@@ -66,6 +66,7 @@ class LocalAuditor:
         self.dp_config = dp_config
         self.canaries = canaries or []
         self.semantic_threshold = semantic_threshold
+        self.llm_judge = llm_judge
 
         # Semantic similarity: use provided fn, auto-detect embeddings, or None (n-gram fallback)
         self._similarity_fn = similarity_fn
@@ -114,7 +115,8 @@ class LocalAuditor:
                 len(result.matched_rules), self.agent_id, to_agent,
             )
 
-        # Tier 2+3: semantic detection on remaining text (catches rephrasing)
+        # Tier 2+3+4: semantic detection on remaining text (catches rephrasing)
+        # Tier 4 (LLM-as-Judge) activates when llm_judge is provided
         if result.decision != Decision.BLOCK and entry.output_text:
             semantic = three_tier_detect(
                 text=entry.output_text,
@@ -122,6 +124,7 @@ class LocalAuditor:
                 canaries=self.canaries,
                 semantic_threshold=self.semantic_threshold,
                 custom_similarity_fn=self._similarity_fn,
+                llm_judge=self.llm_judge,
             )
             if semantic.level == LeakageLevel.FULL:
                 entry.output_text = ""
@@ -170,7 +173,7 @@ class LocalAuditor:
         if result.decision != Decision.ALLOW:
             self._violations += 1
             entry.pii_detected = True
-        # semantic check on internal actions too
+        # semantic check on internal actions too (with LLM judge if available)
         if entry.output_text:
             semantic = three_tier_detect(
                 text=entry.output_text,
@@ -178,6 +181,7 @@ class LocalAuditor:
                 canaries=self.canaries,
                 semantic_threshold=self.semantic_threshold,
                 custom_similarity_fn=self._similarity_fn,
+                llm_judge=self.llm_judge,
             )
             if semantic.level in (LeakageLevel.FULL, LeakageLevel.PARTIAL):
                 entry.pii_detected = True

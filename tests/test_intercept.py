@@ -1,7 +1,7 @@
 """Tests for LLM API interception (LLMFirewall)."""
 
 from federated_agent_audit.schemas import PrivacyPolicy
-from federated_agent_audit.sdk.intercept import LLMFirewall, InterceptResult
+from federated_agent_audit.sdk.intercept import LLMFirewall
 
 
 def _policy(**kwargs):

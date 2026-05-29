@@ -2,10 +2,9 @@
 
 import pytest
 
-from federated_agent_audit.schemas import CompositionalRisk, DesensitizedEdge
+from federated_agent_audit.schemas import DesensitizedEdge
 from federated_agent_audit.compound_attack import (
     CompoundAttackDetector,
-    CompoundAttackRisk,
 )
 
 

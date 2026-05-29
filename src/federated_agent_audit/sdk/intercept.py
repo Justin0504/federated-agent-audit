@@ -42,7 +42,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-from ..schemas import ActionType, PrivacyPolicy
+from ..schemas import PrivacyPolicy
 from ._facade import FederatedAudit
 from ..privacy_gate import PrivacyGate, Decision
 
@@ -69,12 +69,22 @@ class LLMFirewall:
     check it against privacy policy, and block/redact before
     the caller ever sees it.
 
+    Two detection tiers:
+    1. Fast heuristic: PrivacyGate (regex + PII patterns) — <1ms
+    2. LLM-as-Judge: optional deep analysis for uncertain cases — ~500ms
+
+    When llm_judge is provided, responses that pass the fast gate but
+    contain rephrased or indirect sensitive content are caught by the LLM.
+
     Args:
         policy: Privacy policy to enforce.
         mode: "redact" (replace sensitive terms) or "block" (return error message).
         block_message: Message returned when a response is fully blocked.
         to_agent: Target agent label for audit trail.
         on_violation: Optional callback(InterceptResult) fired on every violation.
+        llm_judge: Optional LLMJudge for deep semantic analysis. When provided,
+            responses that pass the regex gate are also checked by the LLM for
+            indirect/paraphrased privacy violations.
     """
 
     def __init__(
@@ -84,12 +94,14 @@ class LLMFirewall:
         block_message: str = "I cannot share that information due to privacy policy.",
         to_agent: str = "user",
         on_violation: Callable[[InterceptResult], None] | None = None,
+        llm_judge: Any | None = None,
     ) -> None:
         self.policy = policy
         self.mode = mode
         self.block_message = block_message
         self.to_agent = to_agent
         self.on_violation = on_violation
+        self.llm_judge = llm_judge
 
         self._gate = PrivacyGate(policy, mode=mode)
         self._audit = FederatedAudit(policy=policy)
@@ -247,7 +259,13 @@ class LLMFirewall:
     def _check_and_enforce(
         self, text: str, model: str = "", provider: str = "",
     ) -> InterceptResult:
-        """Run the privacy gate on text and record the result."""
+        """Run the privacy gate and optional LLM judge on text.
+
+        Pipeline:
+        1. Fast heuristic gate (regex + PII patterns) — always runs
+        2. If gate ALLOWS and llm_judge is set — LLM deep analysis
+           catches rephrased/indirect violations that regex misses
+        """
         gate_result = self._gate.check(text)
 
         result = InterceptResult(
@@ -273,6 +291,33 @@ class LLMFirewall:
                 "REDACTED %s response — %d terms replaced",
                 provider, len(gate_result.matched_rules),
             )
+        elif gate_result.decision == Decision.ALLOW and self.llm_judge is not None:
+            # Gate allowed — but LLM judge may catch indirect leaks
+            # Only check if we have sensitive items to check against
+            if self.policy.must_not_share:
+                try:
+                    llm_result = self._llm_judge_check(text)
+                    if llm_result is not None:
+                        if self.mode == "block":
+                            result.was_blocked = True
+                            result.matched_rules = llm_result["matched"]
+                            result.final_text = self.block_message
+                            logger.warning(
+                                "LLM_JUDGE BLOCKED %s — %s",
+                                provider, llm_result["reasoning"],
+                            )
+                        else:
+                            result.was_redacted = True
+                            result.matched_rules = llm_result["matched"]
+                            # For LLM-detected violations we can't do
+                            # surgical redaction, so block the full response
+                            result.final_text = self.block_message
+                            logger.info(
+                                "LLM_JUDGE FLAGGED %s — %s",
+                                provider, llm_result["reasoning"],
+                            )
+                except Exception as e:
+                    logger.debug("LLM judge check failed (non-blocking): %s", e)
 
         # Record in audit trail
         self._audit.record_outgoing(
@@ -295,6 +340,29 @@ class LLMFirewall:
             self.on_violation(result)
 
         return result
+
+    # ── LLM Judge deep check ──────────────────────────────────────
+
+    def _llm_judge_check(self, text: str) -> dict | None:
+        """Run LLM judge against policy items. Returns dict if violation found."""
+        if not hasattr(self.llm_judge, "judge_privacy_batch"):
+            return None
+
+        results = self.llm_judge.judge_privacy_batch(text, self.policy.must_not_share)
+        violations = []
+        for item, judge_result in zip(self.policy.must_not_share, results):
+            if judge_result.score >= 0.65:
+                violations.append((item, judge_result))
+
+        if violations:
+            matched = [item for item, _ in violations]
+            top = violations[0][1]
+            return {
+                "matched": matched,
+                "reasoning": top.reasoning,
+                "score": top.score,
+            }
+        return None
 
     # ── Standalone check (no patching needed) ───────────────────
 
