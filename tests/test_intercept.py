@@ -1,7 +1,36 @@
 """Tests for LLM API interception (LLMFirewall)."""
 
+from types import SimpleNamespace
+
+import pytest
+
 from federated_agent_audit.schemas import PrivacyPolicy
 from federated_agent_audit.sdk.intercept import LLMFirewall
+
+
+# ── Fakes mimicking the OpenAI SDK response shapes ──────────────────
+
+
+def _chat_response(content, tool_args=None):
+    """Build a fake non-streaming ChatCompletion."""
+    fn = SimpleNamespace(arguments=tool_args) if tool_args is not None else None
+    tool_calls = [SimpleNamespace(function=fn)] if fn is not None else None
+    message = SimpleNamespace(content=content, tool_calls=tool_calls)
+    return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+
+def _stream(*deltas):
+    """Build a fake OpenAI stream yielding content deltas (no .choices on stream)."""
+    chunks = [
+        SimpleNamespace(choices=[SimpleNamespace(delta=SimpleNamespace(content=d))])
+        for d in deltas
+    ]
+
+    class _S:
+        def __iter__(self):
+            return iter(chunks)
+
+    return _S()
 
 
 def _policy(**kwargs):
@@ -124,6 +153,103 @@ class TestFirewallCheck:
         result = fw.check("salary SSN email everything")
         assert not result.was_redacted
         assert not result.was_blocked
+
+
+class TestNonStreamingResponse:
+
+    def test_redacts_message_content(self):
+        fw = LLMFirewall(_policy(), mode="redact")
+        resp = _chat_response("His salary is $185,000")
+        out = fw._intercept_openai_chat_response(resp, "gpt-4o")
+        assert "salary" not in out.choices[0].message.content
+        assert "compensation level" in out.choices[0].message.content
+
+    def test_blocks_message_content(self):
+        fw = LLMFirewall(_policy(), mode="block")
+        resp = _chat_response("His salary is $185,000")
+        out = fw._intercept_openai_chat_response(resp, "gpt-4o")
+        assert out.choices[0].message.content == fw.block_message
+
+    def test_none_content_with_tool_calls(self):
+        """content can be None when the model returns only tool calls."""
+        fw = LLMFirewall(_policy(), mode="redact")
+        resp = _chat_response(None, tool_args='{"q": "lookup salary for Zhang Wei"}')
+        out = fw._intercept_openai_chat_response(resp, "gpt-4o")
+        # tool-call arguments are inspected and redacted
+        args = out.choices[0].message.tool_calls[0].function.arguments
+        assert "salary" not in args
+
+    def test_tool_call_block_neutralizes_arguments(self):
+        fw = LLMFirewall(_policy(), mode="block")
+        resp = _chat_response("ok", tool_args='{"ssn": "123-45-6789 SSN"}')
+        out = fw._intercept_openai_chat_response(resp, "gpt-4o")
+        args = out.choices[0].message.tool_calls[0].function.arguments
+        assert "123-45-6789" not in args
+        assert "_blocked" in args
+
+    def test_tool_inspection_can_be_disabled(self):
+        fw = LLMFirewall(_policy(), mode="redact", inspect_tool_calls=False)
+        resp = _chat_response("ok", tool_args="salary leak here")
+        out = fw._intercept_openai_chat_response(resp, "gpt-4o")
+        assert out.choices[0].message.tool_calls[0].function.arguments == "salary leak here"
+
+
+class TestStreaming:
+
+    def test_clean_stream_passes_through(self):
+        fw = LLMFirewall(_policy(), mode="block")
+        wrapped = fw._wrap_openai_stream(_stream("Hello ", "world", "!"), "gpt-4o")
+        text = "".join(_chunk_text(c) for c in wrapped)
+        assert text == "Hello world!"
+
+    def test_violating_stream_blocked_early(self):
+        fw = LLMFirewall(_policy(), mode="block")
+        # "salary" trips the gate once enough accumulates → stream stops early
+        wrapped = fw._wrap_openai_stream(
+            _stream("Her ", "salary ", "is ", "$185,000"), "gpt-4o"
+        )
+        chunks = list(wrapped)
+        text = "".join(_chunk_text(c) for c in chunks)
+        assert "$185,000" not in text  # tail never forwarded
+        assert len(chunks) < 4
+
+    def test_stream_is_audited(self):
+        fw = LLMFirewall(_policy(), mode="block")
+        wrapped = fw._wrap_openai_stream(_stream("salary ", "data"), "gpt-4o")
+        list(wrapped)  # drain
+        assert len(fw.intercept_log) >= 1
+
+
+class TestFailOpen:
+
+    def test_guard_returns_fallback_on_error(self):
+        fw = LLMFirewall(_policy(), fail_open=True)
+
+        def boom():
+            raise RuntimeError("audit exploded")
+
+        sentinel = object()
+        assert fw._guard(boom, fallback=sentinel) is sentinel
+
+    def test_guard_reraises_when_fail_open_false(self):
+        fw = LLMFirewall(_policy(), fail_open=False)
+
+        def boom():
+            raise RuntimeError("audit exploded")
+
+        with pytest.raises(RuntimeError):
+            fw._guard(boom, fallback=None)
+
+    def test_malformed_response_does_not_crash(self):
+        """A response missing expected attributes must not raise."""
+        fw = LLMFirewall(_policy(), mode="redact")
+        weird = SimpleNamespace(choices=[SimpleNamespace(message=None)])
+        # Should not raise
+        fw._intercept_openai_chat_response(weird, "gpt-4o")
+
+
+def _chunk_text(chunk):
+    return chunk.choices[0].delta.content or ""
 
 
 class TestFirewallUnpatch:

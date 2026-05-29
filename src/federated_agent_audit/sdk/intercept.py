@@ -27,6 +27,16 @@ Usage:
     # Unpatch when done
     firewall.unpatch()
 
+Production hardening:
+    * fail-open — if the audit layer itself errors, the original response is
+      returned unchanged so the firewall can never take an app down.
+    * tool/function calls — sensitive content in OpenAI tool-call arguments
+      is inspected, not just message content.
+    * streaming — streamed responses are gate-checked incrementally and
+      blocked early the moment a violation accumulates (inline redaction of an
+      already-emitted stream is impossible, so streaming uses block semantics).
+    * async — async OpenAI/Anthropic clients are patched alongside sync.
+
 Architecture:
     caller  →  openai.create()  →  [REAL API CALL]  →  response
                      ↓                                      ↓
@@ -38,6 +48,7 @@ Architecture:
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass, field
 from typing import Any, Callable
@@ -85,6 +96,12 @@ class LLMFirewall:
         llm_judge: Optional LLMJudge for deep semantic analysis. When provided,
             responses that pass the regex gate are also checked by the LLM for
             indirect/paraphrased privacy violations.
+        fail_open: When True (default), any unexpected error inside the audit
+            layer is swallowed and the ORIGINAL response is returned, so the
+            firewall can never break the wrapped application. Set False to let
+            audit errors propagate (useful in testing).
+        inspect_tool_calls: When True (default), sensitive content inside
+            OpenAI tool/function-call arguments is also checked.
     """
 
     def __init__(
@@ -95,6 +112,8 @@ class LLMFirewall:
         to_agent: str = "user",
         on_violation: Callable[[InterceptResult], None] | None = None,
         llm_judge: Any | None = None,
+        fail_open: bool = True,
+        inspect_tool_calls: bool = True,
     ) -> None:
         self.policy = policy
         self.mode = mode
@@ -102,6 +121,8 @@ class LLMFirewall:
         self.to_agent = to_agent
         self.on_violation = on_violation
         self.llm_judge = llm_judge
+        self.fail_open = fail_open
+        self.inspect_tool_calls = inspect_tool_calls
 
         self._gate = PrivacyGate(policy, mode=mode)
         self._audit = FederatedAudit(policy=policy)
@@ -123,31 +144,25 @@ class LLMFirewall:
     def patch_openai(self) -> None:
         """Patch the OpenAI Python SDK (v1+).
 
-        Intercepts:
-        - client.chat.completions.create()
-        - client.completions.create()
+        Intercepts client.chat.completions.create() (sync + async),
+        including streaming responses and tool-call arguments.
         """
         try:
-            import openai
+            import openai  # noqa: F401
         except ImportError:
             raise ImportError("openai package required: pip install openai")
 
-        # Patch ChatCompletion.create
-        self._patch_openai_chat(openai)
+        self._patch_openai_chat()
         logger.info("Patched OpenAI SDK — all chat completions are now audited")
 
     def patch_anthropic(self) -> None:
-        """Patch the Anthropic Python SDK.
-
-        Intercepts:
-        - client.messages.create()
-        """
+        """Patch the Anthropic Python SDK (sync + async messages.create)."""
         try:
-            import anthropic
+            import anthropic  # noqa: F401
         except ImportError:
             raise ImportError("anthropic package required: pip install anthropic")
 
-        self._patch_anthropic_messages(anthropic)
+        self._patch_anthropic_messages()
         logger.info("Patched Anthropic SDK — all messages are now audited")
 
     def patch_all(self) -> None:
@@ -177,55 +192,143 @@ class LLMFirewall:
 
     # ── OpenAI internals ────────────────────────────────────────
 
-    def _patch_openai_chat(self, openai_module) -> None:
-        """Patch openai.resources.chat.completions.Completions.create."""
+    def _patch_openai_chat(self) -> None:
+        """Patch sync + async openai chat completions create()."""
         from openai.resources.chat import completions as chat_mod
 
         original_create = chat_mod.Completions.create
         firewall = self
 
         def patched_create(self_inner, *args, **kwargs):
-            # Call the real API
             response = original_create(self_inner, *args, **kwargs)
-            # Intercept the response
-            return firewall._intercept_openai_chat_response(
-                response, kwargs.get("model", "unknown")
+            model = kwargs.get("model", "unknown")
+            return firewall._guard(
+                lambda: firewall._handle_openai_response(response, model, streamed=kwargs.get("stream", False)),
+                fallback=response,
             )
 
         chat_mod.Completions.create = patched_create
         self._patches.append((chat_mod.Completions, "create", original_create))
 
-        # Also patch async version if available
+        # Async client
         try:
-            original_async = chat_mod.AsyncCompletions.acreate
+            original_async = chat_mod.AsyncCompletions.create
+
             async def patched_acreate(self_inner, *args, **kwargs):
                 response = await original_async(self_inner, *args, **kwargs)
-                return firewall._intercept_openai_chat_response(
-                    response, kwargs.get("model", "unknown")
+                model = kwargs.get("model", "unknown")
+                if kwargs.get("stream", False):
+                    return firewall._wrap_openai_astream(response, model)
+                return firewall._guard(
+                    lambda: firewall._handle_openai_response(response, model, streamed=False),
+                    fallback=response,
                 )
-            chat_mod.AsyncCompletions.acreate = patched_acreate
-            self._patches.append((chat_mod.AsyncCompletions, "acreate", original_async))
+
+            chat_mod.AsyncCompletions.create = patched_acreate
+            self._patches.append((chat_mod.AsyncCompletions, "create", original_async))
         except AttributeError:
             pass
 
-    def _intercept_openai_chat_response(self, response, model: str):
-        """Check and potentially modify an OpenAI ChatCompletion response."""
-        for choice in response.choices:
-            if choice.message and choice.message.content:
-                original = choice.message.content
-                result = self._check_and_enforce(original, model=model, provider="openai")
+    def _handle_openai_response(self, response, model: str, streamed: bool):
+        """Route an OpenAI response to streaming or non-streaming handling."""
+        if streamed or _is_sync_stream(response):
+            return self._wrap_openai_stream(response, model)
+        return self._intercept_openai_chat_response(response, model)
 
+    def _intercept_openai_chat_response(self, response, model: str):
+        """Check and potentially modify a non-streaming ChatCompletion."""
+        for choice in getattr(response, "choices", []):
+            msg = getattr(choice, "message", None)
+            if msg is None:
+                continue
+            if getattr(msg, "content", None):
+                result = self._check_and_enforce(msg.content, model=model, provider="openai")
                 if result.was_blocked:
-                    choice.message.content = self.block_message
+                    msg.content = self.block_message
                 elif result.was_redacted:
-                    choice.message.content = result.final_text
+                    msg.content = result.final_text
+
+            # Tool / function call arguments can also leak sensitive data.
+            if self.inspect_tool_calls:
+                self._inspect_openai_tool_calls(msg, model)
 
         return response
 
+    def _inspect_openai_tool_calls(self, msg, model: str) -> None:
+        """Gate-check sensitive content inside OpenAI tool-call arguments."""
+        tool_calls = getattr(msg, "tool_calls", None) or []
+        for tc in tool_calls:
+            fn = getattr(tc, "function", None)
+            if fn is None:
+                continue
+            args = getattr(fn, "arguments", None)
+            if not args or not isinstance(args, str):
+                continue
+            result = self._check_and_enforce(args, model=model, provider="openai_tool")
+            if result.was_blocked:
+                # Neutralize the arguments so the leaked value never reaches the tool.
+                fn.arguments = json.dumps({"_blocked": self.block_message})
+            elif result.was_redacted:
+                fn.arguments = result.final_text
+
+    def _wrap_openai_stream(self, stream, model: str):
+        """Wrap a sync OpenAI stream: gate-check incrementally, block early.
+
+        Inline redaction of an already-emitted stream is impossible, so when a
+        violation accumulates we stop forwarding and emit nothing further — the
+        caller has only received clean prefix text. The full assembled text is
+        audited at the end.
+        """
+        def generator():
+            assembled = ""
+            blocked = False
+            try:
+                for chunk in stream:
+                    delta = _openai_chunk_text(chunk)
+                    if delta:
+                        assembled += delta
+                        # Incremental gate check — block the moment we trip.
+                        if self._gate.check(assembled).decision == Decision.BLOCK:
+                            blocked = True
+                            break
+                    yield chunk
+            finally:
+                # Audit the assembled prefix regardless of how the stream ended.
+                try:
+                    self._check_and_enforce(assembled, model=model, provider="openai_stream")
+                except Exception as e:  # pragma: no cover - audit must not break stream
+                    if not self.fail_open:
+                        raise
+                    logger.debug("stream audit failed (non-blocking): %s", e)
+            if blocked:
+                logger.warning("BLOCKED openai stream mid-flight after violation accumulated")
+
+        return generator()
+
+    async def _wrap_openai_astream(self, stream, model: str):
+        """Async counterpart of _wrap_openai_stream."""
+        assembled = ""
+        try:
+            async for chunk in stream:
+                delta = _openai_chunk_text(chunk)
+                if delta:
+                    assembled += delta
+                    if self._gate.check(assembled).decision == Decision.BLOCK:
+                        logger.warning("BLOCKED openai async stream mid-flight")
+                        break
+                yield chunk
+        finally:
+            try:
+                self._check_and_enforce(assembled, model=model, provider="openai_stream")
+            except Exception as e:  # pragma: no cover
+                if not self.fail_open:
+                    raise
+                logger.debug("async stream audit failed (non-blocking): %s", e)
+
     # ── Anthropic internals ─────────────────────────────────────
 
-    def _patch_anthropic_messages(self, anthropic_module) -> None:
-        """Patch anthropic.resources.messages.Messages.create."""
+    def _patch_anthropic_messages(self) -> None:
+        """Patch sync + async anthropic messages.create()."""
         from anthropic.resources import messages as msg_mod
 
         original_create = msg_mod.Messages.create
@@ -233,20 +336,36 @@ class LLMFirewall:
 
         def patched_create(self_inner, *args, **kwargs):
             response = original_create(self_inner, *args, **kwargs)
-            return firewall._intercept_anthropic_response(
-                response, kwargs.get("model", "unknown")
+            model = kwargs.get("model", "unknown")
+            return firewall._guard(
+                lambda: firewall._intercept_anthropic_response(response, model),
+                fallback=response,
             )
 
         msg_mod.Messages.create = patched_create
         self._patches.append((msg_mod.Messages, "create", original_create))
 
+        try:
+            original_async = msg_mod.AsyncMessages.create
+
+            async def patched_acreate(self_inner, *args, **kwargs):
+                response = await original_async(self_inner, *args, **kwargs)
+                model = kwargs.get("model", "unknown")
+                return firewall._guard(
+                    lambda: firewall._intercept_anthropic_response(response, model),
+                    fallback=response,
+                )
+
+            msg_mod.AsyncMessages.create = patched_acreate
+            self._patches.append((msg_mod.AsyncMessages, "create", original_async))
+        except AttributeError:
+            pass
+
     def _intercept_anthropic_response(self, response, model: str):
         """Check and potentially modify an Anthropic Message response."""
-        for block in response.content:
+        for block in getattr(response, "content", []):
             if hasattr(block, "text") and block.text:
-                original = block.text
-                result = self._check_and_enforce(original, model=model, provider="anthropic")
-
+                result = self._check_and_enforce(block.text, model=model, provider="anthropic")
                 if result.was_blocked:
                     block.text = self.block_message
                 elif result.was_redacted:
@@ -255,6 +374,19 @@ class LLMFirewall:
         return response
 
     # ── Core enforcement ────────────────────────────────────────
+
+    def _guard(self, fn: Callable[[], Any], fallback: Any) -> Any:
+        """Run an interception step fail-open: on error, return the original.
+
+        The audit/firewall layer must never crash the wrapped application.
+        """
+        try:
+            return fn()
+        except Exception as e:
+            if not self.fail_open:
+                raise
+            logger.error("firewall interception failed (returning original): %s", e)
+            return fallback
 
     def _check_and_enforce(
         self, text: str, model: str = "", provider: str = "",
@@ -375,6 +507,25 @@ class LLMFirewall:
                 send_to_user(result.final_text)
         """
         return self._check_and_enforce(text, model="manual", provider="direct")
+
+
+def _is_sync_stream(response: Any) -> bool:
+    """Heuristic: an OpenAI Stream is iterable but has no .choices attribute."""
+    return hasattr(response, "__iter__") and not hasattr(response, "choices")
+
+
+def _openai_chunk_text(chunk: Any) -> str:
+    """Extract the incremental text delta from an OpenAI streaming chunk."""
+    try:
+        choices = getattr(chunk, "choices", None)
+        if not choices:
+            return ""
+        delta = getattr(choices[0], "delta", None)
+        if delta is None:
+            return ""
+        return getattr(delta, "content", None) or ""
+    except Exception:  # pragma: no cover - defensive
+        return ""
 
 
 def _infer_tags(matched_rules: list[str]) -> list[str]:
