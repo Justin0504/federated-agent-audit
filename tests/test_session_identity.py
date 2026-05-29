@@ -3,7 +3,6 @@
 from federated_agent_audit.session_identity import (
     AgentHandle,
     SessionLinkageChallenge,
-    SessionSummary,
 )
 
 

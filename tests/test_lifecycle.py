@@ -140,7 +140,7 @@ def test_audit_trail():
 def test_active_actions():
     tracker = _make_tracker()
     a1 = tracker.create_action("test1")
-    a2 = tracker.create_action("test2")
+    tracker.create_action("test2")
     tracker.transition(a1.action_id, LifecycleStage.EXECUTING)
     tracker.transition(a1.action_id, LifecycleStage.COMPLETED)
     assert len(tracker.active_actions()) == 1  # only a2

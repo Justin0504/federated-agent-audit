@@ -65,7 +65,7 @@ class TestAuditedDecorator:
     def test_redaction_applied(self, policy):
         @audited(policy=policy, to_agent="bot")
         def leak(data: str) -> str:
-            return f"The secret_key is ABC123"
+            return "The secret_key is ABC123"
 
         result = leak("query")
         # The function itself returns the original

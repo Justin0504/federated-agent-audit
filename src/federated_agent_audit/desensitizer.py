@@ -38,7 +38,6 @@ References:
 from __future__ import annotations
 
 import hashlib
-import math
 import secrets
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta

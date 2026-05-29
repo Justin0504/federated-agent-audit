@@ -1,7 +1,7 @@
 """Tests for multi-channel leakage auditing (C3-C7)."""
 
 from federated_agent_audit.channel_auditor import (
-    ChannelAuditor, Channel, ChannelAction,
+    ChannelAuditor, ChannelAction,
 )
 from federated_agent_audit.schemas import PrivacyPolicy
 

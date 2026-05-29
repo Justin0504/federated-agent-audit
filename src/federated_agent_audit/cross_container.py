@@ -25,13 +25,11 @@ References:
 from __future__ import annotations
 
 import hashlib
-import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from uuid import uuid4
 
 from .schemas import LocalAuditReport, DesensitizedEdge
-from .merkle import MerkleTree
 
 
 # --- Verification Tokens ---

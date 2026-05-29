@@ -13,8 +13,7 @@ Reference: AuditableLLM (MDPI Electronics 2025) — 3.4ms/step overhead.
 from __future__ import annotations
 
 import hashlib
-import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from .schemas import AuditEntry

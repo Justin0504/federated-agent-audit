@@ -1,12 +1,10 @@
 """Tests for risk aggregation and alert denoising."""
 
-import pytest
 
 from federated_agent_audit.schemas import (
     AlertLevel,
     CompositionalRisk,
     NetworkAuditResult,
-    PropagationPath,
     SuppressionRule,
 )
 from federated_agent_audit.risk_aggregator import RiskAggregator

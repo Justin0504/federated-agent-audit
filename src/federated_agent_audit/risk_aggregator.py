@@ -18,8 +18,6 @@ import logging
 import re
 from collections import defaultdict
 
-logger = logging.getLogger(__name__)
-
 from .schemas import (
     AggregatedResult,
     AlertLevel,
@@ -28,6 +26,8 @@ from .schemas import (
     NetworkAuditResult,
     SuppressionRule,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # Default severity thresholds for alert levels

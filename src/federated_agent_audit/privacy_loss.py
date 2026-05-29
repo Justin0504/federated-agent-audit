@@ -21,9 +21,9 @@ References:
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from .schemas import AuditEntry, DesensitizedEdge, LocalAuditReport
+from .schemas import AuditEntry, DesensitizedEdge
 from .dp_mechanism import DPConfig
 
 

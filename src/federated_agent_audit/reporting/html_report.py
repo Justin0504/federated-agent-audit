@@ -22,14 +22,10 @@ from __future__ import annotations
 import html as html_mod
 import math
 from datetime import datetime, timezone
-from typing import Optional
 
 from ..schemas import (
     AggregatedResult,
-    AlertLevel,
-    CompositionalRisk,
     DesensitizedEdge,
-    Incident,
     NetworkAuditResult,
 )
 
@@ -556,7 +552,6 @@ def _build_executive_summary(
     crit = agg.alert_summary.get("critical", 0)
     high = agg.alert_summary.get("high", 0)
     med = agg.alert_summary.get("medium", 0)
-    low = agg.alert_summary.get("low", 0)
 
     if crit > 0:
         verdict_class = "stat-card verdict"
@@ -905,7 +900,6 @@ def _build_blame_attribution(agg: AggregatedResult) -> str:
         scenario_badge = ""
         if inc.scenario_type:
             sc_color = _SCENARIO_COLORS.get(inc.scenario_type, "#9b9590")
-            sc_label = _SCENARIO_LABELS.get(inc.scenario_type, inc.scenario_type)
             scenario_badge = (
                 f'<code style="font-family:var(--mono);font-size:10px;'
                 f'padding:2px 6px;border-radius:3px;background:var(--surface-alt);'

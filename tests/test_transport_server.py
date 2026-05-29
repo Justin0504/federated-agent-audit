@@ -14,7 +14,6 @@ except ImportError:
 from federated_agent_audit.schemas import (
     DesensitizedEdge,
     LocalAuditReport,
-    TaintLabel,
 )
 
 pytestmark = pytest.mark.skipif(

@@ -1,7 +1,7 @@
 """Tests for advanced 6-layer desensitization pipeline."""
 
 import hashlib
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 import numpy as np
 
@@ -18,7 +18,7 @@ from federated_agent_audit.desensitizer import (
     DesensitizationConfig,
 )
 from federated_agent_audit.dp_mechanism import DPConfig
-from federated_agent_audit.schemas import AuditEntry, DesensitizedEdge
+from federated_agent_audit.schemas import AuditEntry
 
 
 def _make_entry(**overrides) -> AuditEntry:

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 
 from .merkle import MerkleTree
 from .schemas import (
@@ -70,7 +69,6 @@ class CommitStore:
         else:
             revealed = entries
 
-        serialized_all = [self._serialize_entry(e) for e in entries]
         proofs: list[str] = []
         for entry in revealed:
             idx = next(

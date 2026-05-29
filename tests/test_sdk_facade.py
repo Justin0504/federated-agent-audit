@@ -29,7 +29,7 @@ class TestRecordOutgoing:
 
     def test_auto_tags_health(self, policy):
         audit = FederatedAudit(policy=policy)
-        result = audit.record_outgoing(
+        audit.record_outgoing(
             "patient needs medical attention", to_agent="bot"
         )
         report = audit.get_report(apply_dp=False)

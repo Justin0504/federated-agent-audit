@@ -1,11 +1,9 @@
 """Tests for wire format serialization/deserialization."""
 
 from federated_agent_audit.schemas import (
-    AuditEntry,
     LocalAuditReport,
     NetworkAuditResult,
     CompositionalRisk,
-    PrivacyPolicy,
     AggregatedResult,
     AlertLevel,
     Incident,

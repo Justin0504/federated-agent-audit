@@ -16,7 +16,6 @@ Usage:
 from __future__ import annotations
 
 import functools
-import json
 
 from ..schemas import ActionType, PrivacyPolicy
 from ._facade import FederatedAudit

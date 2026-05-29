@@ -1,6 +1,5 @@
 """Tests for taint propagation tracking."""
 
-import pytest
 
 from federated_agent_audit.schemas import TaintLabel
 from federated_agent_audit.taint_tracker import TaintTracker

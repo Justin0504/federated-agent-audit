@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
 
 try:
     from fastapi import FastAPI, HTTPException, Header
@@ -30,11 +29,6 @@ except ImportError:
 from ..schemas import LocalAuditReport
 from ..network_auditor import NetworkAuditor
 from ..risk_aggregator import RiskAggregator, SuppressionRule
-from .wire import (
-    deserialize_report,
-    serialize_aggregated,
-    serialize_result,
-)
 
 logger = logging.getLogger(__name__)
 

@@ -6,20 +6,15 @@ Covers all three mechanisms:
   3. ContinuousAuditor — challenge-triggered linkage + orchestration
 """
 
-import math
 
 import numpy as np
-import pytest
 
 from federated_agent_audit.epoch_chain import (
     _sha256,
     EpochChain,
-    EpochToken,
     EpochCommitment,
     verify_epoch_chain,
     BinaryTreeCounter,
-    LinkageChallenge,
-    LinkageProof,
     ContinuousAuditor,
 )
 

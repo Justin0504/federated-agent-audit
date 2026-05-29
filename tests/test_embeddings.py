@@ -10,7 +10,7 @@ from federated_agent_audit.schemas import PrivacyPolicy
 from federated_agent_audit.local_auditor import LocalAuditor
 
 try:
-    from sentence_transformers import SentenceTransformer
+    from sentence_transformers import SentenceTransformer  # noqa: F401
     HAS_ST = True
 except ImportError:
     HAS_ST = False
