@@ -1,0 +1,46 @@
+name: Bug report
+description: Report a problem with detection, an integration, or the API
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! For **security** issues (e.g. raw content leaking
+        into a report, detector bypass) do **not** file here — see SECURITY.md.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you observe, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: A small scenario / code snippet that reproduces it. Offline if possible.
+      render: python
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "federated-agent-audit version + Python version"
+      placeholder: "0.1.0, Python 3.12"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Detection (network/local auditor)
+        - SDK integration (CrewAI / LangChain / generic)
+        - LLM firewall
+        - Desensitization / privacy guarantee
+        - Compliance engine
+        - CLI / reporting
+        - Other
+    validations:
+      required: true

@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Federated Agent Audit: Privacy auditing for multi-agent AI systems"
+abstract: >-
+  A privacy-preserving audit framework for multi-agent AI systems that detects
+  compositional privacy leaks (cross-domain flows, aggregation/inference,
+  cascading injection) across agent interactions without the central auditor
+  ever accessing raw content.
+type: software
+authors:
+  - family-names: Yuan
+    given-names: Aojie
+    email: aojieyua@usc.edu
+    affiliation: University of Southern California
+repository-code: "https://github.com/Justin0504/federated-agent-audit"
+url: "https://github.com/Justin0504/federated-agent-audit"
+license: Apache-2.0
+keywords:
+  - privacy
+  - multi-agent
+  - federated audit
+  - LLM
+  - AI safety
+  - compliance
+version: 0.1.0

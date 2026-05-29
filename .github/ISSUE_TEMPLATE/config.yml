@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Justin0504/federated-agent-audit/security/advisories/new
+    about: Report privacy/security issues privately (see SECURITY.md). Do not open a public issue.
+  - name: Question / discussion
+    url: https://github.com/Justin0504/federated-agent-audit/discussions
+    about: Ask how to integrate, interpret a risk, or design a detector.

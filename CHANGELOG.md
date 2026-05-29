@@ -1,0 +1,44 @@
+# Changelog
+
+All notable changes to this project are documented here. The format is based on
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres
+to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- `MultiAgentTracer` — captures the real agent-to-agent interaction graph with
+  automatic cross-hop taint propagation; the backbone all framework
+  integrations build on.
+- CrewAI and LangChain/LangGraph integrations rewritten for true multi-agent
+  capture (per-agent identity, delegation/hand-off edges, async handler).
+- LLM firewall production hardening: fail-open, streaming early-block,
+  tool-call argument inspection, async OpenAI/Anthropic patching.
+- Detection-effectiveness benchmark (`benchmarks/scenarios.py`,
+  `detection_eval.py`) with precision/recall/F1, a privacy-vs-structural
+  risk-type split, and a no-raw-content invariant — plus a regression gate
+  (`tests/test_detection_benchmark.py`).
+- Live integration test against real LangGraph (`tests/test_langgraph_live.py`)
+  and opt-in live examples for CrewAI and OpenAI streaming.
+
+### Fixed
+- Precision: `cross_domain_leak` no longer fires on a lone sensitive edge to a
+  terminal, unknown-domain sink (requires the recipient to forward, or to
+  operate in a known different domain).
+- Precision: `compound_scope_escalation`, `taint_spreading`, and
+  `long_distance_taint` now gate on **sensitive** domains and are
+  data-subject-aware (disjoint origins are not compounded).
+- LangChain adapter corrected against real framework behaviour (run_id
+  identity correlation; outer-graph events ignored).
+- CrewAI adapter reads `TaskOutput.raw`; auto-tagger recognizes common
+  pay/health terms (compensation, wage, payroll, medication, therapy, …).
+
+## [0.1.0]
+
+### Added
+- Two-phase federated audit: local auditor + central network auditor.
+- Detection stack: privacy gate, semantic detector, taint tracker, compositional
+  leak, cascade, cross-platform deanonymization, memory audit, LLM-as-judge.
+- Desensitization (6-layer), DP mechanism, Merkle/epoch commitments.
+- Compliance engine (EU AI Act / GDPR / CA SB 243 / COPPA).
+- CLI, HTML reporting, transport server, framework SDKs.

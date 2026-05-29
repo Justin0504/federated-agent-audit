@@ -6,8 +6,14 @@
 pip install federated-agent-audit
 ```
 
+[![CI](https://github.com/Justin0504/federated-agent-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/Justin0504/federated-agent-audit/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/federated-agent-audit.svg)](https://pypi.org/project/federated-agent-audit/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-649%20passing-brightgreen.svg)](tests/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
+> Audit multi-agent systems (CrewAI · LangGraph · AutoGen) for compositional privacy leaks the central auditor can never see the raw data behind.
 
 ---
 
