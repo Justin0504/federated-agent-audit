@@ -18,6 +18,16 @@ class TestExtractPrivacyTags:
         tags = extract_privacy_tags("Check your bank account balance")
         assert "finance" in tags
 
+    def test_finance_compensation_terms(self):
+        # Regression: real CrewAI output said "compensation level" and was
+        # mis-tagged as 'general' — these common pay terms must map to finance.
+        for text in ["her compensation level is high", "monthly wage", "payroll record", "annual income"]:
+            assert "finance" in extract_privacy_tags(text), text
+
+    def test_health_medication_terms(self):
+        for text in ["take this medication", "ongoing chemotherapy", "physical therapy"]:
+            assert "health" in extract_privacy_tags(text), text
+
     def test_legal_keywords(self):
         tags = extract_privacy_tags("Contact your attorney about the lawsuit")
         assert "legal" in tags

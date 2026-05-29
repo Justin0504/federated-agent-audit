@@ -18,11 +18,13 @@ _DOMAIN_PATTERNS: dict[str, list[str]] = {
         r"\bhealth\b", r"\bmedical\b", r"\bdiagnos", r"\btreatment\b",
         r"\bprescription\b", r"\bsymptom", r"\bhospital\b", r"\bdoctor\b",
         r"\bpatient\b", r"\bsurg", r"\bcancer\b", r"\bdisease\b",
+        r"\bmedication\b", r"\btherapy\b", r"\bchemotherapy\b", r"\bclinic",
     ],
     "finance": [
         r"\bfinance\b", r"\bfinancial\b", r"\baccount\b", r"\bbank",
         r"\binvest", r"\bportfolio\b", r"\btransaction\b", r"\bcredit\b",
         r"\bdebit\b", r"\bsalar", r"\btax\b", r"\bbudget\b",
+        r"\bcompensation\b", r"\bwage", r"\bpayroll\b", r"\bincome\b",
     ],
     "legal": [
         r"\blegal\b", r"\blawyer\b", r"\battorney\b", r"\bcourt\b",

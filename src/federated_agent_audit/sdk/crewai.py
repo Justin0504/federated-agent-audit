@@ -106,8 +106,12 @@ def delegation_target(tool_name: str, tool_input: dict) -> tuple[str, str] | Non
 
 
 def step_text(step: Any) -> str:
-    """Best-effort textual representation of a step output."""
-    for attr in ("output", "result", "text", "return_values"):
+    """Best-effort textual representation of a step / task output.
+
+    Covers the real CrewAI shapes (verified on crewai 1.14): AgentFinish has
+    ``.output``/``.text``; TaskOutput carries its text in ``.raw``.
+    """
+    for attr in ("output", "raw", "result", "text", "return_values"):
         val = getattr(step, attr, None)
         if val:
             return str(val)[:4000]
