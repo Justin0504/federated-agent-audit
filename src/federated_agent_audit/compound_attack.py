@@ -115,17 +115,30 @@ class CompoundAttackDetector:
         """
         risks: list[CompoundAttackRisk] = []
 
-        # Build per-agent actually-used domains
+        # Build per-agent actually-used domains and observed data-subject origins
         agent_used: dict[str, set[str]] = defaultdict(set)
         agent_edges: dict[str, list[str]] = defaultdict(list)
+        agent_origins: dict[str, set[str]] = defaultdict(set)
         for edge in edges:
             agent_used[edge.from_agent].update(edge.domains)
             agent_edges[edge.from_agent].append(edge.edge_id)
+            if edge.taint is not None and edge.taint.origin_boundary:
+                agent_origins[edge.from_agent].add(edge.taint.origin_boundary)
 
         agents = list(agent_used.keys())
         for i in range(len(agents)):
             for j in range(i + 1, len(agents)):
                 a, b = agents[i], agents[j]
+
+                # Scope escalation / reidentification requires the two agents to
+                # handle the SAME data subject. If both have known origins and
+                # they are disjoint (e.g. alice's health vs bob's finance),
+                # combining them cannot profile anyone — skip to avoid a false
+                # positive on multi-tenant hubs.
+                oa, ob = agent_origins.get(a, set()), agent_origins.get(b, set())
+                if oa and ob and not (oa & ob):
+                    continue
+
                 combined = agent_used[a] | agent_used[b]
                 scope_a = agent_scopes.get(a, set())
                 scope_b = agent_scopes.get(b, set())

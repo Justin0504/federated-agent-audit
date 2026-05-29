@@ -163,9 +163,17 @@ class NetworkAuditor:
             # check if sensitive domains are reaching agents in different domains
             sensitive_domains = {"health", "finance", "legal"}
             crossing = edge_domains & sensitive_domains
-            # risk if: sensitive domain in edge AND target is in a different domain
-            # (or target has no registered domains -- unknown boundary)
-            if crossing and (not target_domains or not (crossing & target_domains)):
+            if not crossing:
+                continue
+            # A *compositional* cross-domain risk requires the sensitive info to
+            # either land in a KNOWN different domain, or keep flowing (the
+            # recipient forwards it onward). A lone sensitive edge to a terminal,
+            # unknown-domain sink (a referral, or telling the data owner their
+            # own data) is a LOCAL policy concern, not a network-level
+            # compositional leak — flagging it over-fires and hurts precision.
+            crosses_known_domain = bool(target_domains) and not (crossing & target_domains)
+            recipient_forwards = self._graph.out_degree(v) > 0
+            if crosses_known_domain or recipient_forwards:
                 risks.append(CompositionalRisk(
                     risk_type="cross_domain_leak",
                     involved_agents=[u, v],

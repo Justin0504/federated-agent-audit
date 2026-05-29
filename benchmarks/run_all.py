@@ -10,15 +10,12 @@ Usage:
 from __future__ import annotations
 
 import json
-import statistics
 import time
 import tracemalloc
 from dataclasses import dataclass, asdict
 
 from federated_agent_audit.schemas import (
     AuditEntry,
-    DesensitizedEdge,
-    LocalAuditReport,
     PrivacyPolicy,
     TaintLabel,
 )
@@ -106,7 +103,6 @@ def bench_audit_outgoing() -> BenchResult:
     """Measure audit_outgoing latency (single message)."""
     policy = _policy()
     auditor = LocalAuditor("a", "u", policy)
-    entry = _entry(0)
 
     def fn():
         e = _entry(0)

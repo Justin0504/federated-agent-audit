@@ -1,0 +1,247 @@
+{
+  "threshold": 0.5,
+  "n_positive": 8,
+  "n_total": 15,
+  "confusion": {
+    "tp": 8,
+    "fp": 0,
+    "tn": 7,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "specificity": 1.0,
+    "f1": 1.0,
+    "accuracy": 1.0
+  },
+  "scenarios": [
+    {
+      "name": "cross_domain_health_to_social",
+      "category": "cross_domain",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "compound_health_finance_hub",
+      "category": "compound",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "inference_accumulation",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "aggregation_three_fragments",
+      "category": "aggregation",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "inference_accumulation",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "aggregation_leak",
+        "compound_scope_escalation",
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "long_distance_taint_chain",
+      "category": "cascade",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "long_distance_taint",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "long_distance_taint",
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "identity_health_reidentification",
+      "category": "compound",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "inference_accumulation",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "legal_to_external_cross_domain",
+      "category": "cross_domain",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "finance_multihop_escalation",
+      "category": "compound",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 0.8,
+      "detected_types": [
+        "cross_domain_leak",
+        "inference_accumulation",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "compound_multihop_escalation",
+        "compound_scope_escalation",
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "health_hub_fanout",
+      "category": "cross_domain",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "benign_social_chat",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.0,
+      "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "single_domain_within_boundary",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.0,
+      "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "schedule_logistics",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.0,
+      "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "single_finance_no_forward",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.0,
+      "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "two_hop_general",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.0,
+      "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "weather_updates",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.0,
+      "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "cross_origin_no_reidentification",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.0,
+      "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    }
+  ]
+}

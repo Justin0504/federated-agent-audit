@@ -252,6 +252,26 @@ Local (Phase 1):                    Network (Phase 2):
 
 **Privacy guarantee**: The central auditor architecturally cannot see raw content. Data is hashed, pseudonymized, and DP-noised before leaving local agents. Merkle tree commitments ensure tamper-proof audit trails without revealing entries.
 
+## Detection Effectiveness
+
+A labeled benchmark of multi-agent scenarios (real compositional leaks vs.
+benign traffic) measures detection quality, not just speed:
+
+```bash
+python benchmarks/detection_eval.py            # precision / recall / F1
+python benchmarks/detection_eval.py --sweep    # threshold robustness
+```
+
+On the current scenario set (8 leak + 7 benign) the pipeline reaches
+**precision 1.0 / recall 1.0 / F1 1.0** with **zero raw-content leakage** into
+central reports, stable across thresholds 0.3–0.8. Pure structural signals
+(topology, timing, behavioral) are reported separately and not counted as
+privacy-leak detections. The harness is the place to add adversarial scenarios;
+`tests/test_detection_benchmark.py` locks the metrics as a regression gate.
+
+Validated live against **LangGraph** (free, in-suite) and **CrewAI** + **OpenAI
+streaming** (opt-in examples, need an API key).
+
 ## Development
 
 ```bash
