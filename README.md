@@ -201,6 +201,20 @@ result = tracer.network_audit()      # Phase-2 central audit
 incidents = tracer.aggregated()      # denoised, actionable alerts
 ```
 
+It catches the compound leak no single agent's policy can see — and the central
+auditor still never touched the raw data (`python examples/multiagent_trace_demo.py`):
+
+```
+Incidents: 5  alert_summary={'critical': 3, 'high': 2}
+  [CRITICAL] cross_domain_leak  — Sensitive health data reaches social domain via 2-agent chain
+  [CRITICAL] cross_domain_leak  — Sensitive finance data reaches social domain via 2-agent chain
+  [CRITICAL] taint_spreading    — Data from origin 'zhang_wei' spread to 4 agents across the network
+  [HIGH]     inference_accumulation — external_bot accumulated high inference risk (77%)
+  [HIGH]     compound_scope_escalation — 3 agent pairs exceed authorized scope
+
+Privacy verification (central reports):  hr_bot → clean  health_bot → clean  summary_bot → clean
+```
+
 ## Framework Integrations
 
 ```python

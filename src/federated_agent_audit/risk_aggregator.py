@@ -45,14 +45,14 @@ _ROOT_CAUSE_TEMPLATES: dict[str, str] = {
     ),
     "cross_domain_leak": (
         "Sensitive {source} data reaches {target} domain via "
-        "{n}-agent chain: {agents}"
+        "{n_agents}-agent chain: {agents}"
     ),
     "aggregation_leak": (
-        "Agent {hub} aggregates {source} info from {n} independent "
-        "sources, enabling cross-source inference"
+        "Agent {hub} aggregates {source} info from {n_agents} "
+        "agents, enabling cross-source inference"
     ),
     "taint_spreading": (
-        "Data from origin '{origin}' has spread to {n} agents "
+        "Data from origin '{origin}' has spread to {n_agents} agents "
         "across the network: {agents}"
     ),
     "long_distance_taint": (
@@ -343,6 +343,7 @@ class RiskAggregator:
         try:
             return template.format(
                 n=len(cluster),
+                n_agents=len(agents),
                 domains=sorted(all_domains),
                 source=cluster[0].source_domain,
                 target=cluster[0].target_domain,
