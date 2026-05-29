@@ -1,0 +1,150 @@
+"""Tests for MultiAgentTracer — the multi-agent interaction-graph capture layer."""
+
+from __future__ import annotations
+
+from federated_agent_audit.schemas import ActionType, PrivacyPolicy
+from federated_agent_audit.sdk.multiagent import MultiAgentTracer
+
+
+def _tracer() -> MultiAgentTracer:
+    return MultiAgentTracer()
+
+
+# ── Edge capture ────────────────────────────────────────────────────
+
+
+def test_handoff_creates_directed_edge():
+    t = _tracer()
+    t.record_handoff("agent_a", "agent_b", "hello world", privacy_tags=["social"])
+
+    aud = t.auditor("agent_a")
+    assert aud is not None
+    assert len(aud.edges) == 1
+    edge = aud.edges[0]
+    assert edge.from_agent == "agent_a"
+    assert edge.to_agent == "agent_b"
+
+
+def test_unseen_agents_auto_registered():
+    t = _tracer()
+    t.record_handoff("x", "y", "some text")
+    # both sender and recipient become graph nodes
+    assert set(t.agents) == {"x", "y"}
+
+
+def test_recipient_node_exists_even_without_sending():
+    t = _tracer()
+    t.record_handoff("sender", "receiver", "data")
+    assert "receiver" in t.agents
+    assert t.auditor("receiver") is not None
+
+
+def test_shared_trace_id_across_agents():
+    t = _tracer()
+    t.record_handoff("a", "b", "hi", privacy_tags=["social"])
+    t.record_handoff("b", "c", "hi again", privacy_tags=["social"])
+    edge_a = t.auditor("a").edges[0]
+    edge_b = t.auditor("b").edges[0]
+    assert edge_a.trace_id == edge_b.trace_id == t.trace_id
+
+
+# ── Taint propagation (the core value) ──────────────────────────────
+
+
+def test_taint_propagates_across_hop():
+    """Health taint emitted by A→Hub must be inherited by Hub's later edges."""
+    t = _tracer()
+    t.record_handoff("health_agent", "hub", "patient diagnosis details",
+                     privacy_tags=["health"], sensitivity_level=5, origin="alice")
+    # Hub forwards onward — its outgoing edge should carry the health domain
+    t.record_handoff("hub", "social_bot", "weekly summary",
+                     privacy_tags=["social"])
+
+    hub_edge = t.auditor("hub").edges[-1]
+    assert hub_edge.taint is not None
+    assert "health" in hub_edge.taint.domains  # inherited from upstream
+    assert hub_edge.taint.hop_count >= 2  # at least two hops deep
+
+
+def test_compound_risk_detected_on_real_chain():
+    """Two sensitive domains converging on a hub from the same origin
+    must surface a compositional risk in the network audit."""
+    t = _tracer()
+    t.record_handoff("health_agent", "hub", "diagnosis info",
+                     privacy_tags=["health"], sensitivity_level=5, origin="alice")
+    t.record_handoff("finance_agent", "hub", "account balance",
+                     privacy_tags=["finance"], sensitivity_level=4, origin="alice")
+    t.record_handoff("hub", "external", "combined profile",
+                     privacy_tags=["social"])
+
+    result = t.network_audit()
+    assert result.total_agents >= 3
+    assert result.total_edges == 3
+    # The hub accumulated health + finance from one origin → compound exposure
+    assert len(result.compositional_risks) > 0
+
+
+def test_blocked_handoff_does_not_propagate_taint():
+    """If a hand-off is blocked, content never reached the recipient, so no
+    taint should leak forward."""
+    policy = PrivacyPolicy(agent_id="secret_agent", must_not_share=["topsecret"])
+    t = MultiAgentTracer()
+    t.register_agent("secret_agent", policy)
+    t.record_handoff("secret_agent", "hub", "the topsecret value is 42",
+                     privacy_tags=["identity"], sensitivity_level=5)
+
+    edge = t.auditor("secret_agent").edges[-1]
+    if edge.local_action == "block":
+        # hub received no taint to inherit, so its onward edge stays clean
+        t.record_handoff("hub", "next", "innocuous", privacy_tags=["social"])
+        assert "identity" not in t.auditor("hub").edges[-1].taint.domains
+
+
+# ── Internal actions ────────────────────────────────────────────────
+
+
+def test_record_internal_no_edge():
+    t = _tracer()
+    t.record_internal("agent_a", "calling a tool", action_type=ActionType.TOOL_CALL)
+    aud = t.auditor("agent_a")
+    assert aud is not None
+    assert len(aud.edges) == 0  # internal actions produce no inter-agent edge
+
+
+# ── Phase 2 / reports ───────────────────────────────────────────────
+
+
+def test_network_audit_counts():
+    t = _tracer()
+    t.record_handoff("a", "b", "x", privacy_tags=["social"])
+    t.record_handoff("b", "c", "y", privacy_tags=["social"])
+    result = t.network_audit()
+    assert result.total_agents == 3
+    assert result.total_edges == 2
+
+
+def test_aggregated_returns_incidents_structure():
+    t = _tracer()
+    t.record_handoff("health_agent", "hub", "diagnosis",
+                     privacy_tags=["health"], sensitivity_level=5, origin="u1")
+    t.record_handoff("finance_agent", "hub", "balance",
+                     privacy_tags=["finance"], sensitivity_level=4, origin="u1")
+    t.record_handoff("hub", "external", "summary", privacy_tags=["social"])
+    agg = t.aggregated()
+    assert agg.incident_count >= 0
+    assert isinstance(agg.alert_summary, dict)
+
+
+def test_no_raw_content_in_reports():
+    """Central reports must never contain raw sensitive strings."""
+    policy = PrivacyPolicy(agent_id="hr_bot", must_not_share=["salary", "SSN"])
+    t = MultiAgentTracer()
+    t.register_agent("hr_bot", policy)
+    t.record_handoff("hr_bot", "summary_bot",
+                     "Zhang Wei salary is 185000 and SSN 123-45-6789",
+                     privacy_tags=["finance", "identity"], sensitivity_level=5)
+
+    for report in t.reports():
+        blob = report.model_dump_json()
+        assert "185000" not in blob
+        assert "123-45-6789" not in blob

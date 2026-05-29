@@ -205,6 +205,23 @@ class LocalAuditor:
         self._entries.append(entry)
         return entry
 
+    # ── Accessors for multi-agent coordination ─────────────────────
+
+    @property
+    def edges(self) -> list[DesensitizedEdge]:
+        """All desensitized edges this agent has produced (read-only copy)."""
+        return list(self._edges)
+
+    def receive_taint(self, taint: TaintLabel) -> None:
+        """Feed an inbound taint label into this agent's taint state.
+
+        Used by multi-agent coordinators to propagate provenance across
+        agent-to-agent handoffs: the emitted taint of an X→A edge is fed
+        into A so A's subsequent outgoing edges inherit the accumulated
+        domains, sensitivity, origin, and hop count.
+        """
+        self._taint_tracker.receive(taint)
+
     def _desensitize(
         self, entry: AuditEntry, to_agent: str, action: str
     ) -> DesensitizedEdge:

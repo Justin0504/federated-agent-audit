@@ -27,7 +27,7 @@ from .schemas import (
     PrivacyPolicy,
     TaintLabel,
 )
-from .sdk import FederatedAudit, LLMFirewall, audited
+from .sdk import FederatedAudit, LLMFirewall, MultiAgentTracer, audited
 from .local_auditor import LocalAuditor
 from .network_auditor import NetworkAuditor
 from .risk_aggregator import RiskAggregator
@@ -44,6 +44,7 @@ __all__ = [
     # Core facade
     "FederatedAudit",
     "LLMFirewall",
+    "MultiAgentTracer",
     "audited",
     # LLM-as-Judge
     "LLMJudge",

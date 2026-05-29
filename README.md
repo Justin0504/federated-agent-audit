@@ -173,25 +173,57 @@ for gap in report.gaps():
     print(f"{gap.regulation} {gap.article}: {gap.remediation}")
 ```
 
-## Framework Integrations
+## Multi-Agent Trace Capture
 
-Works with any multi-agent framework:
+The integrations capture the **real agent-to-agent interaction graph** — who
+sent what to whom — which is exactly what the compositional / cascade /
+cross-domain detectors analyze. Everything is built on `MultiAgentTracer`,
+which works with any framework (or none):
 
 ```python
-# LangChain — callback-based
-from federated_agent_audit.sdk.langchain import AuditCallbackHandler
-chain.invoke(input, config={"callbacks": [AuditCallbackHandler(policy)]})
+from federated_agent_audit import MultiAgentTracer, PrivacyPolicy
 
-# CrewAI — context manager
-from federated_agent_audit.sdk.crewai import crew_audit
-with crew_audit(policy=my_policy) as audit:
-    crew.kickoff()
+tracer = MultiAgentTracer()
+tracer.register_agent("hr_bot", PrivacyPolicy(agent_id="hr_bot", must_not_share=["salary"]))
 
-# Generic Python — decorator
+# Each call is a real directed edge; taint (domains, sensitivity, origin,
+# hop count) propagates across hops automatically.
+tracer.record_handoff("hr_bot", "summary_bot", "Zhang Wei earns $185k", origin="zhang_wei")
+tracer.record_handoff("summary_bot", "external_bot", "candidate compensation summary")
+
+result = tracer.network_audit()      # Phase-2 central audit
+incidents = tracer.aggregated()      # denoised, actionable alerts
+```
+
+## Framework Integrations
+
+```python
+# CrewAI — captures agent delegation (Delegate/Ask coworker) as A→B edges
+from federated_agent_audit.sdk import crew_audit
+crew = crew_audit(crew, default_policy=policy)   # or policies={role: policy}
+crew.kickoff()
+result = crew._federated_tracer.network_audit()
+
+# LangChain / LangGraph — per-node identity + node-to-node hand-offs
+from federated_agent_audit.sdk import langchain_callback
+handler = langchain_callback(default_policy=policy)          # asynchronous=True for async graphs
+graph.invoke(input, config={"callbacks": [handler]})
+result = handler.tracer.network_audit()
+
+# Generic Python — single-agent decorator
 from federated_agent_audit import audited
-@audited(policy)
+@audited(policy, to_agent="downstream")
 def my_agent(input_text: str) -> str:
     return process(input_text)
+```
+
+The LLM firewall hardens this for production — fail-open (audit never crashes
+the app), streaming responses blocked the moment a violation accumulates, and
+sensitive content inspected inside tool-call arguments:
+
+```python
+from federated_agent_audit import firewall
+fw = firewall(["salary", "SSN"]); fw.patch_openai()   # streaming + tool calls covered
 ```
 
 ## Installation
