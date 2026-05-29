@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from collections import defaultdict
 
 from .schemas import CompositionalRisk, DesensitizedEdge
+from .taint_tracker import SENSITIVE_DOMAINS
 
 
 @dataclass
@@ -146,7 +147,10 @@ class CompoundAttackDetector:
                 # Combined domains exceed either agent's individual scope
                 if not (combined <= scope_a) and not (combined <= scope_b):
                     excess = combined - (scope_a & scope_b)
-                    if excess:
+                    # Only SENSITIVE domains constitute a privacy scope escalation;
+                    # collectively touching general/social/schedule is not a leak.
+                    excess_sensitive = excess & SENSITIVE_DOMAINS
+                    if excess_sensitive:
                         base = CompositionalRisk(
                             risk_type="compound_scope_escalation",
                             involved_agents=[a, b],
@@ -156,9 +160,9 @@ class CompoundAttackDetector:
                             description=(
                                 f"Agents {a} and {b} combined touch domains "
                                 f"{sorted(combined)} which exceeds any single "
-                                f"scope. Excess: {sorted(excess)}"
+                                f"scope. Sensitive excess: {sorted(excess_sensitive)}"
                             ),
-                            severity=min(1.0, len(excess) * 0.3),
+                            severity=round(min(1.0, len(excess_sensitive) * 0.3), 3),
                             source_domain="governance",
                             target_domain="privacy",
                         )

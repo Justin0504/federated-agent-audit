@@ -116,6 +116,65 @@ POSITIVE: list[Scenario] = [
         ],
         expected_types={"cross_domain_leak", "taint_spreading"},
     ),
+    Scenario(
+        # The leak is buried in benign chatter — tests robustness to noise.
+        "noise_buried_leak", "cross_domain", True,
+        [
+            Handoff("a", "b", "morning standup notes", ["social"], 1),
+            Handoff("b", "c", "lunch plans", ["social"], 1),
+            Handoff("health_bot", "hub", "patient cancer diagnosis", ["health"], 5, "heidi"),
+            Handoff("c", "d", "weekend trip ideas", ["social"], 1),
+            Handoff("hub", "external_bot", "candidate profile", ["social"], 3),
+            Handoff("d", "e", "movie recommendations", ["social"], 1),
+        ],
+        expected_types={"cross_domain_leak", "taint_spreading"},
+    ),
+    Scenario(
+        # Same sensitive info reaches a sink via two distinct paths (diamond).
+        "diamond_dual_path", "cascade", True,
+        [
+            Handoff("src", "left", "financial portfolio", ["finance"], 4, "ivan"),
+            Handoff("src", "right", "financial portfolio", ["finance"], 4, "ivan"),
+            Handoff("left", "sink", "forwarded left", ["social"], 2),
+            Handoff("right", "sink", "forwarded right", ["social"], 2),
+            Handoff("sink", "external", "merged", ["social"], 2),
+        ],
+        expected_types={"taint_spreading"},
+    ),
+    Scenario(
+        # Hub gets alice-health + alice-finance (must compound) plus an unrelated
+        # bob-social edge (must NOT pull bob into the compound).
+        "partial_shared_origin_hub", "compound", True,
+        [
+            Handoff("h_bot", "hub", "alice condition", ["health"], 5, "alice"),
+            Handoff("f_bot", "hub", "alice salary", ["finance"], 4, "alice"),
+            Handoff("s_bot", "hub", "bob hobby", ["social"], 1, "bob"),
+            Handoff("hub", "external", "summary", ["social"], 3),
+        ],
+        expected_types={"compound_scope_escalation", "cross_domain_leak", "taint_spreading"},
+    ),
+    Scenario(
+        "five_fragment_aggregation", "aggregation", True,
+        [
+            Handoff("a1", "hub", "name", ["identity"], 3, "judy"),
+            Handoff("a2", "hub", "dob", ["identity"], 3, "judy"),
+            Handoff("a3", "hub", "condition", ["health"], 5, "judy"),
+            Handoff("a4", "hub", "salary", ["finance"], 4, "judy"),
+            Handoff("a5", "hub", "case number", ["legal"], 4, "judy"),
+            Handoff("hub", "external", "full dossier", ["social"], 3),
+        ],
+        expected_types={"aggregation_leak", "compound_scope_escalation", "taint_spreading"},
+    ),
+    Scenario(
+        # Sensitive info "laundered" through same-domain hops then exits to social.
+        "laundering_same_domain_then_exit", "cascade", True,
+        [
+            Handoff("h1", "h2", "health record", ["health"], 5, "mallory"),
+            Handoff("h2", "h3", "internal health note", ["health"], 4),
+            Handoff("h3", "social_bot", "public-facing blurb", ["social"], 2),
+        ],
+        expected_types={"taint_spreading", "long_distance_taint"},
+    ),
 ]
 
 
@@ -174,6 +233,50 @@ NEGATIVE: list[Scenario] = [
         [
             Handoff("health_bot", "hub", "alice condition", ["health"], 5, "alice"),
             Handoff("finance_bot", "hub", "bob balance", ["finance"], 4, "bob"),
+        ],
+        expected_types=set(),
+    ),
+    Scenario(
+        # A busy hub with many inbound edges — but all non-sensitive chatter.
+        # Topology alone (a bottleneck) must not be treated as a privacy leak.
+        "high_volume_benign_hub", "benign", False,
+        [
+            Handoff(f"chat_{i}", "hub", "team update", ["social"], 1)
+            for i in range(6)
+        ] + [Handoff("hub", "board", "digest", ["social"], 1)],
+        expected_types=set(),
+    ),
+    Scenario(
+        # Several sensitive messages, but each is a single hop to a terminal
+        # consumer (different subjects, no convergence, no forwarding).
+        "independent_single_sensitive_hops", "benign", False,
+        [
+            Handoff("fin_bot", "user_a", "your balance", ["finance"], 3, "alice"),
+            Handoff("health_bot", "patient_b", "your results", ["health"], 4, "bob"),
+            Handoff("legal_bot", "client_c", "your case status", ["legal"], 4, "carol"),
+        ],
+        expected_types=set(),
+    ),
+    Scenario(
+        # Many agents converge on a planner, but only schedule/social — no
+        # sensitive (health/finance/legal/identity) domains involved.
+        "schedule_social_hub", "benign", False,
+        [
+            Handoff("p1", "planner", "free tuesday", ["schedule"], 2),
+            Handoff("p2", "planner", "prefer afternoon", ["schedule", "social"], 2),
+            Handoff("p3", "planner", "any room works", ["schedule"], 1),
+            Handoff("planner", "group", "meeting set for 3pm", ["schedule", "social"], 2),
+        ],
+        expected_types=set(),
+    ),
+    Scenario(
+        "deep_benign_chain", "benign", False,
+        [
+            Handoff("n0", "n1", "public release notes v1", ["general"], 1),
+            Handoff("n1", "n2", "edited copy", ["general"], 1),
+            Handoff("n2", "n3", "reviewed copy", ["general"], 1),
+            Handoff("n3", "n4", "approved copy", ["general"], 1),
+            Handoff("n4", "n5", "published", ["social"], 1),
         ],
         expected_types=set(),
     ),

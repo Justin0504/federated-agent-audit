@@ -262,9 +262,11 @@ python benchmarks/detection_eval.py            # precision / recall / F1
 python benchmarks/detection_eval.py --sweep    # threshold robustness
 ```
 
-On the current scenario set (8 leak + 7 benign) the pipeline reaches
-**precision 1.0 / recall 1.0 / F1 1.0** with **zero raw-content leakage** into
-central reports, stable across thresholds 0.3–0.8. Pure structural signals
+On the current scenario set (13 leak + 11 benign, incl. adversarial cases:
+noise-buried leaks, diamond multi-path, partial-shared-origin hubs, same-domain
+laundering, high-volume benign hubs, cross-subject convergence) the pipeline
+reaches **precision 1.0 / recall 1.0 / F1 1.0** with **zero raw-content
+leakage** into central reports, stable across thresholds 0.3–0.8. Pure structural signals
 (topology, timing, behavioral) are reported separately and not counted as
 privacy-leak detections. The harness is the place to add adversarial scenarios;
 `tests/test_detection_benchmark.py` locks the metrics as a regression gate.

@@ -29,6 +29,7 @@ from .compound_attack import CompoundAttackDetector
 from .scenario_classifier import classify_all, scenario_summary
 from .topology import analyze_topology
 from .compositional_leak import CompositionalLeakDetector
+from .taint_tracker import SENSITIVE_DOMAINS
 from .cascade_detector import CascadeDetector
 from .cross_platform_denanon import CrossPlatformDetector
 
@@ -298,6 +299,10 @@ class NetworkAuditor:
         origin_edges: dict[str, list[str]] = defaultdict(list)
         for edge in tainted_edges:
             origin = edge.taint.origin_boundary
+            # Spreading non-sensitive (general/social/schedule) info is not a
+            # privacy leak — only count taint carrying a sensitive domain.
+            if not (edge.taint.domains & SENSITIVE_DOMAINS):
+                continue
             if origin and origin != "multi":
                 origin_agents[origin].add(edge.to_agent)
                 origin_agents[origin].add(edge.from_agent)
@@ -318,9 +323,9 @@ class NetworkAuditor:
                     target_domain="privacy",
                 ))
 
-        # Check 2: long-distance flow — hop_count >= 4
+        # Check 2: long-distance flow — hop_count >= 4 carrying sensitive taint
         for edge in tainted_edges:
-            if edge.taint.hop_count >= 4:
+            if edge.taint.hop_count >= 4 and (edge.taint.domains & SENSITIVE_DOMAINS):
                 risks.append(CompositionalRisk(
                     risk_type="long_distance_taint",
                     involved_agents=[edge.from_agent, edge.to_agent],

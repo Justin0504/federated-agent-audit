@@ -1,11 +1,11 @@
 {
   "threshold": 0.5,
-  "n_positive": 8,
-  "n_total": 15,
+  "n_positive": 13,
+  "n_total": 24,
   "confusion": {
-    "tp": 8,
+    "tp": 13,
     "fp": 0,
-    "tn": 7,
+    "tn": 11,
     "fn": 0,
     "precision": 1.0,
     "recall": 1.0,
@@ -167,6 +167,99 @@
       "raw_leak": false
     },
     {
+      "name": "noise_buried_leak",
+      "category": "cross_domain",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "diamond_dual_path",
+      "category": "cascade",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "partial_shared_origin_hub",
+      "category": "compound",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "inference_accumulation",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "five_fragment_aggregation",
+      "category": "aggregation",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "inference_accumulation",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "aggregation_leak",
+        "compound_scope_escalation",
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "laundering_same_domain_then_exit",
+      "category": "cascade",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "long_distance_taint",
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
       "name": "benign_social_chat",
       "category": "benign",
       "should_detect": false,
@@ -234,6 +327,50 @@
     },
     {
       "name": "cross_origin_no_reidentification",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.0,
+      "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "high_volume_benign_hub",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.0,
+      "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "independent_single_sensitive_hops",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.0,
+      "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "schedule_social_hub",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.0,
+      "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "deep_benign_chain",
       "category": "benign",
       "should_detect": false,
       "flagged": false,
