@@ -10,13 +10,17 @@ Identity resolution (per event), in priority order:
     2. ``metadata["agent_id"]`` / ``metadata["agent"]``
     3. a tag of the form ``"agent:<name>"``
     4. ``serialized["name"]``
-    5. the configured ``default_agent``
+    5. ``None`` (unidentified — the event is ignored, e.g. the outer graph)
 
-Hand-off capture:
-    When control moves from node A to node B, B's *inputs* are the data that
-    flowed A→B, so on B's chain start we record a ``A → B`` edge carrying those
-    inputs. Tool/LLM events inside a node are recorded as that node's internal
-    actions.
+Real-framework behaviour this is built around (verified against LangGraph
+1.x / langchain-core 1.x):
+    * the overall graph invocation fires a chain event with NO
+      ``langgraph_node`` — it is ignored so it never pollutes the graph;
+    * ``on_chain_end`` does NOT receive ``metadata`` — identity is therefore
+      correlated by ``run_id`` recorded at the matching ``*_start`` event;
+    * a node's *inputs* are the data that flowed into it from the previous
+      node, so the ``A → B`` edge is recorded on B's start carrying those
+      inputs. Tool/LLM events inside a node are that node's internal actions.
 
 Usage:
     from federated_agent_audit.sdk import langchain_callback
@@ -50,9 +54,14 @@ def resolve_agent_id(
     serialized: dict | None,
     metadata: dict | None,
     tags: list[str] | None,
-    default_agent: str = "agent",
-) -> str:
-    """Resolve a stable agent/node identity from a LangChain callback payload."""
+    default_agent: str | None = "agent",
+) -> str | None:
+    """Resolve a stable agent/node identity from a LangChain callback payload.
+
+    Returns ``default_agent`` (which may be ``None``) when nothing identifies
+    the event — callers pass ``default_agent=None`` to *skip* unidentified
+    events such as the outer LangGraph invocation.
+    """
     metadata = metadata or {}
     node = metadata.get("langgraph_node") or metadata.get("agent_id") or metadata.get("agent")
     if node:
@@ -95,11 +104,15 @@ class FederatedAuditCallbackHandler(BaseCallbackHandler):
         self.default_agent = default_agent
         self.origin = origin
         self._last_node: str | None = None
+        # run_id -> resolved agent id (on_*_end does not carry metadata, so we
+        # correlate identity by the run_id captured at the matching *_start).
+        self._run_agent: dict[str, str] = {}
 
     # -- internal helpers --
 
-    def _agent(self, serialized=None, metadata=None, tags=None) -> str:
-        return resolve_agent_id(serialized, metadata, tags, self.default_agent)
+    def _participant(self, serialized=None, metadata=None, tags=None) -> str | None:
+        """Resolve a *named* participant, or None for unidentified events."""
+        return resolve_agent_id(serialized, metadata, tags, default_agent=None)
 
     def _maybe_handoff(self, current: str, inbound_text: str) -> None:
         """Record an edge from the previously-active node to the current one."""
@@ -116,18 +129,26 @@ class FederatedAuditCallbackHandler(BaseCallbackHandler):
     def on_chain_start(
         self, serialized, inputs, *, run_id=None, metadata=None, tags=None, **kwargs
     ) -> None:
-        agent = self._agent(serialized, metadata, tags)
+        agent = self._participant(serialized, metadata, tags)
+        if agent is None:
+            return  # outer graph / anonymous chain — ignore
+        if run_id is not None:
+            self._run_agent[str(run_id)] = agent
         self._maybe_handoff(agent, _truncate(inputs))
 
     def on_chain_end(self, outputs, *, run_id=None, metadata=None, tags=None, **kwargs) -> None:
-        agent = self._agent(None, metadata, tags)
+        agent = self._run_agent.pop(str(run_id), None) if run_id is not None else None
+        if agent is None:
+            # Fall back to whatever metadata/tags we have (rare); skip if still unknown.
+            agent = self._participant(None, metadata, tags)
+        if agent is None:
+            return
         text = _truncate(outputs)
         if text:
             self.tracer.record_internal(
                 agent, text, action_type=ActionType.OUTBOUND_MESSAGE,
                 metadata={"source": "langchain_chain_end"},
             )
-        # This node is now the most-recently-active for the next hand-off.
         self._last_node = agent
 
     # -- tool events (internal to a node) --
@@ -135,14 +156,21 @@ class FederatedAuditCallbackHandler(BaseCallbackHandler):
     def on_tool_start(
         self, serialized, input_str, *, run_id=None, metadata=None, tags=None, **kwargs
     ) -> None:
-        agent = self._agent(serialized, metadata, tags)
+        agent = self._participant(serialized, metadata, tags) or self._last_node
+        if agent is None:
+            return
+        if run_id is not None:
+            self._run_agent[str(run_id)] = agent
         self.tracer.record_internal(
             agent, _truncate(input_str), action_type=ActionType.TOOL_CALL,
             metadata={"source": "langchain_tool_start"},
         )
 
     def on_tool_end(self, output, *, run_id=None, metadata=None, tags=None, **kwargs) -> None:
-        agent = self._agent(None, metadata, tags)
+        agent = self._run_agent.pop(str(run_id), None) if run_id is not None else None
+        agent = agent or self._participant(None, metadata, tags) or self._last_node
+        if agent is None:
+            return
         self.tracer.record_internal(
             agent, _truncate(output), action_type=ActionType.TOOL_OBSERVATION,
             metadata={"source": "langchain_tool_end"},
@@ -150,11 +178,23 @@ class FederatedAuditCallbackHandler(BaseCallbackHandler):
 
     # -- llm events (internal to a node) --
 
+    def on_llm_start(
+        self, serialized, prompts, *, run_id=None, metadata=None, tags=None, **kwargs
+    ) -> None:
+        agent = self._participant(serialized, metadata, tags) or self._last_node
+        if agent is not None and run_id is not None:
+            self._run_agent[str(run_id)] = agent
+
     def on_llm_end(self, response, *, run_id=None, metadata=None, tags=None, **kwargs) -> None:
         text = _extract_llm_text(response)
         if not text:
+            if run_id is not None:
+                self._run_agent.pop(str(run_id), None)
             return
-        agent = self._agent(None, metadata, tags)
+        agent = self._run_agent.pop(str(run_id), None) if run_id is not None else None
+        agent = agent or self._participant(None, metadata, tags) or self._last_node
+        if agent is None:
+            return
         self.tracer.record_internal(
             agent, text, action_type=ActionType.OUTBOUND_MESSAGE,
             metadata={"source": "langchain_llm_end"},
@@ -175,6 +215,9 @@ class AsyncFederatedAuditCallbackHandler(FederatedAuditCallbackHandler):
 
     async def on_tool_end(self, output, **kwargs) -> None:  # type: ignore[override]
         super().on_tool_end(output, **kwargs)
+
+    async def on_llm_start(self, serialized, prompts, **kwargs) -> None:  # type: ignore[override]
+        super().on_llm_start(serialized, prompts, **kwargs)
 
     async def on_llm_end(self, response, **kwargs) -> None:  # type: ignore[override]
         super().on_llm_end(response, **kwargs)
@@ -205,7 +248,8 @@ def langchain_callback(
         policy / default_policy: Default policy for auto-registered nodes.
         policies: Optional mapping of ``node_name -> PrivacyPolicy`` pre-registered
             so each node enforces its own rules.
-        default_agent: Fallback identity when a node cannot be resolved.
+        default_agent: Fallback identity for the rare case a participant event
+            carries no resolvable name (unidentified events are otherwise skipped).
         origin: Optional data-subject id seeded on the first hand-off.
         asynchronous: Return the async handler for async graphs.
     """
