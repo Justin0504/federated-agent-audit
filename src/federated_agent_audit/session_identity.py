@@ -263,7 +263,12 @@ class AgentHandle:
         # Mean and std of historical
         hist_mean = sum(hist_rates) / len(hist_rates)
         hist_var = sum((r - hist_mean) ** 2 for r in hist_rates) / len(hist_rates)
-        hist_std = math.sqrt(hist_var) if hist_var > 0 else 0.01  # floor to avoid div/0
+        # Floor the std: with (near-)constant history, hist_var is 0 in exact
+        # arithmetic but a tiny positive float (e.g. 1e-34) under floating-point
+        # rounding — which differs across Python/platform. Without the floor that
+        # tiny std turns negligible mean noise into a huge, platform-dependent
+        # z-score (a real cross-version flake). Treat sub-threshold variance as 0.
+        hist_std = max(math.sqrt(hist_var), 0.01)
 
         recent_mean = sum(recent_rates) / len(recent_rates)
 
