@@ -1,9 +1,11 @@
 """Command-line interface for federated-agent-audit.
 
 Usage:
+    federated-audit scan "text to check"
+    federated-audit scan --protect salary,SSN "Zhang Wei earns $185k"
+    echo "text" | federated-audit scan
     federated-audit server [--host HOST] [--port PORT] [--token TOKEN]
     federated-audit validate <policy_file>...
-    federated-audit audit <policy_dir> <trace_file>
     federated-audit report <audit_result.json> [-o report.html]
     federated-audit demo
     federated-audit version
@@ -21,13 +23,26 @@ from pathlib import Path
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         prog="federated-audit",
-        description="Privacy-preserving audit framework for multi-agent AI systems",
+        description="Privacy-preserving audit for multi-agent AI systems",
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true",
         help="Enable verbose logging",
     )
     sub = parser.add_subparsers(dest="command")
+
+    # ── scan (primary entry point) ─────────────────────────────
+    sc = sub.add_parser("scan", help="Scan text for PII and sensitive content")
+    sc.add_argument("text", nargs="?", default=None, help="Text to scan (or pipe via stdin)")
+    sc.add_argument(
+        "--protect", default="",
+        help="Comma-separated sensitive terms (default: auto-detect PII)",
+    )
+    sc.add_argument(
+        "--mode", choices=["redact", "block"], default="redact",
+        help="Action on detection: redact (default) or block",
+    )
+    sc.add_argument("--json", dest="json_output", action="store_true", help="Output as JSON")
 
     # ── server ──────────────────────────────────────────────────
     srv = sub.add_parser("server", help="Start the central audit server")
@@ -41,7 +56,7 @@ def main(argv: list[str] | None = None) -> None:
     val.add_argument("files", nargs="+", help="Policy file(s) — .json or .yaml")
 
     # ── demo ────────────────────────────────────────────────────
-    sub.add_parser("demo", help="Run the Telegram group chat demo and generate report")
+    sub.add_parser("demo", help="Run a quick multi-agent audit demo")
 
     # ── report ──────────────────────────────────────────────────
     rpt = sub.add_parser("report", help="Generate HTML report from audit result JSON")
@@ -55,14 +70,16 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
 
     # Configure logging
-    level = logging.DEBUG if args.verbose else logging.INFO
+    level = logging.DEBUG if args.verbose else logging.WARNING
     logging.basicConfig(
         level=level,
         format="%(asctime)s %(levelname)-8s %(name)s — %(message)s",
         datefmt="%H:%M:%S",
     )
 
-    if args.command == "version":
+    if args.command == "scan":
+        _cmd_scan(args)
+    elif args.command == "version":
         _cmd_version()
     elif args.command == "server":
         _cmd_server(args)
@@ -75,6 +92,39 @@ def main(argv: list[str] | None = None) -> None:
     else:
         parser.print_help()
         sys.exit(1)
+
+
+def _cmd_scan(args: argparse.Namespace) -> None:
+    """Scan text for PII and sensitive content."""
+    from . import scan
+
+    # Read text from argument or stdin
+    text = args.text
+    if text is None:
+        if sys.stdin.isatty():
+            print("Usage: federated-audit scan \"text to check\"", file=sys.stderr)
+            print("       echo \"text\" | federated-audit scan", file=sys.stderr)
+            sys.exit(1)
+        text = sys.stdin.read().strip()
+
+    if not text:
+        sys.exit(0)
+
+    protect = [t.strip() for t in args.protect.split(",") if t.strip()] or None
+    result = scan(text, protect=protect, mode=args.mode)
+
+    if args.json_output:
+        print(json.dumps(result, indent=2))
+        return
+
+    # Human-readable output
+    if result["clean"]:
+        print("\033[32mCLEAN\033[0m  No sensitive content detected.")
+    elif result["blocked"]:
+        print(f"\033[31mBLOCKED\033[0m  Detected: {', '.join(result['detected'])}")
+    else:
+        print(f"\033[33mREDACTED\033[0m  Detected: {', '.join(result['detected'])}")
+        print(f"  Output: {result['text']}")
 
 
 def _cmd_version() -> None:
@@ -137,7 +187,7 @@ def _cmd_validate(args: argparse.Namespace) -> None:
 
 def _cmd_demo() -> None:
     """Run the telegram demo inline."""
-    demo_path = Path(__file__).parent.parent.parent / "examples" / "telegram_audit_demo.py"
+    demo_path = Path(__file__).parent.parent.parent / "examples" / "crewai_audit_demo.py"
 
     if demo_path.exists():
         print(f"Running demo from {demo_path}...")

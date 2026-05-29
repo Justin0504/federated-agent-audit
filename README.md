@@ -1,118 +1,143 @@
 # Federated Agent Audit
 
-**Privacy-preserving audit framework for multi-agent AI systems.**
-
-Detects cross-agent data leaks, inference attacks, and compliance violations — without ever accessing raw content. The central auditor only sees desensitized metadata.
+**Privacy audit for multi-agent AI systems — without touching raw data.**
 
 ```
 pip install federated-agent-audit
 ```
 
-[![CI](https://github.com/Justin0504/federated-agent-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/Justin0504/federated-agent-audit/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
 ---
 
-## Why This Exists
+## 30-Second Quick Start
 
-Multi-agent systems (LangChain chains, CrewAI crews, custom agent networks) create **compound privacy risks** that no single agent can detect:
+Scan any text for sensitive content:
+
+```python
+from federated_agent_audit import scan
+
+result = scan("Zhang Wei's SSN is 123-45-6789, salary $185,000")
+print(result["clean"])     # False
+print(result["detected"])  # ['SSN', 'salary']
+print(result["text"])      # "Zhang Wei's [REDACTED] is [SSN], [REDACTED] [DOLLAR_AMOUNT]"
+```
+
+Or from the command line:
+
+```bash
+federated-audit scan "My email is john@acme.com"
+# REDACTED  Detected: email
+#   Output: My [REDACTED] is [EMAIL_ADDRESS]
+
+echo "credit card 4532-1234-5678-9012" | federated-audit scan
+# REDACTED  Detected: credit card
+```
+
+## Protect Your LLM Calls
+
+Intercept every OpenAI/Anthropic response automatically:
+
+```python
+from federated_agent_audit import firewall
+
+fw = firewall(["salary", "SSN", "diagnosis"])
+fw.patch_openai()  # done — every response is now checked
+
+# Normal usage — firewall is invisible
+response = client.chat.completions.create(model="gpt-4o", messages=[...])
+# Sensitive content in response is already redacted
+```
+
+## The Problem
+
+Multi-agent systems (CrewAI, LangGraph, AutoGen) create **compound privacy risks** that single-agent tools can't detect:
 
 - Agent A shares salary data with Agent B (allowed by A's policy)
 - Agent B forwards a "summary" to an external partner (allowed by B's policy)
-- **Result**: salary data leaked outside the company — neither agent violated its own rules
+- **Result**: salary leaked outside the company — neither agent broke its own rules
 
-Federated Agent Audit solves this with a **two-phase architecture** where the central auditor never sees raw content:
+Existing observability tools (LangSmith, Langfuse) require uploading raw prompts to their servers. This framework audits agent interactions **without the central auditor ever seeing raw content**.
 
 ```
-                       ┌─────────────┐
-                       │   Central    │  Phase 2: Network audit
-                       │   Auditor    │  (desensitized data only)
-                       └──────┬──────┘
-                              │
-               ┌──────────────┼──────────────┐
-               │              │              │
-        ┌──────┴──────┐ ┌────┴────┐ ┌───────┴──────┐
-        │  Local Audit │ │  Local  │ │  Local Audit │  Phase 1
-        │  (Agent A)   │ │ (Agent B)│ │  (Agent C)   │
-        └─────────────┘ └─────────┘ └──────────────┘
-         raw content     raw content   raw content
-         stays here      stays here    stays here
+                       +---------------+
+                       |   Central     |  Phase 2: Network audit
+                       |   Auditor     |  (desensitized metadata only)
+                       +-------+-------+
+                               |
+               +---------------+---------------+
+               |               |               |
+        +------+------+  +----+----+  +--------+------+
+        | Local Audit |  | Local   |  | Local Audit   |  Phase 1
+        | (Agent A)   |  | (Agt B) |  | (Agent C)     |
+        +-------------+  +---------+  +---------------+
+         raw content      raw content   raw content
+         stays here       stays here    stays here
 ```
 
-## Quick Start
-
-### 5-Line Integration
-
-```python
-from federated_agent_audit import FederatedAudit, PrivacyPolicy
-
-policy = PrivacyPolicy(agent_id="my_bot", must_not_share=["email", "SSN", "salary"])
-audit = FederatedAudit(policy=policy, agent_id="my_bot")
-audit.record_outgoing("User email is john@acme.com", to_agent="other_bot")
-report = audit.get_report()  # desensitized — safe to send to central auditor
-```
-
-### Full Pipeline (Local Audit → Network Audit → Report)
+## Full Pipeline Example
 
 ```python
 from federated_agent_audit import (
     FederatedAudit, PrivacyPolicy, NetworkAuditor,
-    RiskAggregator, generate_html_report,
+    RiskAggregator, ComplianceEngine,
 )
 
-# 1. Define policies (or load from YAML/JSON)
-policy_a = PrivacyPolicy(agent_id="hr_bot", must_not_share=["salary", "SSN"])
-policy_b = PrivacyPolicy(agent_id="summary_bot", must_not_share=["salary"])
+# 1. Define policies
+policy_hr = PrivacyPolicy(agent_id="hr_bot", must_not_share=["salary", "SSN"])
+policy_ext = PrivacyPolicy(agent_id="notify_bot", must_not_share=["salary", "SSN", "email"])
 
-# 2. Record interactions
-audit_a = FederatedAudit(policy=policy_a)
-audit_a.record_outgoing("Zhang Wei got a raise to $185k", to_agent="summary_bot")
+# 2. Record interactions (each agent audits locally)
+audit_hr = FederatedAudit(policy=policy_hr)
+audit_hr.record_outgoing("Zhang Wei earns $185k", to_agent="summary_bot")
 
-audit_b = FederatedAudit(policy=policy_b)
-audit_b.record_outgoing("Team update: positive reviews", to_agent="external")
+audit_ext = FederatedAudit(policy=policy_ext)
+audit_ext.record_outgoing("Candidate update sent", to_agent="external")
 
-# 3. Central audit (only sees desensitized metadata)
+# 3. Central audit (only sees desensitized metadata — never raw text)
 net = NetworkAuditor()
-net.ingest_report(audit_a.get_report())
-net.ingest_report(audit_b.get_report())
+net.ingest_report(audit_hr.get_report())
+net.ingest_report(audit_ext.get_report())
 result = net.audit()
 
-# 4. Aggregate and report
-incidents = RiskAggregator().aggregate(result)
-html = generate_html_report(result, incidents, title="My Audit Report")
+# 4. Compliance check
+compliance = ComplianceEngine(eu_users=True).evaluate(result)
+print(f"Compliance: {compliance.overall_score:.0%} — {compliance.status.value}")
+for gap in compliance.gaps():
+    print(f"  {gap.regulation} {gap.article}: {gap.title}")
 ```
 
-### LLM Firewall (Block Sensitive Responses in Real-Time)
+## What It Detects
 
-```python
-from federated_agent_audit import PrivacyPolicy, LLMFirewall
+| Risk | What happens | How we catch it |
+|------|-------------|-----------------|
+| **Cross-domain leak** | Health data reaches social media agent | Domain boundary analysis on metadata |
+| **Compositional inference** | Agent collects health + identity = reidentification | Quasi-identifier assembly detection |
+| **Aggregation attack** | 3 agents each share a fragment → hub reconstructs full profile | Multi-source convergence analysis |
+| **Cascading injection** | Prompt injection propagates agent-to-agent like a worm | Infection tree + patient-zero attribution |
+| **Behavioral drift** | Agent suddenly changes behavior (possible compromise) | Cross-session z-score monitoring |
+| **Negative inference** | "I can't share that" confirms the data exists | Refusal pattern detection |
+| **Regulatory gap** | EU AI Act / GDPR / COPPA requirements unmet | Per-article compliance scoring |
 
-policy = PrivacyPolicy(
-    agent_id="hr_bot",
-    must_not_share=["salary", "SSN", "email"],
-    acceptable_abstractions={"salary": "compensation info", "SSN": "gov ID"},
-)
-firewall = LLMFirewall(policy, mode="redact")
+## CLI
 
-# Check any LLM response before sending to user
-result = firewall.check("Zhang Wei's salary is $185,000. Email: zhang@corp.com")
-print(result.final_text)
-# → "Zhang Wei's compensation info is [DOLLAR_AMOUNT]. contact info: [EMAIL_ADDRESS]"
+```bash
+# Scan text for sensitive content
+federated-audit scan "Patient SSN is 123-45-6789"
+echo "salary: $200k" | federated-audit scan --protect salary
+
+# Validate policy files
+federated-audit validate policies/*.yaml
+
+# Run a demo
+federated-audit demo
+
+# Start the central audit server
+federated-audit server --port 8000
 ```
 
-Auto-patch OpenAI/Anthropic SDKs (every API call is intercepted transparently):
-
-```python
-firewall.patch_openai()   # patches openai.chat.completions.create()
-firewall.patch_anthropic() # patches anthropic.messages.create()
-
-# Now ALL responses are automatically checked — no manual calls needed
-response = client.chat.completions.create(model="gpt-4o", messages=[...])
-# Sensitive content is already redacted in response.choices[0].message.content
-```
-
-### YAML Policy Files
+## YAML Policies
 
 ```yaml
 # policies/hr_bot.yaml
@@ -132,187 +157,68 @@ from federated_agent_audit import load_policy
 policy = load_policy("policies/hr_bot.yaml")
 ```
 
-### Decorator for Existing Agents
+## Compliance Engine
+
+Built-in regulatory mapping for EU AI Act, GDPR, CA SB 243, and COPPA:
 
 ```python
-from federated_agent_audit import audited, PrivacyPolicy
+from federated_agent_audit import ComplianceEngine
 
-policy = PrivacyPolicy(agent_id="my_agent", must_not_share=["email"])
+engine = ComplianceEngine(eu_users=True, california_users=True, involves_children=False)
+report = engine.evaluate(audit_result)
 
-@audited(policy)
-def my_agent(input_text: str) -> str:
-    return f"Processing: {input_text}"
-```
-
-## CLI
-
-```bash
-# Start the central audit server
-federated-audit server --port 8000
-
-# Validate policy files
-federated-audit validate policies/*.yaml
-
-# Run the demo
-federated-audit demo
-
-# Check version
-federated-audit version
-```
-
-## What It Detects
-
-| Risk Type | Description |
-|-----------|-------------|
-| **Cross-domain leak** | Sensitive data (health/finance/legal) crossing domain boundaries |
-| **Aggregation inference** | Multiple sources converging at one agent, enabling cross-source inference |
-| **Taint propagation** | Data spreading beyond safe hop counts across the network |
-| **Compound attacks** | Injection + data exfiltration, scope escalation combinations |
-| **Negative inference** | Refusal responses that leak information about data existence |
-| **Topology bottleneck** | Structural single-points-of-failure handling sensitive data |
-| **Behavioral drift** | Agent behavior changes across sessions (possible compromise) |
-
-## Architecture
-
-```
-39 modules · 431 tests · 0 external API calls required
-
-Core Pipeline:
-  PrivacyGate ──→ SemanticDetector ──→ TaintTracker ──→ Desensitizer
-       │                │                    │               │
-   regex match    3-tier detection     propagation      6-layer pipeline
-   block/redact   canary+PII+embed    hop counting     hash+DP+k-anon
-
-Network Analysis:
-  CrossDomain ──→ Aggregation ──→ CompoundAttack ──→ Topology
-       │               │              │                 │
-  domain flow     multi-source    injection×leak    hub/bottleneck
-  detection       inference       scope escalation  community detect
-
-Classification & Attribution:
-  ScenarioClassifier ──→ BlameAttribution ──→ RiskAggregator
-       │                       │                    │
-  7-type taxonomy        causal chain walk     cluster → incident
-  (AgentSocialBench)     on desensitized graph  CRITICAL/HIGH/MED/LOW
-```
-
-### Privacy Guarantees
-
-- **Central auditor never sees raw content** — only hashed, pseudonymized, DP-noised metadata
-- **Merkle tree audit log** — tamper-proof, verifiable without revealing entries
-- **Epoch commitment chain** — cross-epoch integrity without cross-epoch linkability
-- **Session pseudonyms** — unlinkable across sessions unless challenge-response triggered
-- **Differential privacy** — calibrated noise injection before data leaves local environment
-- **6-layer desensitization** — salted hash, timestamp bucketing, agent pseudonymization, domain k-anonymity, local DP, dummy edge injection
-
-### Cryptographic Primitives
-
-| Primitive | Purpose |
-|-----------|---------|
-| Merkle tree | Tamper-proof audit log, selective disclosure proofs |
-| Commit-reveal | Two-phase verification without full log sharing |
-| H-chain | Session commitment chain (same pattern as blockchain) |
-| Salted hashing | Per-epoch salt prevents cross-epoch equality attacks |
-| DP mechanism | Laplace/Gaussian noise calibrated to sensitivity |
-
-## Compliance Coverage
-
-The framework addresses requirements from:
-
-- **GDPR** — Art 25 (Privacy by Design), Art 30 (Records), Art 35 (DPIA)
-- **SOC 2 Type II** — CC6.1 (Access Control), CC7.2 (Monitoring)
-- **EU AI Act** — Art 9 (Risk Management), Art 12 (Record-Keeping), Art 14 (Traceability)
-- **ISO 27001** — A.5.15 (Access Control), A.8.11 (Data Masking), A.8.15 (Logging)
-
-## Installation
-
-```bash
-# Core (no server, no framework integrations)
-pip install federated-agent-audit
-
-# With audit server
-pip install "federated-agent-audit[transport]"
-
-# With YAML policy support
-pip install "federated-agent-audit[yaml]"
-
-# With LangChain integration
-pip install "federated-agent-audit[langchain]"
-
-# Everything
-pip install "federated-agent-audit[all]"
-```
-
-### Docker
-
-```bash
-docker build -t federated-audit .
-docker run -p 8000:8000 federated-audit
-```
-
-Or with docker-compose:
-
-```bash
-docker-compose up
+print(report.overall_score)  # 0.0 - 1.0
+print(report.status)         # compliant / partial / non_compliant
+for gap in report.gaps():
+    print(f"{gap.regulation} {gap.article}: {gap.remediation}")
 ```
 
 ## Framework Integrations
 
-### LangChain
+Works with any multi-agent framework:
 
 ```python
-from federated_agent_audit.sdk import langchain_callback
+# LangChain — callback-based
+from federated_agent_audit.sdk.langchain import AuditCallbackHandler
+chain.invoke(input, config={"callbacks": [AuditCallbackHandler(policy)]})
 
-callback = langchain_callback(policy=my_policy)
-chain.invoke({"input": "..."}, config={"callbacks": [callback]})
-```
-
-### CrewAI
-
-```python
-from federated_agent_audit.sdk import crew_audit
-
+# CrewAI — context manager
+from federated_agent_audit.sdk.crewai import crew_audit
 with crew_audit(policy=my_policy) as audit:
     crew.kickoff()
+
+# Generic Python — decorator
+from federated_agent_audit import audited
+@audited(policy)
+def my_agent(input_text: str) -> str:
+    return process(input_text)
 ```
 
-### Generic Python
+## Installation
 
-```python
-from federated_agent_audit import FederatedAudit, PrivacyPolicy
-
-audit = FederatedAudit(policy=PrivacyPolicy(
-    agent_id="my_agent",
-    must_not_share=["email", "phone"],
-))
-
-# Record any outgoing action
-audit.record_outgoing(output_text, to_agent="recipient")
-
-# Record internal actions (tool calls, memory access)
-audit.record_internal(output_text, action_type=ActionType.TOOL_CALL)
+```bash
+pip install federated-agent-audit                      # core
+pip install "federated-agent-audit[transport]"         # + audit server
+pip install "federated-agent-audit[yaml]"              # + YAML policies
+pip install "federated-agent-audit[langchain]"         # + LangChain
+pip install "federated-agent-audit[all]"               # everything
 ```
 
-## Cross-Session Tracking
+## How It Works
 
-Track agent behavior across multiple sessions with privacy-preserving linkage:
-
-```python
-from federated_agent_audit import FederatedAudit, PrivacyPolicy
-from federated_agent_audit.session_identity import AgentHandle
-
-handle = AgentHandle()  # persistent across sessions
-
-# Session 1
-audit = FederatedAudit(policy=my_policy, agent_handle=handle)
-audit.record_outgoing("...", to_agent="bot")
-report1 = audit.get_report()  # includes session_pseudonym, drift_score
-
-# Session 2
-audit.new_trace()  # starts new session, ends previous
-audit.record_outgoing("...", to_agent="bot")
-report2 = audit.get_report()
 ```
+48 modules  ·  597 tests  ·  0 external API calls required
+
+Local (Phase 1):                    Network (Phase 2):
+  PrivacyGate (regex + PII)           Cross-domain flow detection
+  SemanticDetector (4-tier)           Compositional leak detection
+  TaintTracker (info flow)            Cascade infection tracking
+  Desensitizer (6-layer)              Topology analysis
+  MemoryAuditor (write audit)         Blame attribution
+                                      Compliance engine
+```
+
+**Privacy guarantee**: The central auditor architecturally cannot see raw content. Data is hashed, pseudonymized, and DP-noised before leaving local agents. Merkle tree commitments ensure tamper-proof audit trails without revealing entries.
 
 ## Development
 
@@ -320,20 +226,10 @@ report2 = audit.get_report()
 git clone https://github.com/Justin0504/federated-agent-audit
 cd federated-agent-audit
 pip install -e ".[dev,transport,yaml]"
-pytest                    # run all tests
+pytest                    # 597 tests
 ruff check src/ tests/    # lint
-federated-audit demo      # run the demo
+python examples/crewai_audit_demo.py  # run the demo
 ```
-
-## Research Context
-
-Built as a research prototype for studying privacy-preserving compliance verification in multi-agent social networks. Extends the threat model from:
-
-- [AgentSocialBench](https://arxiv.org/abs/2604.01487) — 7-scenario taxonomy for agent privacy risks
-- AgentLeak — 7-channel audit model (output-only misses 41.7% violations)
-- AgentTrace — 3-surface trace taxonomy (cognitive/operational/contextual)
-- G-Designer (ICLR 2025) — GNN topology fingerprinting
-- ARG-Designer (AAAI 2026) — autoregressive topology inference
 
 ## License
 

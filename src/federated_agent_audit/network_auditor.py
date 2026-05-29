@@ -17,8 +17,6 @@ from collections import defaultdict
 
 import networkx as nx
 
-logger = logging.getLogger(__name__)
-
 from .schemas import (
     CompositionalRisk,
     DesensitizedEdge,
@@ -30,6 +28,11 @@ from .blame import blame_all
 from .compound_attack import CompoundAttackDetector
 from .scenario_classifier import classify_all, scenario_summary
 from .topology import analyze_topology
+from .compositional_leak import CompositionalLeakDetector
+from .cascade_detector import CascadeDetector
+from .cross_platform_denanon import CrossPlatformDetector
+
+logger = logging.getLogger(__name__)
 
 
 class NetworkAuditor:
@@ -80,6 +83,7 @@ class NetworkAuditor:
             "Starting network audit: %d agents, %d edges",
             self._graph.number_of_nodes(), self._graph.number_of_edges(),
         )
+        all_edges = self._collect_all_edges()
         risks = []
         risks.extend(self._detect_cross_domain_flows())
         risks.extend(self._detect_aggregation_risks())
@@ -88,6 +92,30 @@ class NetworkAuditor:
         # compound attack detection
         compound_risks = self._detect_compound_attacks()
         risks.extend([cr.base_risk for cr in compound_risks])
+
+        # compositional privacy leakage (quasi-identifier assembly, k-anonymity collapse)
+        comp_detector = CompositionalLeakDetector()
+        comp_signals = comp_detector.detect_all(all_edges)
+        risks.extend(comp_detector.signals_to_risks(comp_signals))
+
+        # cascading prompt infection
+        cascade_detector = CascadeDetector()
+        cascades = cascade_detector.detect_cascades(all_edges)
+        risks.extend(cascade_detector.cascades_to_risks(cascades))
+
+        # cross-platform deanonymization
+        xplat_detector = CrossPlatformDetector()
+        xplat_risks = xplat_detector.detect_all(all_edges)
+        for dr in xplat_risks:
+            risks.append(CompositionalRisk(
+                risk_type=f"deanon_{dr.risk_type}",
+                involved_agents=[dr.target_pseudonym],
+                involved_edges=dr.edge_ids,
+                description=dr.description,
+                severity=dr.linkability_score,
+                source_domain="identity",
+                target_domain="cross_platform",
+            ))
 
         propagation = self._detect_propagation_paths()
 
