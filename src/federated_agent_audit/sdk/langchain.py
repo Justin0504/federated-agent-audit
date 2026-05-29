@@ -1,17 +1,31 @@
-"""LangChain integration via BaseCallbackHandler.
+"""LangChain / LangGraph integration via callback handlers.
 
-Uses LangChain's official callback extension point — no monkey-patching.
+Uses LangChain's official callback extension point — no monkey-patching —
+but resolves a distinct agent identity per LangGraph node so a multi-node
+graph is captured as a real multi-agent interaction graph rather than a
+single flattened trace.
+
+Identity resolution (per event), in priority order:
+    1. ``metadata["langgraph_node"]`` — the LangGraph node name
+    2. ``metadata["agent_id"]`` / ``metadata["agent"]``
+    3. a tag of the form ``"agent:<name>"``
+    4. ``serialized["name"]``
+    5. the configured ``default_agent``
+
+Hand-off capture:
+    When control moves from node A to node B, B's *inputs* are the data that
+    flowed A→B, so on B's chain start we record a ``A → B`` edge carrying those
+    inputs. Tool/LLM events inside a node are recorded as that node's internal
+    actions.
 
 Usage:
     from federated_agent_audit.sdk import langchain_callback
 
-    handler = langchain_callback(policy, to_agent="downstream")
-    chain.invoke(input, config={"callbacks": [handler]})
+    handler = langchain_callback(default_policy=policy)
+    graph.invoke(input, config={"callbacks": [handler]})
+    result = handler.tracer.network_audit()
 
-    # Get the audit report
-    report = handler.facade.get_report()
-
-Requires: pip install federated-agent-audit[langchain]
+Requires: pip install federated-agent-audit[langchain]  (for live use)
 """
 
 from __future__ import annotations
@@ -19,147 +33,185 @@ from __future__ import annotations
 from typing import Any
 
 from ..schemas import ActionType, PrivacyPolicy
-from ._facade import FederatedAudit
+from .multiagent import MultiAgentTracer
 
-try:
+try:  # Optional at import time so the pure logic stays unit-testable.
     from langchain_core.callbacks import BaseCallbackHandler
-    from langchain_core.outputs import LLMResult
-except ImportError:
-    raise ImportError(
-        "LangChain integration requires langchain-core. "
-        "Install with: pip install federated-agent-audit[langchain]"
-    )
+    _HAS_LANGCHAIN = True
+except ImportError:  # pragma: no cover - exercised only without langchain
+    BaseCallbackHandler = object  # type: ignore
+    _HAS_LANGCHAIN = False
+
+
+# ── Pure identity resolution (unit-tested without langchain) ────────
+
+
+def resolve_agent_id(
+    serialized: dict | None,
+    metadata: dict | None,
+    tags: list[str] | None,
+    default_agent: str = "agent",
+) -> str:
+    """Resolve a stable agent/node identity from a LangChain callback payload."""
+    metadata = metadata or {}
+    node = metadata.get("langgraph_node") or metadata.get("agent_id") or metadata.get("agent")
+    if node:
+        return str(node)
+
+    for tag in tags or []:
+        if isinstance(tag, str) and tag.startswith("agent:"):
+            return tag.split(":", 1)[1] or default_agent
+
+    if serialized:
+        name = serialized.get("name")
+        if name:
+            return str(name)
+
+    return default_agent
+
+
+def _truncate(value: Any, limit: int = 4000) -> str:
+    return str(value)[:limit] if value else ""
+
+
+# ── Handler ─────────────────────────────────────────────────────────
 
 
 class FederatedAuditCallbackHandler(BaseCallbackHandler):
-    """LangChain callback handler that feeds events into the audit pipeline."""
+    """LangChain callback handler feeding events into a MultiAgentTracer.
+
+    Works as a plain object even when langchain is not installed, so its
+    logic can be unit-tested directly; LangChain only needs to be present to
+    register it as a live callback.
+    """
 
     def __init__(
         self,
-        facade: FederatedAudit,
-        to_agent: str = "",
+        tracer: MultiAgentTracer,
+        default_agent: str = "agent",
+        origin: str | None = None,
     ) -> None:
-        self.facade = facade
-        self._to_agent = to_agent
-        self._pending: dict[str, dict[str, Any]] = {}  # run_id -> partial data
+        self.tracer = tracer
+        self.default_agent = default_agent
+        self.origin = origin
+        self._last_node: str | None = None
 
-    def on_tool_start(
-        self,
-        serialized: dict[str, Any],
-        input_str: str,
-        *,
-        run_id: Any,
-        **kwargs: Any,
-    ) -> None:
-        """Record the start of a tool call."""
-        self._pending[str(run_id)] = {
-            "input": input_str,
-            "tool": serialized.get("name", "unknown_tool"),
-        }
+    # -- internal helpers --
 
-    def on_tool_end(
-        self,
-        output: str,
-        *,
-        run_id: Any,
-        **kwargs: Any,
-    ) -> None:
-        """Record the completion of a tool call and audit the output."""
-        pending = self._pending.pop(str(run_id), {})
-        self.facade.record_outgoing(
-            output_text=str(output),
-            to_agent=self._to_agent,
-            input_text=pending.get("input", ""),
-            action_type=ActionType.TOOL_CALL,
-            metadata={"tool_name": pending.get("tool", "")},
-        )
+    def _agent(self, serialized=None, metadata=None, tags=None) -> str:
+        return resolve_agent_id(serialized, metadata, tags, self.default_agent)
 
-    def on_tool_error(
-        self,
-        error: BaseException,
-        *,
-        run_id: Any,
-        **kwargs: Any,
-    ) -> None:
-        """Clean up pending state on tool error."""
-        self._pending.pop(str(run_id), None)
-
-    def on_llm_end(
-        self,
-        response: LLMResult,
-        *,
-        run_id: Any,
-        **kwargs: Any,
-    ) -> None:
-        """Audit LLM output for privacy leakage."""
-        text = ""
-        if response.generations and response.generations[0]:
-            text = response.generations[0][0].text or ""
-
-        if text:
-            self.facade.record_outgoing(
-                output_text=text,
-                to_agent=self._to_agent,
+    def _maybe_handoff(self, current: str, inbound_text: str) -> None:
+        """Record an edge from the previously-active node to the current one."""
+        if self._last_node and self._last_node != current and inbound_text:
+            self.tracer.record_handoff(
+                self._last_node, current, inbound_text,
                 action_type=ActionType.OUTBOUND_MESSAGE,
+                origin=self.origin,
+                metadata={"source": "langgraph_handoff"},
             )
+
+    # -- chain (node) events --
 
     def on_chain_start(
-        self,
-        serialized: dict[str, Any],
-        inputs: dict[str, Any],
-        *,
-        run_id: Any,
-        **kwargs: Any,
+        self, serialized, inputs, *, run_id=None, metadata=None, tags=None, **kwargs
     ) -> None:
-        """Record chain start for input tracking."""
-        self._pending[str(run_id)] = {
-            "input": str(inputs)[:2000],
-            "chain": serialized.get("name", "unknown_chain"),
-        }
+        agent = self._agent(serialized, metadata, tags)
+        self._maybe_handoff(agent, _truncate(inputs))
 
-    def on_chain_end(
-        self,
-        outputs: dict[str, Any],
-        *,
-        run_id: Any,
-        **kwargs: Any,
-    ) -> None:
-        """Audit chain output."""
-        pending = self._pending.pop(str(run_id), {})
-        output_text = str(outputs)[:2000] if outputs else ""
-
-        if output_text:
-            self.facade.record_outgoing(
-                output_text=output_text,
-                to_agent=self._to_agent,
-                input_text=pending.get("input", ""),
-                action_type=ActionType.OUTBOUND_MESSAGE,
-                metadata={"chain_name": pending.get("chain", "")},
+    def on_chain_end(self, outputs, *, run_id=None, metadata=None, tags=None, **kwargs) -> None:
+        agent = self._agent(None, metadata, tags)
+        text = _truncate(outputs)
+        if text:
+            self.tracer.record_internal(
+                agent, text, action_type=ActionType.OUTBOUND_MESSAGE,
+                metadata={"source": "langchain_chain_end"},
             )
+        # This node is now the most-recently-active for the next hand-off.
+        self._last_node = agent
+
+    # -- tool events (internal to a node) --
+
+    def on_tool_start(
+        self, serialized, input_str, *, run_id=None, metadata=None, tags=None, **kwargs
+    ) -> None:
+        agent = self._agent(serialized, metadata, tags)
+        self.tracer.record_internal(
+            agent, _truncate(input_str), action_type=ActionType.TOOL_CALL,
+            metadata={"source": "langchain_tool_start"},
+        )
+
+    def on_tool_end(self, output, *, run_id=None, metadata=None, tags=None, **kwargs) -> None:
+        agent = self._agent(None, metadata, tags)
+        self.tracer.record_internal(
+            agent, _truncate(output), action_type=ActionType.TOOL_OBSERVATION,
+            metadata={"source": "langchain_tool_end"},
+        )
+
+    # -- llm events (internal to a node) --
+
+    def on_llm_end(self, response, *, run_id=None, metadata=None, tags=None, **kwargs) -> None:
+        text = _extract_llm_text(response)
+        if not text:
+            return
+        agent = self._agent(None, metadata, tags)
+        self.tracer.record_internal(
+            agent, text, action_type=ActionType.OUTBOUND_MESSAGE,
+            metadata={"source": "langchain_llm_end"},
+        )
+
+
+class AsyncFederatedAuditCallbackHandler(FederatedAuditCallbackHandler):
+    """Async variant: identical logic, awaitable callbacks for async graphs."""
+
+    async def on_chain_start(self, serialized, inputs, **kwargs) -> None:  # type: ignore[override]
+        super().on_chain_start(serialized, inputs, **kwargs)
+
+    async def on_chain_end(self, outputs, **kwargs) -> None:  # type: ignore[override]
+        super().on_chain_end(outputs, **kwargs)
+
+    async def on_tool_start(self, serialized, input_str, **kwargs) -> None:  # type: ignore[override]
+        super().on_tool_start(serialized, input_str, **kwargs)
+
+    async def on_tool_end(self, output, **kwargs) -> None:  # type: ignore[override]
+        super().on_tool_end(output, **kwargs)
+
+    async def on_llm_end(self, response, **kwargs) -> None:  # type: ignore[override]
+        super().on_llm_end(response, **kwargs)
+
+
+def _extract_llm_text(response: Any) -> str:
+    """Pull text out of a LangChain LLMResult (defensive across versions)."""
+    generations = getattr(response, "generations", None)
+    if generations and generations[0]:
+        first = generations[0][0]
+        return getattr(first, "text", None) or _truncate(getattr(first, "message", ""))
+    return ""
 
 
 def langchain_callback(
-    policy: PrivacyPolicy,
-    to_agent: str = "",
-    agent_id: str | None = None,
-    user_id: str = "",
+    policy: PrivacyPolicy | None = None,
+    *,
+    default_policy: PrivacyPolicy | None = None,
+    policies: dict[str, PrivacyPolicy] | None = None,
+    default_agent: str = "agent",
+    origin: str | None = None,
+    asynchronous: bool = False,
     **kwargs: Any,
 ) -> FederatedAuditCallbackHandler:
-    """Create a LangChain callback handler for federated audit.
+    """Create a LangChain/LangGraph callback handler for federated audit.
 
     Args:
-        policy: Privacy policy to enforce.
-        to_agent: Default target agent for all interactions.
-        agent_id: Override agent ID.
-        user_id: User ID for audit context.
-
-    Returns:
-        A callback handler to pass to LangChain's config.
+        policy / default_policy: Default policy for auto-registered nodes.
+        policies: Optional mapping of ``node_name -> PrivacyPolicy`` pre-registered
+            so each node enforces its own rules.
+        default_agent: Fallback identity when a node cannot be resolved.
+        origin: Optional data-subject id seeded on the first hand-off.
+        asynchronous: Return the async handler for async graphs.
     """
-    facade = FederatedAudit(
-        policy=policy,
-        agent_id=agent_id,
-        user_id=user_id,
-        **kwargs,
-    )
-    return FederatedAuditCallbackHandler(facade, to_agent=to_agent)
+    tracer = MultiAgentTracer(default_policy=default_policy or policy, **kwargs)
+    for name, pol in (policies or {}).items():
+        tracer.register_agent(name, pol)
+
+    cls = AsyncFederatedAuditCallbackHandler if asynchronous else FederatedAuditCallbackHandler
+    return cls(tracer, default_agent=default_agent, origin=origin)
