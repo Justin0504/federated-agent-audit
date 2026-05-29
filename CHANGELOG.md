@@ -6,6 +6,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-05-29
+
+First public PyPI release.
+
 ### Added
 - `MultiAgentTracer` — captures the real agent-to-agent interaction graph with
   automatic cross-hop taint propagation; the backbone all framework
