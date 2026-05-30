@@ -1,9 +1,9 @@
 {
   "threshold": 0.5,
-  "n_positive": 15,
-  "n_total": 27,
+  "n_positive": 16,
+  "n_total": 28,
   "confusion": {
-    "tp": 15,
+    "tp": 16,
     "fp": 0,
     "tn": 12,
     "fn": 0,
@@ -39,6 +39,7 @@
       "flagged": true,
       "max_severity": 1.0,
       "detected_types": [
+        "compound_multihop_escalation",
         "compound_scope_escalation",
         "cross_domain_leak",
         "inference_accumulation",
@@ -59,6 +60,7 @@
       "flagged": true,
       "max_severity": 1.0,
       "detected_types": [
+        "compound_multihop_escalation",
         "compound_scope_escalation",
         "cross_domain_leak",
         "inference_accumulation",
@@ -98,6 +100,7 @@
       "flagged": true,
       "max_severity": 1.0,
       "detected_types": [
+        "compound_multihop_escalation",
         "compound_scope_escalation",
         "cross_domain_leak",
         "inference_accumulation",
@@ -208,6 +211,7 @@
       "flagged": true,
       "max_severity": 1.0,
       "detected_types": [
+        "compound_multihop_escalation",
         "compound_scope_escalation",
         "cross_domain_leak",
         "inference_accumulation",
@@ -228,6 +232,7 @@
       "flagged": true,
       "max_severity": 1.0,
       "detected_types": [
+        "compound_multihop_escalation",
         "compound_scope_escalation",
         "cross_domain_leak",
         "inference_accumulation",
@@ -290,6 +295,25 @@
       "expected_types": [
         "cross_domain_leak",
         "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "collusion_complementary_exchange",
+      "category": "collusion",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 0.9,
+      "detected_types": [
+        "compound_collusion",
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "inference_accumulation",
+        "long_distance_taint"
+      ],
+      "expected_types": [
+        "compound_collusion"
       ],
       "expected_hit": true,
       "raw_leak": false

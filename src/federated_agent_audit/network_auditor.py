@@ -397,6 +397,14 @@ class NetworkAuditor:
             results.extend(
                 detector.detect_scope_compound(agent_scopes, all_edges)
             )
+            # Transitive (k-agent chain) scope escalation that no pair triggers.
+            results.extend(
+                detector.detect_multihop_scope_escalation(agent_scopes, all_edges)
+            )
+
+        # Privacy×privacy collusion: high-volume bidirectional complementary
+        # exchange between an agent pair.
+        results.extend(detector.detect_collusion(all_edges))
 
         return results
 

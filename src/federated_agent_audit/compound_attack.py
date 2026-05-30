@@ -352,7 +352,9 @@ class CompoundAttackDetector:
                         not (combined <= agent_scopes.get(a, set()))
                         for a in chain
                     )
-                    if exceeds_all and len(combined) >= 3:
+                    # Require sensitive domains in the mix — a chain touching
+                    # only general/social/schedule is not a privacy escalation.
+                    if exceeds_all and len(combined) >= 3 and (combined & SENSITIVE_DOMAINS):
                         base = CompositionalRisk(
                             risk_type="compound_multihop_escalation",
                             involved_agents=list(chain),

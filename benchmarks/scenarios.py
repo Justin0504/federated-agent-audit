@@ -203,6 +203,21 @@ POSITIVE: list[Scenario] = [
         ],
         expected_types={"taint_spreading", "cross_domain_leak"},
     ),
+    Scenario(
+        # Two agents exchange complementary sensitive domains back and forth in
+        # high volume — the signature of privacy×privacy collusion. Exercises
+        # the detect_collusion detector (now wired into the pipeline).
+        "collusion_complementary_exchange", "collusion", True,
+        [
+            Handoff("agent_x", "agent_y", "health fragment 1", ["health"], 4, "target"),
+            Handoff("agent_y", "agent_x", "finance fragment 1", ["finance"], 4, "target"),
+            Handoff("agent_x", "agent_y", "health fragment 2", ["health"], 4, "target"),
+            Handoff("agent_y", "agent_x", "finance fragment 2", ["finance"], 4, "target"),
+            Handoff("agent_x", "agent_y", "health fragment 3", ["health"], 4, "target"),
+            Handoff("agent_y", "agent_x", "finance fragment 3", ["finance"], 4, "target"),
+        ],
+        expected_types={"compound_collusion"},
+    ),
 ]
 
 

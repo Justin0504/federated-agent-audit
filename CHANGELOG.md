@@ -24,6 +24,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **OpenAI Agents SDK integration** (`sdk/openai_agents.py`,
   `openai_agents_hooks`) capturing first-class handoffs via `RunHooks`. New
   `[openai-agents]` extra. (#4)
+- Collusion benchmark scenario (#2).
+
+### Fixed
+- Three compound detectors (`compound_collusion`, `compound_multihop_escalation`)
+  were defined and unit-tested but never wired into `NetworkAuditor.audit()` —
+  now run in the pipeline. `compound_multihop_escalation` gated on sensitive
+  domains to match `compound_scope_escalation`. (`compound_temporal_aggregation`
+  is intentionally not wired — it needs cross-epoch history a single audit
+  doesn't hold.)
 
 ### Fixed
 - Security×privacy compound detectors (`compound_injection_leak`,
