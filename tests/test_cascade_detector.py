@@ -18,6 +18,7 @@ def _edge(
         to_agent=to_a,
         domains=["general"],
         local_violation=violation,
+        injection_detected=violation,  # cascade follows the injection signal
         sensitivity_level=sensitivity,
     )
 

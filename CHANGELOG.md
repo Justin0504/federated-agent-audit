@@ -6,6 +6,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Worked case study (`docs/CASE_STUDY.md` + `examples/case_study_healthcare_leak.py`)
+  showing a compound leak caught with raw PHI/PII never leaving the agents.
+
+### Fixed
+- Security×privacy compound detectors (`compound_injection_leak`,
+  `cascading_infection`) no longer conflate a privacy redaction
+  (`local_violation`) with a prompt injection. Local audit now runs real
+  injection detection and sets `DesensitizedEdge.injection_detected`; the
+  network auditor and cascade detector key off that genuine signal.
+
 ## [0.2.0] — 2026-05-29
 
 First public PyPI release.

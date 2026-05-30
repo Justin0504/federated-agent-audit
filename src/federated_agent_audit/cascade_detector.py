@@ -80,26 +80,29 @@ class CascadeDetector:
         """Detect all cascading infection patterns in the edge set."""
         cascades: list[CascadeEvent] = []
 
-        # Build directed graph of violation edges
-        violation_edges = [e for e in edges if e.local_violation]
-        if len(violation_edges) < self.min_chain:
+        # Build directed graph of injection-flagged edges. Cascading infection
+        # models a prompt-injection worm — it must follow the genuine injection
+        # signal, not local_violation (a privacy redaction is a different harm
+        # class and does not propagate an injection).
+        infection_edges = [e for e in edges if e.injection_detected]
+        if len(infection_edges) < self.min_chain:
             return cascades
 
         # Adjacency from violation edges
         adjacency: dict[str, list[DesensitizedEdge]] = defaultdict(list)
-        for edge in violation_edges:
+        for edge in infection_edges:
             adjacency[edge.from_agent].append(edge)
 
         # Find patient-zero candidates (violation sources with no incoming violations)
-        all_targets = {e.to_agent for e in violation_edges}
-        all_sources = {e.from_agent for e in violation_edges}
+        all_targets = {e.to_agent for e in infection_edges}
+        all_sources = {e.from_agent for e in infection_edges}
         patient_zeros = all_sources - all_targets
 
         # Also consider sources that have incoming non-violation edges only
         if not patient_zeros:
             # Use sources with the most outgoing violations
             source_counts = defaultdict(int)
-            for e in violation_edges:
+            for e in infection_edges:
                 source_counts[e.from_agent] += 1
             if source_counts:
                 max_count = max(source_counts.values())

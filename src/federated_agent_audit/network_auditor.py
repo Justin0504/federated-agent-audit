@@ -374,10 +374,13 @@ class NetworkAuditor:
         all_edges = self._collect_all_edges()
         results = []
 
-        # Find agents flagged for injection (local_violation on outbound edges)
+        # Find agents flagged for prompt injection — the genuine security
+        # signal, set by the local injection detector. NOT local_violation,
+        # which is a privacy redaction/block (a different harm class) and was
+        # previously conflated here, firing on every redacting agent.
         flagged_agents: set[str] = set()
         for edge in all_edges:
-            if edge.local_violation:
+            if edge.injection_detected:
                 flagged_agents.add(edge.from_agent)
 
         if flagged_agents:

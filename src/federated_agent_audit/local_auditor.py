@@ -40,6 +40,7 @@ from .schemas import (
 )
 from .taint_tracker import TaintTracker
 from .negative_inference import NegativeInferenceDetector, NegativeInferenceEvent
+from .injection_detector import detect_injection
 
 logger = logging.getLogger(__name__)
 
@@ -145,11 +146,23 @@ class LocalAuditor:
 
         self._entries.append(entry)
 
+        # Prompt-injection detection on the content flowing out (or what came
+        # in). This is the genuine security signal the network-level
+        # security×privacy compound detector needs — NOT privacy redactions.
+        injection_flagged = False
+        for probe in (entry.output_text, entry.input_text):
+            if probe and detect_injection(probe, source="agent").detected:
+                injection_flagged = True
+                break
+        if injection_flagged:
+            entry.metadata["injection_detected"] = True
+
         # produce desensitized edge (no raw content)
         action = result.decision.value
         if entry.metadata.get("semantic_blocked"):
             action = "block"
         edge = self._desensitize(entry, to_agent, action)
+        edge.injection_detected = injection_flagged
 
         # Emit taint label and attach to edge
         outgoing_taint = self._taint_tracker.emit(

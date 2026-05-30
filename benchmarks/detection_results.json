@@ -1,11 +1,11 @@
 {
   "threshold": 0.5,
   "n_positive": 13,
-  "n_total": 24,
+  "n_total": 25,
   "confusion": {
     "tp": 13,
     "fp": 0,
-    "tn": 11,
+    "tn": 12,
     "fn": 0,
     "precision": 1.0,
     "recall": 1.0,
@@ -371,6 +371,17 @@
     },
     {
       "name": "deep_benign_chain",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.0,
+      "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "redaction_is_not_injection",
       "category": "benign",
       "should_detect": false,
       "flagged": false,

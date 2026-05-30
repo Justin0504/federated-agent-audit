@@ -122,6 +122,7 @@ class DesensitizedEdge(BaseModel):
     local_action: str = "allow"  # "allow", "block", "redact"
     content_hash: str = ""  # hash of original content for integrity, not content itself
     taint: Optional[TaintLabel] = None  # information flow taint label
+    injection_detected: bool = False  # local injection-detector flagged this content
 
 
 class LocalAuditReport(BaseModel):

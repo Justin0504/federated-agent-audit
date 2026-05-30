@@ -66,6 +66,8 @@ Multi-agent systems (CrewAI, LangGraph, AutoGen) create **compound privacy risks
 
 Existing observability tools (LangSmith, Langfuse) require uploading raw prompts to their servers. This framework audits agent interactions **without the central auditor ever seeing raw content**.
 
+📖 **[Worked case study](docs/CASE_STUDY.md)** — a leak that emerges only from *combining* two policy-compliant agents, caught with the raw PHI/PII never leaving the agents' environments (`python examples/case_study_healthcare_leak.py`).
+
 ```
                        +---------------+
                        |   Central     |  Phase 2: Network audit
