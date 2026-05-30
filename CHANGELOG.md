@@ -16,6 +16,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   agent-to-agent message — makes the long-claimed AutoGen support real. New
   `[autogen]` extra.
 - `ROADMAP.md`.
+- **Declared agent domains**: `register_agent(..., domains=[...])` (and
+  `LocalAuditor(declared_domains=...)`) let a pure-sink/leaf agent present a
+  known domain to the network auditor — improves cross-domain precision and
+  catches a sensitive flow to a known different-domain terminal sink that the
+  forwarding heuristic alone missed. (#3)
 
 ### Fixed
 - Security×privacy compound detectors (`compound_injection_leak`,

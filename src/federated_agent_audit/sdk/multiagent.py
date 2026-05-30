@@ -97,11 +97,17 @@ class MultiAgentTracer:
         agent_id: str,
         policy: PrivacyPolicy | None = None,
         user_id: str = "",
+        domains: list[str] | None = None,
     ) -> LocalAuditor:
         """Register an agent with its own policy and local auditor.
 
         Re-registering an existing ``agent_id`` is a no-op that returns the
         existing auditor (so integrations can call this defensively).
+
+        Args:
+            domains: the agent's *declared* operating domains. Useful for
+                pure-sink agents that never send (so their domain can't be
+                inferred): declaring it sharpens cross-domain detection.
         """
         if agent_id in self._auditors:
             return self._auditors[agent_id]
@@ -115,6 +121,7 @@ class MultiAgentTracer:
             policy=pol,
             dp_config=self._dp_config,
             desens_config=self._desens_config,
+            declared_domains=domains,
         )
         self._auditors[agent_id] = auditor
         self._user_ids[agent_id] = user_id

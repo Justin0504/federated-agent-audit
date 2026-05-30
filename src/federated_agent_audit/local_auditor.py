@@ -59,10 +59,16 @@ class LocalAuditor:
         desens_config: DesensitizationConfig | None = None,
         similarity_fn=None,
         llm_judge=None,
+        declared_domains: list[str] | None = None,
     ) -> None:
         self.agent_id = agent_id
         self.user_id = user_id
         self.policy = policy
+        # Domains this agent is *declared* to operate in. Lets a pure-sink /
+        # leaf agent (which never sends, so has no inferred domain) still
+        # present a known domain to the network auditor, sharpening
+        # cross-domain precision instead of relying on the forwarding heuristic.
+        self.declared_domains: set[str] = set(declared_domains or [])
         self.gate = PrivacyGate(policy, mode="redact")
         self.dp_config = dp_config
         self.canaries = canaries or []
@@ -312,7 +318,7 @@ class LocalAuditor:
             merkle_root = tree.root
 
         # collect all domains this agent touched
-        all_domains: set[str] = set()
+        all_domains: set[str] = set(self.declared_domains)
         for entry in self._entries:
             all_domains.update(entry.privacy_tags)
 

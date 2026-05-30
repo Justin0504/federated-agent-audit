@@ -148,3 +148,35 @@ def test_no_raw_content_in_reports():
         blob = report.model_dump_json()
         assert "185000" not in blob
         assert "123-45-6789" not in blob
+
+
+# ── Declared domains (issue #3) ─────────────────────────────────────
+
+
+def test_declared_domain_in_report():
+    t = MultiAgentTracer()
+    t.register_agent("sink", domains=["health"])
+    # sink never sends, yet its report declares the health domain
+    rep = t.auditor("sink").produce_report(apply_dp=False)
+    assert "health" in rep.domains
+
+
+def test_declared_same_domain_not_cross_domain():
+    """health → a sink declared in health is NOT a cross-domain leak."""
+    t = MultiAgentTracer()
+    t.register_agent("specialist", domains=["health"])
+    t.record_handoff("health_bot", "specialist", "referral note",
+                     privacy_tags=["health"], sensitivity_level=4, origin="alice")
+    types = {r.risk_type for r in t.network_audit().compositional_risks}
+    assert "cross_domain_leak" not in types
+
+
+def test_declared_different_domain_terminal_sink_is_caught():
+    """Sensitive info to a KNOWN-different-domain leaf (never forwards) is now
+    flagged — a recall win the out-degree heuristic alone would miss."""
+    t = MultiAgentTracer()
+    t.register_agent("ad_network", domains=["social"])  # known different domain, terminal
+    t.record_handoff("health_bot", "ad_network", "patient diagnosis",
+                     privacy_tags=["health"], sensitivity_level=5, origin="bob")
+    types = {r.risk_type for r in t.network_audit().compositional_risks}
+    assert "cross_domain_leak" in types
