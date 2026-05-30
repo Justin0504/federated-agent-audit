@@ -12,6 +12,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Adversarial benchmark scenarios (injection worm, sensitivity-under-reporting
   evasion, redaction-is-not-injection guard) — 27 scenarios, still P/R/F1 = 1.0.
 - CLI test suite (`tests/test_cli.py`); overall coverage 84% → 86%.
+- **AutoGen / AG2 integration** (`sdk/autogen.py`, `autogen_audit`) hooking every
+  agent-to-agent message — makes the long-claimed AutoGen support real. New
+  `[autogen]` extra.
+- `ROADMAP.md`.
 
 ### Fixed
 - Security×privacy compound detectors (`compound_injection_leak`,

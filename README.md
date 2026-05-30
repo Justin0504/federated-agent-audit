@@ -232,6 +232,12 @@ handler = langchain_callback(default_policy=policy)          # asynchronous=True
 graph.invoke(input, config={"callbacks": [handler]})
 result = handler.tracer.network_audit()
 
+# AutoGen / AG2 — hooks every agent-to-agent message
+from federated_agent_audit.sdk import autogen_audit
+tracer = autogen_audit([assistant, user_proxy, critic], default_policy=policy)
+user_proxy.initiate_chat(assistant, message="...")
+result = tracer.network_audit()
+
 # Generic Python — single-agent decorator
 from federated_agent_audit import audited
 @audited(policy, to_agent="downstream")

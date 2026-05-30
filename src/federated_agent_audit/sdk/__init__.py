@@ -52,3 +52,9 @@ def crew_audit(*args, **kwargs):
     """Wrap a CrewAI Crew with federated audit callbacks."""
     from .crewai import crew_audit as _ca
     return _ca(*args, **kwargs)
+
+
+def autogen_audit(*args, **kwargs):
+    """Instrument AutoGen agents with federated audit."""
+    from .autogen import autogen_audit as _ag
+    return _ag(*args, **kwargs)
