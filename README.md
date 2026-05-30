@@ -13,7 +13,7 @@ pip install federated-agent-audit
 [![Tests](https://img.shields.io/badge/tests-665%20passing-brightgreen.svg)](tests/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-> Audit multi-agent systems (CrewAI · LangGraph · AutoGen) for compositional privacy leaks the central auditor can never see the raw data behind.
+> Audit multi-agent systems (CrewAI · LangGraph · AutoGen · OpenAI Agents) for compositional privacy leaks the central auditor can never see the raw data behind.
 
 ---
 
@@ -58,7 +58,7 @@ response = client.chat.completions.create(model="gpt-4o", messages=[...])
 
 ## The Problem
 
-Multi-agent systems (CrewAI, LangGraph, AutoGen) create **compound privacy risks** that single-agent tools can't detect:
+Multi-agent systems (CrewAI, LangGraph, AutoGen, OpenAI Agents) create **compound privacy risks** that single-agent tools can't detect:
 
 - Agent A shares salary data with Agent B (allowed by A's policy)
 - Agent B forwards a "summary" to an external partner (allowed by B's policy)
