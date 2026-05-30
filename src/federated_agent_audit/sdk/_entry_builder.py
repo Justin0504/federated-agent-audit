@@ -19,12 +19,14 @@ _DOMAIN_PATTERNS: dict[str, list[str]] = {
         r"\bprescription\b", r"\bsymptom", r"\bhospital\b", r"\bdoctor\b",
         r"\bpatient\b", r"\bsurg", r"\bcancer\b", r"\bdisease\b",
         r"\bmedication\b", r"\btherapy\b", r"\bchemotherapy\b", r"\bclinic",
+        r"\bcopay\b", r"\binsurer\b",
     ],
     "finance": [
         r"\bfinance\b", r"\bfinancial\b", r"\baccount\b", r"\bbank",
         r"\binvest", r"\bportfolio\b", r"\btransaction\b", r"\bcredit\b",
         r"\bdebit\b", r"\bsalar", r"\btax\b", r"\bbudget\b",
         r"\bcompensation\b", r"\bwage", r"\bpayroll\b", r"\bincome\b",
+        r"\bbonus\b", r"\bequity\b", r"\b401k\b",
     ],
     "legal": [
         r"\blegal\b", r"\blawyer\b", r"\battorney\b", r"\bcourt\b",
@@ -35,6 +37,7 @@ _DOMAIN_PATTERNS: dict[str, list[str]] = {
         r"\bssn\b", r"\bsocial security\b", r"\bpassport\b",
         r"\bdriver.?s? license\b", r"\bdate of birth\b", r"\bdob\b",
         r"\baddress\b", r"\bphone number\b",
+        r"\bpassport number\b", r"\bnational id\b",
     ],
     "schedule": [
         r"\bschedule\b", r"\bcalendar\b", r"\bappointment\b",
