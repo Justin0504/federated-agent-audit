@@ -87,6 +87,21 @@ class TestInferSensitivity:
     def test_pii_capped_at_five(self):
         assert infer_sensitivity(["health", "finance"], pii_detected=True) == 5
 
+    def test_health_copay_insurer(self):
+        # Regression for #1: copay and insurer must map to health
+        for text in ["the copay is $20", "contact your insurer for coverage"]:
+            assert "health" in extract_privacy_tags(text), text
+
+    def test_finance_bonus_equity_401k(self):
+        # Regression for #1: bonus, equity, 401k must map to finance
+        for text in ["annual bonus payout", "stock equity plan", "max out your 401k"]:
+            assert "finance" in extract_privacy_tags(text), text
+
+    def test_identity_passport_number_national_id(self):
+        # Regression for #1: passport number and national id must map to identity
+        for text in ["please provide your passport number", "enter your national id"]:
+            assert "identity" in extract_privacy_tags(text), text
+
 
 class TestClassifyActionType:
 
