@@ -21,6 +21,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   known domain to the network auditor — improves cross-domain precision and
   catches a sensitive flow to a known different-domain terminal sink that the
   forwarding heuristic alone missed. (#3)
+- **OpenAI Agents SDK integration** (`sdk/openai_agents.py`,
+  `openai_agents_hooks`) capturing first-class handoffs via `RunHooks`. New
+  `[openai-agents]` extra. (#4)
 
 ### Fixed
 - Security×privacy compound detectors (`compound_injection_leak`,

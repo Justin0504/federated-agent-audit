@@ -58,3 +58,9 @@ def autogen_audit(*args, **kwargs):
     """Instrument AutoGen agents with federated audit."""
     from .autogen import autogen_audit as _ag
     return _ag(*args, **kwargs)
+
+
+def openai_agents_hooks(*args, **kwargs):
+    """Create RunHooks that audit an OpenAI Agents SDK run."""
+    from .openai_agents import openai_agents_hooks as _oa
+    return _oa(*args, **kwargs)

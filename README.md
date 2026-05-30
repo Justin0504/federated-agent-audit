@@ -238,6 +238,12 @@ tracer = autogen_audit([assistant, user_proxy, critic], default_policy=policy)
 user_proxy.initiate_chat(assistant, message="...")
 result = tracer.network_audit()
 
+# OpenAI Agents SDK — captures first-class handoffs
+from federated_agent_audit.sdk import openai_agents_hooks
+hooks = openai_agents_hooks(default_policy=policy)
+await Runner.run(triage_agent, input="...", hooks=hooks)
+result = hooks.tracer.network_audit()
+
 # Generic Python — single-agent decorator
 from federated_agent_audit import audited
 @audited(policy, to_agent="downstream")
