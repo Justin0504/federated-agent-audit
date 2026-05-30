@@ -1,9 +1,9 @@
 {
   "threshold": 0.5,
-  "n_positive": 13,
-  "n_total": 25,
+  "n_positive": 15,
+  "n_total": 27,
   "confusion": {
-    "tp": 13,
+    "tp": 15,
     "fp": 0,
     "tn": 12,
     "fn": 0,
@@ -254,6 +254,41 @@
       ],
       "expected_types": [
         "long_distance_taint",
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "injection_worm_cascade",
+      "category": "injection",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 0.9,
+      "detected_types": [
+        "cascading_infection",
+        "compound_injection_leak"
+      ],
+      "expected_types": [
+        "cascading_infection",
+        "compound_injection_leak"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "evasion_underreported_sensitivity",
+      "category": "cross_domain",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 0.8,
+      "detected_types": [
+        "compound_scope_escalation",
+        "cross_domain_leak",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "cross_domain_leak",
         "taint_spreading"
       ],
       "expected_hit": true,

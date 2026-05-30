@@ -9,6 +9,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - Worked case study (`docs/CASE_STUDY.md` + `examples/case_study_healthcare_leak.py`)
   showing a compound leak caught with raw PHI/PII never leaving the agents.
+- Adversarial benchmark scenarios (injection worm, sensitivity-under-reporting
+  evasion, redaction-is-not-injection guard) — 27 scenarios, still P/R/F1 = 1.0.
+- CLI test suite (`tests/test_cli.py`); overall coverage 84% → 86%.
 
 ### Fixed
 - Security×privacy compound detectors (`compound_injection_leak`,
