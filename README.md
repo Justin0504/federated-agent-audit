@@ -1,6 +1,6 @@
 # Federated Agent Audit
 
-**Privacy audit for multi-agent AI systems — without touching raw data.**
+**Stop your LLM apps and agents from leaking PII — without shipping raw data to a third party.**
 
 ```
 pip install federated-agent-audit
@@ -13,11 +13,23 @@ pip install federated-agent-audit
 [![Tests](https://img.shields.io/badge/tests-674%20passing-brightgreen.svg)](tests/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-> Audit multi-agent systems (CrewAI · LangGraph · AutoGen · OpenAI Agents) for compositional privacy leaks the central auditor can never see the raw data behind.
+> **Start in one line** on a single LLM app — redact PII in every response.
+> **Scale to multi-agent systems** (CrewAI · LangGraph · AutoGen · OpenAI Agents) —
+> catch compositional leaks that emerge across agents, with the central auditor
+> never seeing the raw data. Unlike LangSmith/Langfuse, your prompts never leave
+> your environment.
+
+**Who's this for?** Teams shipping LLM features or agents with PII/PHI/financial
+data — especially in regulated settings (healthcare, finance, HR) where raw data
+can't go to a third-party observability vendor.
 
 ---
 
 ## 30-Second Quick Start
+
+> New here? Start with the [firewall](#protect-your-llm-calls) — it works on a
+> single LLM call, no multi-agent setup needed. The [multi-agent audit](#multi-agent-trace-capture)
+> is the depth you grow into.
 
 Scan any text for sensitive content:
 
