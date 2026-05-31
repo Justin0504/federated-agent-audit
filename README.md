@@ -223,6 +223,21 @@ result = tracer.network_audit()      # Phase-2 central audit
 incidents = tracer.aggregated()      # denoised, actionable alerts
 ```
 
+**Tracing, not just auditing.** See what your agents did — chronologically and
+desensitized — whether or not anything went wrong. No raw content, ever:
+
+```python
+tracer.timeline()   # [{seq, agent, to, action, domains, sensitivity, local_action, timestamp}, ...]
+tracer.summary()    # per-agent sent/received/internal counts + domains touched
+tracer.export()     # full interaction graph as a JSON-able dict (no raw text — hashes + metadata)
+```
+
+```
+#0 planner     → researcher   outbound_message   domains=['finance']
+#1 researcher  (internal)     tool_call          domains=['general']
+#2 researcher  → writer       outbound_message   domains=['finance']
+```
+
 It catches the compound leak no single agent's policy can see — and the central
 auditor still never touched the raw data (`python examples/multiagent_trace_demo.py`):
 

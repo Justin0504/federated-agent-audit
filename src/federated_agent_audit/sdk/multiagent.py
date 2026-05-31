@@ -89,6 +89,8 @@ class MultiAgentTracer:
         self._user_ids: dict[str, str] = {}
         # (agent_id, origin) pairs already seeded — keeps origin seeding idempotent
         self._seeded: set[tuple[str, str]] = set()
+        # Desensitized event log for behavior tracing (metadata only, no raw text).
+        self._events: list[dict] = []
 
     # ── Registration ────────────────────────────────────────────────
 
@@ -199,11 +201,14 @@ class MultiAgentTracer:
         # Propagate the emitted taint to the recipient (unless fully blocked,
         # in which case the content never reached them).
         edges = aud.edges
-        if edges:
-            edge = edges[-1]
-            if edge.taint is not None and edge.local_action != "block":
-                self._ensure(to_agent).receive_taint(edge.taint)
+        edge = edges[-1] if edges else None
+        if edge is not None and edge.taint is not None and edge.local_action != "block":
+            self._ensure(to_agent).receive_taint(edge.taint)
 
+        self._log_event(
+            "handoff", from_agent, entry, to_agent=to_agent,
+            local_action=edge.local_action if edge is not None else "allow",
+        )
         return entry
 
     def record_internal(
@@ -233,7 +238,93 @@ class MultiAgentTracer:
             privacy_tags=tags,
             metadata=dict(metadata) if metadata else {},
         )
-        return aud.audit_internal(entry)
+        entry = aud.audit_internal(entry)
+        self._log_event("internal", agent_id, entry)
+        return entry
+
+    # ── Behavior tracing (desensitized — metadata only, never raw text) ──
+
+    def _log_event(self, kind: str, agent: str, entry, *, to_agent=None, local_action="allow"):
+        """Append a desensitized event to the trace log."""
+        self._events.append({
+            "seq": len(self._events),
+            "kind": kind,                       # "handoff" | "internal"
+            "agent": agent,
+            "to": to_agent,
+            "action": entry.action_type.value,
+            "domains": list(entry.privacy_tags),
+            "sensitivity": entry.sensitivity_level,
+            "local_action": local_action,       # allow | redact | block
+            "timestamp": entry.timestamp.isoformat(),
+        })
+
+    def timeline(self) -> list[dict]:
+        """Chronological, desensitized log of who did what to whom.
+
+        Pure behavior tracing — available regardless of whether any risk fired,
+        and containing no raw content (domains/sensitivity/action only).
+        """
+        return list(self._events)
+
+    def summary(self) -> dict:
+        """Quick desensitized rollup of the traced behavior."""
+        per_agent: dict[str, dict] = {}
+        all_domains: set[str] = set()
+        for ev in self._events:
+            a = ev["agent"]
+            pa = per_agent.setdefault(a, {"sent": 0, "received": 0, "internal": 0, "domains": set()})
+            pa["domains"].update(ev["domains"])
+            all_domains.update(ev["domains"])
+            if ev["kind"] == "handoff":
+                pa["sent"] += 1
+                if ev["to"]:
+                    rec = per_agent.setdefault(
+                        ev["to"], {"sent": 0, "received": 0, "internal": 0, "domains": set()}
+                    )
+                    rec["received"] += 1
+            else:
+                pa["internal"] += 1
+        for pa in per_agent.values():
+            pa["domains"] = sorted(pa["domains"])
+        return {
+            "trace_id": self._trace_id,
+            "n_agents": len(self._auditors),
+            "n_handoffs": sum(1 for e in self._events if e["kind"] == "handoff"),
+            "n_internal": sum(1 for e in self._events if e["kind"] == "internal"),
+            "domains": sorted(all_domains),
+            "per_agent": per_agent,
+        }
+
+    def export(self) -> dict:
+        """Export the full desensitized interaction trace as a JSON-able dict.
+
+        Suitable for storage, a UI, or offline analysis. Contains the agent
+        graph, desensitized edges (no raw content — only hashes/metadata), the
+        event timeline, and a summary. The privacy guarantee holds: no raw
+        prompt/output text is ever included.
+        """
+        edges = []
+        for aud in self._auditors.values():
+            for e in aud.edges:
+                edges.append({
+                    "from": e.from_agent,
+                    "to": e.to_agent,
+                    "domains": list(e.domains),
+                    "sensitivity": e.sensitivity_level,
+                    "message_type": e.message_type,
+                    "local_action": e.local_action,
+                    "injection_detected": e.injection_detected,
+                    "hop_count": e.taint.hop_count if e.taint else 0,
+                    "content_hash": e.content_hash,
+                    "timestamp": e.timestamp.isoformat(),
+                })
+        return {
+            "trace_id": self._trace_id,
+            "agents": list(self._auditors.keys()),
+            "edges": edges,
+            "events": self.timeline(),
+            "summary": self.summary(),
+        }
 
     # ── Phase 2 ──────────────────────────────────────────────────────
 

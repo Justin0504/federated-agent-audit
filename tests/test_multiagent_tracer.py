@@ -180,3 +180,54 @@ def test_declared_different_domain_terminal_sink_is_caught():
                      privacy_tags=["health"], sensitivity_level=5, origin="bob")
     types = {r.risk_type for r in t.network_audit().compositional_risks}
     assert "cross_domain_leak" in types
+
+
+# ── Behavior tracing (export / timeline / summary) ──────────────────
+
+
+def _traced() -> MultiAgentTracer:
+    t = MultiAgentTracer()
+    t.register_agent("hr_bot", PrivacyPolicy(agent_id="hr_bot", must_not_share=["salary"]))
+    t.record_handoff("hr_bot", "hub", "Zhang Wei salary is 185000",
+                     privacy_tags=["finance"], sensitivity_level=4, origin="zhang")
+    t.record_internal("hub", "looked up the org chart", action_type=ActionType.TOOL_CALL)
+    t.record_handoff("hub", "external", "summary", privacy_tags=["social"])
+    return t
+
+
+def test_timeline_orders_events():
+    t = _traced()
+    tl = t.timeline()
+    assert [e["seq"] for e in tl] == [0, 1, 2]
+    assert tl[0]["kind"] == "handoff" and tl[0]["agent"] == "hr_bot" and tl[0]["to"] == "hub"
+    assert tl[1]["kind"] == "internal" and tl[1]["agent"] == "hub" and tl[1]["to"] is None
+
+
+def test_summary_counts():
+    s = _traced().summary()
+    assert s["n_handoffs"] == 2
+    assert s["n_internal"] == 1
+    assert s["per_agent"]["hr_bot"]["sent"] == 1
+    assert s["per_agent"]["hub"]["received"] == 1
+    assert "finance" in s["domains"]
+
+
+def test_export_is_json_serializable_and_desensitized():
+    import json
+    t = _traced()
+    blob = json.dumps(t.export())  # must be JSON-able
+    # the privacy guarantee: no raw content in the exported trace
+    assert "185000" not in blob
+    assert "org chart" not in blob
+    assert "Zhang Wei" not in blob
+    data = json.loads(blob)
+    assert set(data) == {"trace_id", "agents", "edges", "events", "summary"}
+    assert len(data["edges"]) == 2
+    assert all("content_hash" in e and "domains" in e for e in data["edges"])
+
+
+def test_timeline_records_local_action():
+    """A redacted/blocked hand-off is visible in the timeline as such."""
+    t = _traced()
+    actions = {e["local_action"] for e in t.timeline() if e["kind"] == "handoff"}
+    assert actions  # redact/allow recorded

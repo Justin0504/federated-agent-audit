@@ -25,6 +25,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `openai_agents_hooks`) capturing first-class handoffs via `RunHooks`. New
   `[openai-agents]` extra. (#4)
 - Collusion benchmark scenario (#2).
+- **Behavior tracing as a first-class capability**: `MultiAgentTracer.timeline()`,
+  `.summary()`, and `.export()` give a desensitized, JSON-able view of who did
+  what to whom — available regardless of whether any risk fired, with no raw
+  content ever included. Makes tracing an equal pillar alongside the federated
+  audit.
 
 ### Fixed
 - Three compound detectors (`compound_collusion`, `compound_multihop_escalation`)
