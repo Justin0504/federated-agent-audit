@@ -1,6 +1,6 @@
 # Federated Agent Audit
 
-**Stop your LLM apps and agents from leaking PII — without shipping raw data to a third party.**
+**Behavior tracing + federated audit for any multi-agent system — see what your agents do and catch privacy & compliance risks, with the central auditor never seeing raw content.**
 
 ```
 pip install federated-agent-audit
@@ -13,15 +13,23 @@ pip install federated-agent-audit
 [![Tests](https://img.shields.io/badge/tests-674%20passing-brightgreen.svg)](tests/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-> **Start in one line** on a single LLM app — redact PII in every response.
-> **Scale to multi-agent systems** (CrewAI · LangGraph · AutoGen · OpenAI Agents) —
-> catch compositional leaks that emerge across agents, with the central auditor
-> never seeing the raw data. Unlike LangSmith/Langfuse, your prompts never leave
-> your environment.
+Two pillars, framework-agnostic and scenario-agnostic:
 
-**Who's this for?** Teams shipping LLM features or agents with PII/PHI/financial
-data — especially in regulated settings (healthcare, finance, HR) where raw data
-can't go to a third-party observability vendor.
+1. **Behavior tracing** — capture the real agent-to-agent interaction graph
+   (who sent what to whom, tool calls, hand-offs) from CrewAI · LangGraph ·
+   AutoGen · OpenAI Agents, or any custom orchestration.
+2. **Federated desensitized audit** — each agent audits locally; the central
+   auditor only ever sees hashed, pseudonymized, DP-noised metadata. It detects
+   compositional privacy/compliance risks that emerge *across* agents — and
+   **never sees raw content**, by architecture.
+
+Think LangSmith/Langfuse for multi-agent systems, but federated: your prompts
+and outputs never leave the agents' own environments.
+
+**Who's this for?** Anyone running a multi-agent system who needs to observe and
+govern its behavior — with extra pull for teams who *can't* ship raw prompts to
+a third-party observability vendor (regulated data, on-prem, data residency).
+A single-LLM-app on-ramp is built in (see the firewall below).
 
 ---
 
