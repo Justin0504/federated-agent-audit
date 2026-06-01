@@ -110,3 +110,23 @@ class TestClassifyActionType:
 
     def test_summary(self):
         assert classify_action_type("summary_update") == ActionType.SUMMARY_WRITE
+
+    def test_health_insurance_terms(self):
+        """Regression: insurance terms should map to health domain."""
+        for text in ["your copay is $20", "contact your insurer", "premium payment due", "annual deductible"]:
+            assert "health" in extract_privacy_tags(text), f"Failed for: {text}"
+
+    def test_finance_investment_terms(self):
+        """Regression: investment terms should map to finance domain."""
+        for text in ["annual bonus", "equity stake", "401k contribution", "pension fund"]:
+            assert "finance" in extract_privacy_tags(text), f"Failed for: {text}"
+
+    def test_identity_document_terms(self):
+        """Regression: document terms should map to identity domain."""
+        for text in ["passport number required", "national id verification", "biometric scan", "fingerprint auth"]:
+            assert "identity" in extract_privacy_tags(text), f"Failed for: {text}"
+
+    def test_legal_contract_terms(self):
+        """Regression: contract terms should map to legal domain."""
+        for text in ["signed an NDA", "liability waiver", "out of court settlement", "jury verdict"]:
+            assert "legal" in extract_privacy_tags(text), f"Failed for: {text}"
