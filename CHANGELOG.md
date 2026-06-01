@@ -7,6 +7,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **Edge attestation** (`attestation.py`: `Attestor`, `AttestationVerifier`) for
+  forced-embed deployments where the auditor ships inside the downloaded agent
+  software. Tamper-evident: build pinning, HMAC content integrity, per-agent
+  sequence + hash-chain continuity, and coverage consistency — so a modified
+  build, altered/omitted report, or under-reporting agent is detected.
+  (Tamper-evident, not tamper-proof; hardware/TEE attestation is the next level.)
+- `examples/marketplace_forced_embed.py` — end-to-end: every agent embeds the
+  SDK, the center verifies attestations (rejecting a modified-build agent), runs
+  the graph audit on desensitized data only, and issues a Merkle challenge to
+  prove one entry without seeing the rest.
 - Worked case study (`docs/CASE_STUDY.md` + `examples/case_study_healthcare_leak.py`)
   showing a compound leak caught with raw PHI/PII never leaving the agents.
 - Adversarial benchmark scenarios (injection worm, sensitivity-under-reporting
