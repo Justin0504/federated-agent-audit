@@ -103,6 +103,9 @@ leaving the agents' environments (`python examples/case_study_healthcare_leak.py
          stays here       stays here    stays here
 ```
 
+See **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** for the two-party model (edge vs.
+center), deployment topologies, and the tamper-evidence guarantees.
+
 ## Multi-Agent Trace & Audit
 
 The integrations capture the **real agent-to-agent interaction graph** — who
