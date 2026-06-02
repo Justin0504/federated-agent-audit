@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **LlamaIndex integration** (`sdk/llamaindex.py`, `llamaindex_handler`) capturing
+  AgentWorkflow agent-to-agent hand-offs from the event stream. New
+  `[llamaindex]` extra. (#5)
+- Auto-tagger: more health/finance/legal/identity keywords (copay, insurer,
+  deductible; bonus, equity, 401k, mortgage; settlement, subpoena, litigation;
+  passport number, national id, biometric, …) with regression tests. (#1)
 - **Cross-owner leak detection** — the defining risk of multi-user agent groups
   (each agent holds its own owner's memory). Flags when data about subject X
   (taint origin) reaches an agent owned by Y ≠ X, even when every agent obeyed

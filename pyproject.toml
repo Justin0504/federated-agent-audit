@@ -42,11 +42,12 @@ langgraph = ["langgraph>=0.2", "langchain-core>=0.2"]
 crewai = ["crewai>=0.50"]
 autogen = ["pyautogen>=0.2"]
 openai-agents = ["openai-agents>=0.1"]
+llamaindex = ["llama-index>=0.11"]
 embeddings = ["sentence-transformers>=2.2"]
 transport = ["httpx>=0.25", "fastapi>=0.100", "uvicorn>=0.20"]
 yaml = ["pyyaml>=6.0"]
 all = [
-    "federated-agent-audit[langchain,langgraph,crewai,autogen,openai-agents,embeddings,transport,yaml]",
+    "federated-agent-audit[langchain,langgraph,crewai,autogen,openai-agents,llamaindex,embeddings,transport,yaml]",
 ]
 
 [project.scripts]

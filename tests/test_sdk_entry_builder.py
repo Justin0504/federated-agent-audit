@@ -28,6 +28,18 @@ class TestExtractPrivacyTags:
         for text in ["take this medication", "ongoing chemotherapy", "physical therapy"]:
             assert "health" in extract_privacy_tags(text), text
 
+    def test_expanded_domain_keywords(self):
+        # Regression for #1 — common terms that were previously mis-tagged.
+        cases = {
+            "health": ["your copay is due", "the insurer denied it", "annual deductible", "allergy panel"],
+            "finance": ["year-end bonus", "vested equity", "401k rollover", "mortgage application", "net worth"],
+            "legal": ["reached a settlement", "served a subpoena", "ongoing litigation"],
+            "identity": ["passport number", "national id card", "biometric scan", "tax id"],
+        }
+        for domain, texts in cases.items():
+            for text in texts:
+                assert domain in extract_privacy_tags(text), f"{text!r} -> expected {domain}"
+
     def test_legal_keywords(self):
         tags = extract_privacy_tags("Contact your attorney about the lawsuit")
         assert "legal" in tags

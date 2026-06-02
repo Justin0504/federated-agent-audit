@@ -64,3 +64,9 @@ def openai_agents_hooks(*args, **kwargs):
     """Create RunHooks that audit an OpenAI Agents SDK run."""
     from .openai_agents import openai_agents_hooks as _oa
     return _oa(*args, **kwargs)
+
+
+def llamaindex_handler(*args, **kwargs):
+    """Create a handler that audits a LlamaIndex AgentWorkflow event stream."""
+    from .llamaindex import llamaindex_handler as _li
+    return _li(*args, **kwargs)

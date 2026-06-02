@@ -279,6 +279,13 @@ hooks = openai_agents_hooks(default_policy=policy)
 await Runner.run(triage_agent, input="...", hooks=hooks)
 result = hooks.tracer.network_audit()
 
+# LlamaIndex AgentWorkflow — captures agent-to-agent hand-offs from the event stream
+from federated_agent_audit.sdk import llamaindex_handler
+h = llamaindex_handler(default_policy=policy)
+async for event in workflow.run(user_msg="...").stream_events():
+    h.handle_event(event)
+result = h.tracer.network_audit()
+
 # Generic Python — single-agent decorator
 from federated_agent_audit import audited
 @audited(policy, to_agent="downstream")
