@@ -39,7 +39,10 @@ from .memory_audit import MemoryAuditor, MemoryAnomaly
 from .cross_platform_denanon import CrossPlatformDetector, DeanonRisk
 from .cascade_detector import CascadeDetector, CascadeEvent
 from .regulatory_compliance import ComplianceEngine, ComplianceReport, ComplianceStatus
-from .attestation import Attestor, AttestationVerifier, AuditorAttestation
+from .attestation import (
+    Attestor, AttestationVerifier, AuditorAttestation,
+    cross_corroborate, CorroborationFinding,
+)
 
 __all__ = [
     # Core facade
@@ -83,6 +86,8 @@ __all__ = [
     "Attestor",
     "AttestationVerifier",
     "AuditorAttestation",
+    "cross_corroborate",
+    "CorroborationFinding",
     "ComplianceReport",
     "ComplianceStatus",
     # Quick-start shortcuts

@@ -81,6 +81,7 @@ class LocalAuditor:
             self._similarity_fn = self._auto_detect_embeddings(policy)
         self._entries: list[AuditEntry] = []
         self._edges: list[DesensitizedEdge] = []
+        self._receipts: list[dict] = []
         self._violations = 0
         self._pii_redacted = 0
 
@@ -231,6 +232,20 @@ class LocalAuditor:
         """All desensitized edges this agent has produced (read-only copy)."""
         return list(self._edges)
 
+    def record_receipt(self, from_agent: str, content_hash: str, domains: list[str]) -> None:
+        """Log a desensitized inbound receipt (this agent received an edge).
+
+        Used for cross-corroboration: the center can detect a sender that
+        omitted an edge by matching recipients' receipts (content_hash) against
+        senders' reported edges. Contains no raw content.
+        """
+        self._receipts.append({
+            "from": from_agent,
+            "to": self.agent_id,
+            "content_hash": content_hash,
+            "domains": list(domains),
+        })
+
     def receive_taint(self, taint: TaintLabel) -> None:
         """Feed an inbound taint label into this agent's taint state.
 
@@ -351,6 +366,7 @@ class LocalAuditor:
             agent_id=report_agent_id,
             user_id=report_user_id,
             edges=edges_to_report,
+            received=list(self._receipts),
             total_interactions=total,
             violations_blocked=self._violations,
             pii_instances_redacted=self._pii_redacted,

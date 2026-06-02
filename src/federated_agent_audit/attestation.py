@@ -33,6 +33,44 @@ from dataclasses import dataclass, field
 from .schemas import LocalAuditReport
 
 
+@dataclass
+class CorroborationFinding:
+    """A sender omitted an edge that a recipient independently witnessed."""
+
+    omitting_agent: str      # the sender that did not report the edge
+    recipient: str           # the agent whose receipt witnessed it
+    content_hash: str
+    domains: list[str] = field(default_factory=list)
+
+
+def cross_corroborate(reports: list[LocalAuditReport]) -> list[CorroborationFinding]:
+    """Detect omitted edges by matching recipients' receipts against senders' edges.
+
+    In a forced-embed deployment a malicious agent can drop an edge from its
+    report *and* lower its own counter, defeating single-report attestation. But
+    the recipient's auditor logged a desensitized receipt (sender + content_hash)
+    for that same edge. If a receipt has no matching sender-reported edge, the
+    sender omitted it — caught as long as the recipient is honest (a single bad
+    actor cannot hide; only a colluding sender+recipient pair can).
+    """
+    reported = {
+        (e.from_agent, e.to_agent, e.content_hash)
+        for r in reports for e in r.edges
+    }
+    findings: list[CorroborationFinding] = []
+    for r in reports:
+        for rcpt in r.received:
+            key = (rcpt.get("from"), rcpt.get("to", r.agent_id), rcpt.get("content_hash"))
+            if key not in reported:
+                findings.append(CorroborationFinding(
+                    omitting_agent=str(rcpt.get("from", "")),
+                    recipient=r.agent_id,
+                    content_hash=str(rcpt.get("content_hash", "")),
+                    domains=list(rcpt.get("domains", [])),
+                ))
+    return findings
+
+
 def _report_hash(report: LocalAuditReport) -> str:
     return hashlib.sha256(report.model_dump_json().encode()).hexdigest()
 

@@ -19,6 +19,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   its own policy. Register owners via `register_agent(..., user_id=...)`. New
   `cross_owner_leak` risk type + benchmark scenarios (cross-owner positive,
   same-owner negative).
+- **Graph cross-corroboration** (`cross_corroborate`) — closes the attestation
+  omission gap. Recipients log desensitized receipts (sender + content_hash);
+  the center matches them against senders' reported edges, so a sender that drops
+  an edge AND lowers its own counter is still caught (as long as the recipient is
+  honest — only a colluding sender+recipient pair can hide). New `received` field
+  on `LocalAuditReport`.
 - **Edge attestation** (`attestation.py`: `Attestor`, `AttestationVerifier`) for
   forced-embed deployments where the auditor ships inside the downloaded agent
   software. Tamper-evident: build pinning, HMAC content integrity, per-agent

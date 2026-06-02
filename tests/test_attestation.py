@@ -94,3 +94,40 @@ def test_chain_advances_on_success():
         rep = _report()
         att = attestor.attest(rep)
         assert verifier.verify(rep, att).ok  # consecutive reports chain cleanly
+
+
+# ── Graph cross-corroboration (catch omission a single report can't) ──
+
+from federated_agent_audit import MultiAgentTracer  # noqa: E402
+from federated_agent_audit.attestation import cross_corroborate  # noqa: E402
+
+
+def test_cross_corroboration_clean_when_honest():
+    t = MultiAgentTracer()
+    t.record_handoff("a", "b", "hello", privacy_tags=["social"])
+    t.record_handoff("b", "c", "world", privacy_tags=["social"])
+    assert cross_corroborate(t.reports()) == []
+
+
+def test_cross_corroboration_catches_sender_omission():
+    """Sender 'a' drops its edge to 'b'; b's receipt exposes the omission."""
+    t = MultiAgentTracer()
+    t.record_handoff("a", "b", "private health note",
+                     privacy_tags=["health"], sensitivity_level=5, origin="alice")
+    reports = t.reports()
+    for r in reports:
+        if r.agent_id == "a":
+            r.edges = []  # malicious omission
+    findings = cross_corroborate(reports)
+    assert any(f.omitting_agent == "a" and f.recipient == "b" for f in findings)
+    assert "health" in findings[0].domains
+
+
+def test_blocked_edge_no_false_omission():
+    """A blocked hand-off produces no receipt, so it isn't flagged as omitted."""
+    from federated_agent_audit.schemas import PrivacyPolicy
+    t = MultiAgentTracer()
+    t.register_agent("s", PrivacyPolicy(agent_id="s", must_not_share=["topsecret"]))
+    t.record_handoff("s", "r", "the topsecret value", privacy_tags=["identity"], sensitivity_level=5)
+    # whether or not it blocked, there must be no spurious omission finding
+    assert cross_corroborate(t.reports()) == []

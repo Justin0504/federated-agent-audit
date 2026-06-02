@@ -202,8 +202,13 @@ class MultiAgentTracer:
         # in which case the content never reached them).
         edges = aud.edges
         edge = edges[-1] if edges else None
-        if edge is not None and edge.taint is not None and edge.local_action != "block":
-            self._ensure(to_agent).receive_taint(edge.taint)
+        if edge is not None and edge.local_action != "block":
+            recipient = self._ensure(to_agent)
+            if edge.taint is not None:
+                recipient.receive_taint(edge.taint)
+            # Recipient logs a desensitized receipt → lets the center cross-check
+            # against the sender's report and catch an omitted edge.
+            recipient.record_receipt(from_agent, edge.content_hash, edge.domains)
 
         self._log_event(
             "handoff", from_agent, entry, to_agent=to_agent,

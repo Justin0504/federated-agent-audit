@@ -138,6 +138,9 @@ class LocalAuditReport(BaseModel):
     timestamp: datetime = Field(default_factory=_now)
     # desensitized edges this agent participated in
     edges: list[DesensitizedEdge] = Field(default_factory=list)
+    # desensitized inbound receipts ("I received an edge from X with hash H"),
+    # used to cross-corroborate against senders' reports and catch omission
+    received: list[dict] = Field(default_factory=list)
     # aggregate stats
     total_interactions: int = 0
     violations_blocked: int = 0
