@@ -1,11 +1,11 @@
 {
   "threshold": 0.5,
-  "n_positive": 16,
-  "n_total": 28,
+  "n_positive": 17,
+  "n_total": 30,
   "confusion": {
-    "tp": 16,
+    "tp": 17,
     "fp": 0,
-    "tn": 12,
+    "tn": 13,
     "fn": 0,
     "precision": 1.0,
     "recall": 1.0,
@@ -282,6 +282,21 @@
       "raw_leak": false
     },
     {
+      "name": "cross_owner_group_leak",
+      "category": "cross_owner",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "cross_owner_leak"
+      ],
+      "expected_types": [
+        "cross_owner_leak"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
       "name": "evasion_underreported_sensitivity",
       "category": "cross_domain",
       "should_detect": true,
@@ -430,6 +445,17 @@
     },
     {
       "name": "deep_benign_chain",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.0,
+      "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "same_owner_two_devices",
       "category": "benign",
       "should_detect": false,
       "flagged": false,

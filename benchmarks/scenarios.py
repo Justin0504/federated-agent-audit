@@ -37,6 +37,7 @@ class Scenario:
     handoffs: list[Handoff]
     expected_types: set[str] = field(default_factory=set)
     policies: dict[str, list[str]] = field(default_factory=dict)  # agent -> must_not_share
+    owners: dict[str, str] = field(default_factory=dict)          # agent -> owner (user_id)
 
 
 # ── Positive scenarios (a real compositional privacy risk exists) ────
@@ -191,6 +192,17 @@ POSITIVE: list[Scenario] = [
         expected_types={"cascading_infection", "compound_injection_leak"},
     ),
     Scenario(
+        # Multi-user group: Alice's agent leaks Alice's private health to Bob's
+        # agent (a different owner). The defining cross-owner leak.
+        "cross_owner_group_leak", "cross_owner", True,
+        [
+            Handoff("alice_agent", "bob_agent", "alice ongoing condition",
+                    ["health"], 5, "alice"),
+        ],
+        owners={"alice_agent": "alice", "bob_agent": "bob"},
+        expected_types={"cross_owner_leak"},
+    ),
+    Scenario(
         # Evasion: an agent under-reports sensitivity (claims 1) to dodge
         # sensitivity-gated checks, but still routes health to a social fan-out.
         # Provenance (taint spread + cross-domain), not the self-declared
@@ -324,6 +336,16 @@ NEGATIVE: list[Scenario] = [
         expected_types=set(),
     ),
     Scenario(
+        # Same owner, two devices: Alice's data moving between Alice's own agents
+        # is NOT a cross-owner leak (origin == recipient owner).
+        "same_owner_two_devices", "benign", False,
+        [
+            Handoff("alice_phone", "alice_laptop", "alice condition", ["health"], 5, "alice"),
+        ],
+        owners={"alice_phone": "alice", "alice_laptop": "alice"},
+        expected_types=set(),
+    ),
+    Scenario(
         # The agent's policy redacts SSN (a local privacy violation) but there is
         # NO prompt injection. A redaction must NOT be misread as an injection /
         # cascading infection — regression guard for that conflation.
@@ -343,9 +365,15 @@ ALL_SCENARIOS = POSITIVE + NEGATIVE
 def replay(scenario: Scenario) -> MultiAgentTracer:
     """Replay a scenario into a fresh MultiAgentTracer."""
     tracer = MultiAgentTracer()
-    # Pre-register agents that carry an explicit policy.
-    for agent_id, must_not_share in scenario.policies.items():
-        tracer.register_agent(agent_id, PrivacyPolicy(agent_id=agent_id, must_not_share=must_not_share))
+    # Pre-register agents that carry an explicit policy and/or a declared owner.
+    agents = set(scenario.policies) | set(scenario.owners)
+    for agent_id in agents:
+        must_not_share = scenario.policies.get(agent_id, [])
+        tracer.register_agent(
+            agent_id,
+            PrivacyPolicy(agent_id=agent_id, must_not_share=must_not_share),
+            user_id=scenario.owners.get(agent_id, ""),
+        )
     for h in scenario.handoffs:
         tracer.record_handoff(
             h.src, h.dst, h.text,

@@ -118,6 +118,9 @@ class NetworkAuditor:
                 target_domain="cross_platform",
             ))
 
+        # cross-owner leak: one data subject's info reaching another owner's agent
+        risks.extend(self._detect_cross_owner_leaks(all_edges))
+
         propagation = self._detect_propagation_paths()
 
         # Topology analysis
@@ -188,6 +191,44 @@ class NetworkAuditor:
                     target_domain=next(iter(target_domains - crossing), ""),
                 ))
 
+        return risks
+
+    def _detect_cross_owner_leaks(self, all_edges) -> list[CompositionalRisk]:
+        """Detect a data subject's private info reaching a *different owner's* agent.
+
+        The defining risk of multi-user agent groups (each agent holds its own
+        owner's memory): if data about subject X (taint origin) flows to an agent
+        owned by Y (Y != X), X's private data has crossed an owner boundary —
+        even if every agent obeyed its own policy. Requires both a known data
+        subject (taint origin) and a known recipient owner (report user_id).
+        """
+        risks: list[CompositionalRisk] = []
+        for edge in all_edges:
+            if edge.taint is None:
+                continue
+            subject = edge.taint.origin_boundary
+            if not subject or subject == "multi":
+                continue
+            recipient_report = self._reports.get(edge.to_agent)
+            owner = recipient_report.user_id if recipient_report else ""
+            if not owner or owner == subject:
+                continue  # unknown owner, or same person — not a cross-owner leak
+            # Only sensitive content crossing an owner boundary is a privacy leak.
+            domains = set(edge.domains) | (edge.taint.domains or set())
+            if not (domains & SENSITIVE_DOMAINS):
+                continue
+            risks.append(CompositionalRisk(
+                risk_type="cross_owner_leak",
+                involved_agents=[edge.from_agent, edge.to_agent],
+                involved_edges=[edge.edge_id],
+                description=(
+                    f"Subject '{subject}' data reached {edge.to_agent} "
+                    f"(owned by '{owner}', != subject) — private data crossed an owner boundary"
+                ),
+                severity=min(1.0, edge.sensitivity_level / 5.0),
+                source_domain=next(iter(domains & SENSITIVE_DOMAINS), "privacy"),
+                target_domain="privacy",
+            ))
         return risks
 
     def _detect_aggregation_risks(self) -> list[CompositionalRisk]:

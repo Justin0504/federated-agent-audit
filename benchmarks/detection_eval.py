@@ -42,6 +42,7 @@ PRIVACY_LEAK_TYPES = {
     "platform_leakage",
     "taint_spreading",
     "cascading_infection",
+    "cross_owner_leak",
 }
 # Structural / side-channel signals — informational, not a privacy violation.
 STRUCTURAL_TYPES = {"topology_bottleneck", "temporal_fingerprint", "behavioral_correlation"}

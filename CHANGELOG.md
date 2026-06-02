@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **Cross-owner leak detection** — the defining risk of multi-user agent groups
+  (each agent holds its own owner's memory). Flags when data about subject X
+  (taint origin) reaches an agent owned by Y ≠ X, even when every agent obeyed
+  its own policy. Register owners via `register_agent(..., user_id=...)`. New
+  `cross_owner_leak` risk type + benchmark scenarios (cross-owner positive,
+  same-owner negative).
 - **Edge attestation** (`attestation.py`: `Attestor`, `AttestationVerifier`) for
   forced-embed deployments where the auditor ships inside the downloaded agent
   software. Tamper-evident: build pinning, HMAC content integrity, per-agent

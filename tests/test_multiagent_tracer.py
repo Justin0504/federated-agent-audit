@@ -231,3 +231,38 @@ def test_timeline_records_local_action():
     t = _traced()
     actions = {e["local_action"] for e in t.timeline() if e["kind"] == "handoff"}
     assert actions  # redact/allow recorded
+
+
+# ── Cross-owner leak (multi-user groups: my data → another owner's agent) ──
+
+
+def test_cross_owner_leak_flagged():
+    t = MultiAgentTracer()
+    t.register_agent("alice_agent", user_id="alice")
+    t.register_agent("bob_agent", user_id="bob")
+    t.record_handoff("alice_agent", "bob_agent", "alice's private diagnosis",
+                     privacy_tags=["health"], sensitivity_level=5, origin="alice")
+    types = {r.risk_type for r in t.network_audit().compositional_risks}
+    assert "cross_owner_leak" in types
+
+
+def test_same_owner_not_cross_owner():
+    """Alice's data moving between Alice's own agents is not a cross-owner leak."""
+    t = MultiAgentTracer()
+    t.register_agent("alice_phone", user_id="alice")
+    t.register_agent("alice_laptop", user_id="alice")
+    t.record_handoff("alice_phone", "alice_laptop", "alice's diagnosis",
+                     privacy_tags=["health"], sensitivity_level=5, origin="alice")
+    types = {r.risk_type for r in t.network_audit().compositional_risks}
+    assert "cross_owner_leak" not in types
+
+
+def test_cross_owner_requires_sensitive_domain():
+    """Crossing an owner boundary with only social/general data is not flagged."""
+    t = MultiAgentTracer()
+    t.register_agent("alice_agent", user_id="alice")
+    t.register_agent("bob_agent", user_id="bob")
+    t.record_handoff("alice_agent", "bob_agent", "want to grab lunch?",
+                     privacy_tags=["social"], sensitivity_level=1, origin="alice")
+    types = {r.risk_type for r in t.network_audit().compositional_risks}
+    assert "cross_owner_leak" not in types
