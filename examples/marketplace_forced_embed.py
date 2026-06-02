@@ -24,7 +24,7 @@ Run:
 from __future__ import annotations
 
 from federated_agent_audit import (
-    Attestor, AttestationVerifier, MultiAgentTracer, PrivacyPolicy,
+    Attestor, AttestationVerifier, MultiAgentTracer, PrivacyPolicy, cross_corroborate,
 )
 from federated_agent_audit.commit_reveal import CommitStore
 from federated_agent_audit.schemas import AuditEntry, ChallengeRequest
@@ -90,10 +90,17 @@ def main() -> None:
             print(f"    ✗ {report.agent_id:13s} REJECTED — {verdict.reasons}")
 
     # ── 3) Central graph audit on desensitized data only ────────────────
+    result = tracer.network_audit()
     agg = tracer.aggregated()
     print(f"\n  Central audit → {agg.incident_count} incident(s) (from desensitized graph):")
     for inc in agg.incidents[:4]:
         print(f"    [{inc.alert_level.value.upper():8s}] {inc.risk_type}")
+
+    cross_owner = [r for r in result.compositional_risks if r.risk_type == "cross_owner_leak"]
+    if cross_owner:
+        print("\n  Cross-owner leaks (one user's private data reached another owner's agent):")
+        for r in cross_owner[:3]:
+            print(f"    ⚠ {r.description}")
 
     secrets = ["ongoing diagnosis", "overdrawn", "harvested profile"]
     blob = " ".join(r.model_dump_json() for r in tracer.reports())
@@ -124,6 +131,20 @@ def main() -> None:
     print(f"    challenged 1 entry → revealed with Merkle proof → verified: {verified}")
     print("    (the center proved the entry is in the agent's committed log "
           "without seeing the rest.)")
+
+    # ── 5) Cross-corroboration — catch a stealthy edge omission ─────────
+    print("\n  Cross-corroboration — catch an agent that omits an edge from its report:")
+    reports = tracer.reports()
+    # A stealthy agent passes attestation but drops one of its own edges.
+    for r in reports:
+        if r.agent_id == "alice_agent":
+            r.edges = r.edges[1:]  # omit one edge
+    findings = cross_corroborate(reports)
+    for f in findings:
+        print(f"    ⚠ '{f.omitting_agent}' omitted an edge to '{f.recipient}' "
+              f"(exposed by recipient's receipt, domains={f.domains})")
+    if not findings:
+        print("    (no omissions detected)")
 
 
 if __name__ == "__main__":
