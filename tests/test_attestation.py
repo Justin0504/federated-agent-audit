@@ -131,3 +131,42 @@ def test_blocked_edge_no_false_omission():
     t.record_handoff("s", "r", "the topsecret value", privacy_tags=["identity"], sensitivity_level=5)
     # whether or not it blocked, there must be no spurious omission finding
     assert cross_corroborate(t.reports()) == []
+
+
+# ── Pluggable backend / TEE-style evidence (tamper-proof upgrade path) ──
+
+import hashlib as _hl  # noqa: E402
+import hmac as _hm  # noqa: E402
+
+from federated_agent_audit.attestation import (  # noqa: E402
+    Attestor as _Attestor, AttestationVerifier as _Verifier, CallableBackend,
+)
+
+
+def _enclave_backend(quote):
+    secret = b"enclave-bound-key"
+    sign = lambda p: _hm.new(secret, p.encode(), _hl.sha256).hexdigest()  # noqa: E731
+    verify = lambda p, s: _hm.compare_digest(sign(p), s)  # noqa: E731
+    return CallableBackend(sign, verify, kind="remote-attestation", evidence_fn=lambda: quote)
+
+
+def test_pluggable_backend_carries_evidence_and_verifies():
+    quote = {"measurement": "mr-enclave-abc", "nonce": "n1"}
+    backend = _enclave_backend(quote)
+    rep = _report()
+    att = _Attestor("a", backend=backend, version="1.0", fingerprint="enclave-build").attest(rep)
+    assert att.kind == "remote-attestation" and att.evidence == quote
+
+    v = _Verifier({"enclave-build": backend},
+                  evidence_validator=lambda e: e.get("measurement") == "mr-enclave-abc")
+    assert v.verify(rep, att).ok
+
+
+def test_evidence_validation_failure_rejected():
+    backend = _enclave_backend({"measurement": "WRONG"})
+    rep = _report()
+    att = _Attestor("a", backend=backend, version="1.0", fingerprint="enclave-build").attest(rep)
+    v = _Verifier({"enclave-build": backend},
+                  evidence_validator=lambda e: e.get("measurement") == "mr-enclave-abc")
+    verdict = v.verify(rep, att)
+    assert not verdict.ok and "evidence_validation_failed" in verdict.reasons

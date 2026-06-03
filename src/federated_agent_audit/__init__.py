@@ -42,6 +42,7 @@ from .regulatory_compliance import ComplianceEngine, ComplianceReport, Complianc
 from .attestation import (
     Attestor, AttestationVerifier, AuditorAttestation,
     cross_corroborate, CorroborationFinding,
+    HmacBackend, CallableBackend, AttestationBackend,
 )
 
 __all__ = [
@@ -88,6 +89,9 @@ __all__ = [
     "AuditorAttestation",
     "cross_corroborate",
     "CorroborationFinding",
+    "HmacBackend",
+    "CallableBackend",
+    "AttestationBackend",
     "ComplianceReport",
     "ComplianceStatus",
     # Quick-start shortcuts

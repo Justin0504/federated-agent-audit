@@ -28,7 +28,9 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 from dataclasses import dataclass, field
+from typing import Callable, Protocol, runtime_checkable
 
 from .schemas import LocalAuditReport
 
@@ -75,6 +77,68 @@ def _report_hash(report: LocalAuditReport) -> str:
     return hashlib.sha256(report.model_dump_json().encode()).hexdigest()
 
 
+# ── Attestation backends ────────────────────────────────────────────
+# The signing/verification primitive is pluggable so the guarantee can be
+# upgraded from software (tamper-evident) to hardware (tamper-proof) without
+# changing the report/attestation flow.
+
+
+@runtime_checkable
+class AttestationBackend(Protocol):
+    """How an edge signs an attestation and what build evidence it carries."""
+
+    kind: str
+
+    def sign(self, payload: str) -> str: ...
+    def verify(self, payload: str, signature: str) -> bool: ...
+    def evidence(self) -> dict: ...
+
+
+@dataclass
+class HmacBackend:
+    """Software baseline: a symmetric key provisioned per build (tamper-evident)."""
+
+    key: bytes
+    kind: str = "hmac-sha256"
+
+    def sign(self, payload: str) -> str:
+        return hmac.new(self.key, payload.encode(), hashlib.sha256).hexdigest()
+
+    def verify(self, payload: str, signature: str) -> bool:
+        return hmac.compare_digest(self.sign(payload), signature)
+
+    def evidence(self) -> dict:
+        return {}
+
+
+@dataclass
+class CallableBackend:
+    """Plug in a hardware/TEE attestation adapter via callables.
+
+    For confidential compute (AWS Nitro, Intel SGX/TDX, AMD SEV-SNP): back
+    ``sign_fn`` with a key bound to the enclave and return the enclave's
+    attestation quote from ``evidence_fn``. The center then validates that quote
+    against trusted code measurements (the fingerprint) via the
+    ``AttestationVerifier(evidence_validator=...)`` hook — upgrading the
+    guarantee from tamper-evident to tamper-proof. Concrete enclave bindings are
+    out of scope of this library.
+    """
+
+    sign_fn: Callable[[str], str]
+    verify_fn: Callable[[str, str], bool]
+    kind: str = "remote-attestation"
+    evidence_fn: Callable[[], dict] = dict
+
+    def sign(self, payload: str) -> str:
+        return self.sign_fn(payload)
+
+    def verify(self, payload: str, signature: str) -> bool:
+        return self.verify_fn(payload, signature)
+
+    def evidence(self) -> dict:
+        return self.evidence_fn()
+
+
 @dataclass
 class AuditorAttestation:
     """Signed attestation accompanying a desensitized report."""
@@ -87,11 +151,14 @@ class AuditorAttestation:
     report_hash: str        # sha256 of the desensitized report
     claimed_messages: int   # auditor's own count of audited outgoing messages
     signature: str = ""
+    kind: str = "hmac-sha256"        # attestation backend kind
+    evidence: dict = field(default_factory=dict)  # hardware/TEE attestation quote, if any
 
     def chain_hash(self) -> str:
         material = (
             f"{self.prev_hash}|{self.report_seq}|{self.report_hash}"
-            f"|{self.fingerprint}|{self.claimed_messages}"
+            f"|{self.fingerprint}|{self.claimed_messages}|{self.kind}"
+            f"|{json.dumps(self.evidence, sort_keys=True)}"
         )
         return hashlib.sha256(material.encode()).hexdigest()
 
@@ -105,11 +172,16 @@ class Attestor:
     """
 
     auditor_id: str
-    key: bytes
-    version: str
-    fingerprint: str
+    key: bytes = b""                  # convenience for the default HMAC backend
+    version: str = ""
+    fingerprint: str = ""
+    backend: AttestationBackend | None = None  # plug a TEE/remote-attestation backend here
     _seq: int = 0
     _prev_hash: str = ""
+
+    def __post_init__(self) -> None:
+        if self.backend is None:
+            self.backend = HmacBackend(self.key)
 
     def attest(
         self, report: LocalAuditReport, claimed_messages: int | None = None
@@ -126,8 +198,10 @@ class Attestor:
             prev_hash=self._prev_hash,
             report_hash=_report_hash(report),
             claimed_messages=claimed_messages if claimed_messages is not None else len(report.edges),
+            kind=self.backend.kind,
+            evidence=self.backend.evidence(),
         )
-        att.signature = hmac.new(self.key, att.chain_hash().encode(), hashlib.sha256).hexdigest()
+        att.signature = self.backend.sign(att.chain_hash())
         self._prev_hash = att.chain_hash()
         self._seq += 1
         return att
@@ -142,23 +216,36 @@ class AttestationVerdict:
 class AttestationVerifier:
     """Center-side verifier: confirms reports come from a trusted, untampered auditor."""
 
-    def __init__(self, trusted_builds: dict[str, bytes]) -> None:
-        # fingerprint -> shared key registered for that known-good build
-        self._trusted = dict(trusted_builds)
+    def __init__(
+        self,
+        trusted_builds: dict,
+        evidence_validator: Callable[[dict], bool] | None = None,
+    ) -> None:
+        # fingerprint -> AttestationBackend (a raw bytes value is taken as an
+        # HMAC key for backward compatibility).
+        self._backends: dict[str, AttestationBackend] = {
+            fp: (v if not isinstance(v, (bytes, bytearray)) else HmacBackend(bytes(v)))
+            for fp, v in trusted_builds.items()
+        }
+        # For hardware-attested kinds, validate the enclave quote against trusted
+        # measurements; returning False marks the build untrusted. None = skip.
+        self._evidence_validator = evidence_validator
         self._last_seq: dict[str, int] = {}
         self._last_chain: dict[str, str] = {}
 
     def verify(self, report: LocalAuditReport, att: AuditorAttestation) -> AttestationVerdict:
         reasons: list[str] = []
 
-        key = self._trusted.get(att.fingerprint)
-        if key is None:
-            # Unknown/modified build — no registered key to verify against.
+        backend = self._backends.get(att.fingerprint)
+        if backend is None:
+            # Unknown/modified build — no registered verifier for it.
             return AttestationVerdict(False, ["untrusted_or_modified_auditor_build"])
 
-        expected_sig = hmac.new(key, att.chain_hash().encode(), hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(expected_sig, att.signature):
+        if not backend.verify(att.chain_hash(), att.signature):
             reasons.append("bad_signature")
+
+        if self._evidence_validator is not None and not self._evidence_validator(att.evidence):
+            reasons.append("evidence_validation_failed")
 
         if _report_hash(report) != att.report_hash:
             reasons.append("report_tampered")

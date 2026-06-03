@@ -19,6 +19,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   its own policy. Register owners via `register_agent(..., user_id=...)`. New
   `cross_owner_leak` risk type + benchmark scenarios (cross-owner positive,
   same-owner negative).
+- **Pluggable attestation backend (TEE upgrade path)** — `AttestationBackend`
+  abstracts the signing primitive. `HmacBackend` is the software default
+  (tamper-evident); `CallableBackend` plugs in a hardware/TEE adapter whose
+  `evidence()` carries an enclave attestation quote, validated center-side via
+  `AttestationVerifier(evidence_validator=...)` — upgrading the guarantee from
+  tamper-evident to tamper-proof. Attestations now carry `kind` + `evidence`;
+  the HMAC path is fully backward compatible.
 - **Attested transport** — the central audit server runs in attested mode when
   given `trusted_builds`: `POST /api/v1/reports/attested` verifies each report's
   edge attestation and rejects (422) a modified-build / tampered / out-of-sequence
