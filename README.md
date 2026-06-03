@@ -216,10 +216,11 @@ python benchmarks/detection_eval.py            # precision / recall / F1
 python benchmarks/detection_eval.py --sweep    # threshold robustness
 ```
 
-On the current set (**30 scenarios: 17 leak + 13 benign**, incl. adversarial
+On the current set (**33 scenarios: 19 leak + 14 benign**, incl. adversarial
 cases — noise-buried leaks, diamond multi-path, same-domain laundering, an
-injection worm, sensitivity-under-reporting evasion, cross-owner group leaks,
-collusion, high-volume benign hubs, cross-subject convergence) the pipeline
+injection worm, sensitivity-under-reporting evasion, multi-origin aggregation,
+slow-drip identity assembly, cross-owner group leaks, collusion, high-volume
+benign hubs, cross-subject convergence) the pipeline
 reaches **precision 1.0 / recall 1.0 / F1 1.0** with **zero raw-content
 leakage** into central reports, stable across thresholds 0.3–0.8. Pure
 structural signals (topology, timing, behavioral) are reported separately and

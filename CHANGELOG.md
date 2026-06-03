@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- Adversarial benchmark scenarios — multi-origin aggregation to a third party
+  and slow-drip identity assembly (both caught); a same-owner high-volume benign
+  case. 33 scenarios, P/R/F1 = 1.0. A same-owner *sensitive* benign attempt
+  surfaced that the detectors can't yet tell one principal's own agents from
+  distinct services handling a user's data — captured as the trust-boundary
+  roadmap item.
 - **LlamaIndex integration** (`sdk/llamaindex.py`, `llamaindex_handler`) capturing
   AgentWorkflow agent-to-agent hand-offs from the event stream. New
   `[llamaindex]` extra. (#5)

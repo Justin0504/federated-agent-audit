@@ -1,11 +1,11 @@
 {
   "threshold": 0.5,
-  "n_positive": 17,
-  "n_total": 30,
+  "n_positive": 19,
+  "n_total": 33,
   "confusion": {
-    "tp": 17,
+    "tp": 19,
     "fp": 0,
-    "tn": 13,
+    "tn": 14,
     "fn": 0,
     "precision": 1.0,
     "recall": 1.0,
@@ -297,6 +297,38 @@
       "raw_leak": false
     },
     {
+      "name": "multi_origin_hub_to_third_party",
+      "category": "aggregation",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_multihop_escalation",
+        "cross_domain_leak"
+      ],
+      "expected_types": [
+        "cross_domain_leak"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "slow_drip_identity_aggregation",
+      "category": "aggregation",
+      "should_detect": true,
+      "flagged": true,
+      "max_severity": 1.0,
+      "detected_types": [
+        "compound_scope_escalation",
+        "taint_spreading"
+      ],
+      "expected_types": [
+        "taint_spreading"
+      ],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
       "name": "evasion_underreported_sensitivity",
       "category": "cross_domain",
       "should_detect": true,
@@ -461,6 +493,19 @@
       "flagged": false,
       "max_severity": 0.0,
       "detected_types": [],
+      "expected_types": [],
+      "expected_hit": true,
+      "raw_leak": false
+    },
+    {
+      "name": "same_owner_high_volume_chatter",
+      "category": "benign",
+      "should_detect": false,
+      "flagged": false,
+      "max_severity": 0.3,
+      "detected_types": [
+        "compound_collusion"
+      ],
       "expected_types": [],
       "expected_hit": true,
       "raw_leak": false

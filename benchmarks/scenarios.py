@@ -203,6 +203,33 @@ POSITIVE: list[Scenario] = [
         expected_types={"cross_owner_leak"},
     ),
     Scenario(
+        # Hard positive: a hub aggregates two people's sensitive data (origin
+        # becomes "multi"), then forwards to a third user's agent. Others' data
+        # reaches carol — must be caught even though no single subject is attributable.
+        "multi_origin_hub_to_third_party", "aggregation", True,
+        [
+            Handoff("health_bot", "hub", "alice condition", ["health"], 5, "alice"),
+            Handoff("finance_bot", "hub", "bob balance", ["finance"], 4, "bob"),
+            Handoff("hub", "carol_agent", "combined profile", ["social"], 3),
+        ],
+        owners={"carol_agent": "carol"},
+        expected_types={"cross_domain_leak"},
+    ),
+    Scenario(
+        # Hard positive: slow-drip aggregation — five low-sensitivity identity
+        # fragments about one subject assemble at a hub, then leave.
+        "slow_drip_identity_aggregation", "aggregation", True,
+        [
+            Handoff("a1", "hub", "first name", ["identity"], 2, "victim"),
+            Handoff("a2", "hub", "zip code", ["identity"], 2, "victim"),
+            Handoff("a3", "hub", "birth year", ["identity"], 2, "victim"),
+            Handoff("a4", "hub", "employer", ["identity"], 2, "victim"),
+            Handoff("a5", "hub", "device id", ["identity"], 2, "victim"),
+            Handoff("hub", "external", "assembled identity", ["social"], 2),
+        ],
+        expected_types={"taint_spreading"},
+    ),
+    Scenario(
         # Evasion: an agent under-reports sensitivity (claims 1) to dodge
         # sensitivity-gated checks, but still routes health to a social fan-out.
         # Provenance (taint spread + cross-domain), not the self-declared
@@ -341,6 +368,21 @@ NEGATIVE: list[Scenario] = [
         "same_owner_two_devices", "benign", False,
         [
             Handoff("alice_phone", "alice_laptop", "alice condition", ["health"], 5, "alice"),
+        ],
+        owners={"alice_phone": "alice", "alice_laptop": "alice"},
+        expected_types=set(),
+    ),
+    Scenario(
+        # Same owner, high-volume but only non-sensitive chatter between one
+        # person's own two devices — must not false-trigger on volume alone.
+        "same_owner_high_volume_chatter", "benign", False,
+        [
+            Handoff("alice_phone", "alice_laptop", "reminder", ["social"], 1, "alice"),
+            Handoff("alice_laptop", "alice_phone", "ok noted", ["social"], 1, "alice"),
+            Handoff("alice_phone", "alice_laptop", "calendar sync", ["schedule"], 1, "alice"),
+            Handoff("alice_laptop", "alice_phone", "synced", ["schedule"], 1, "alice"),
+            Handoff("alice_phone", "alice_laptop", "weather", ["social"], 1, "alice"),
+            Handoff("alice_laptop", "alice_phone", "thanks", ["social"], 1, "alice"),
         ],
         owners={"alice_phone": "alice", "alice_laptop": "alice"},
         expected_types=set(),
