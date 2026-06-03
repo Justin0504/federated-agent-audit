@@ -19,6 +19,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   its own policy. Register owners via `register_agent(..., user_id=...)`. New
   `cross_owner_leak` risk type + benchmark scenarios (cross-owner positive,
   same-owner negative).
+- **Attested transport** — the central audit server runs in attested mode when
+  given `trusted_builds`: `POST /api/v1/reports/attested` verifies each report's
+  edge attestation and rejects (422) a modified-build / tampered / out-of-sequence
+  agent. `GET /api/v1/audit` returns an `integrity` block (rejected agents +
+  cross-corroboration findings). Client gains `submit_attested_report()`. The
+  two-party model now works over the network, not just in-process.
 - **Graph cross-corroboration** (`cross_corroborate`) — closes the attestation
   omission gap. Recipients log desensitized receipts (sender + content_hash);
   the center matches them against senders' reported edges, so a sender that drops

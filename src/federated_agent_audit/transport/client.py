@@ -81,6 +81,18 @@ class AuditClient:
         payload = "[" + ",".join(serialize_report(r) for r in reports) + "]"
         return await self._post_with_retry("/api/v1/reports/batch", payload)
 
+    async def submit_attested_report(self, report: LocalAuditReport, attestation) -> dict[str, Any]:
+        """Submit a report with its edge attestation to an attested-mode server.
+
+        ``attestation`` is an ``AuditorAttestation`` (from ``Attestor.attest``).
+        The server rejects (422) a modified-build / tampered / out-of-sequence
+        report.
+        """
+        import json
+        from dataclasses import asdict
+        envelope = {"report": json.loads(serialize_report(report)), "attestation": asdict(attestation)}
+        return await self._post_with_retry("/api/v1/reports/attested", json.dumps(envelope))
+
     async def buffer_report(self, report: LocalAuditReport) -> None:
         """Add report to buffer. Flushes automatically when batch_size is reached."""
         self._buffer.append(report)
