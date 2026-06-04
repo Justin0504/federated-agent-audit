@@ -1,6 +1,6 @@
 # Federated Agent Audit
 
-**Behavior tracing + federated audit for any multi-agent system — see what your agents do and catch privacy & compliance risks, with the central auditor never seeing raw content.**
+**Trace and audit any multi-agent system for privacy & compliance risks — with the central auditor never seeing raw content.**
 
 ```
 pip install federated-agent-audit
@@ -10,33 +10,36 @@ pip install federated-agent-audit
 [![PyPI version](https://img.shields.io/pypi/v/federated-agent-audit.svg)](https://pypi.org/project/federated-agent-audit/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-696%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-723%20passing-brightgreen.svg)](tests/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-Two pillars, framework-agnostic and scenario-agnostic:
+Think **LangSmith/Langfuse for multi-agent systems, but federated** — your
+prompts and outputs never leave the agents' own environments. Two pillars,
+framework- and scenario-agnostic:
 
-1. **Behavior tracing** — capture the real agent-to-agent interaction graph
-   (who sent what to whom, tool calls, hand-offs) from CrewAI · LangGraph ·
-   AutoGen · OpenAI Agents · LlamaIndex, or any custom orchestration.
+1. **Behavior tracing** — capture the real agent-to-agent interaction graph (who
+   sent what to whom, tool calls, hand-offs) from CrewAI · LangGraph · AutoGen ·
+   OpenAI Agents · LlamaIndex, or any custom orchestration.
 2. **Federated desensitized audit** — each agent audits locally; the central
-   auditor only ever sees hashed, pseudonymized, DP-noised metadata. It detects
-   compositional privacy/compliance risks that emerge *across* agents — and
-   **never sees raw content**, by architecture.
+   auditor only ever sees hashed, pseudonymized, DP-noised metadata, yet detects
+   the compositional privacy/compliance risks that emerge *across* agents.
 
-Think LangSmith/Langfuse for multi-agent systems, but federated: your prompts
-and outputs never leave the agents' own environments.
+> **The hard part, proven.** Detection has to survive desensitization. Run every
+> benchmark scenario through the full 6-layer desensitizer **and** differential
+> privacy and the audit still holds **F1 ≈ 0.91 (ε 0.5–3.0) with zero raw-content
+> leakage** — where a naive design collapses to ~0.17 specificity.
 
 **Who's this for?** Anyone running a multi-agent system who needs to observe and
 govern its behavior — with extra pull for teams who *can't* ship raw prompts to
-a third-party observability vendor (regulated data, on-prem, data residency).
-A single-LLM-app on-ramp is built in (see the firewall below).
+a third-party vendor (regulated data, on-prem, data residency). A single-LLM-app
+on-ramp is built in (the firewall below).
 
 ---
 
 ## 30-Second Quick Start
 
 > New here? Start with the [firewall](#protect-your-llm-calls) — it works on a
-> single LLM call, no multi-agent setup needed. The
+> single LLM call, no multi-agent setup. The
 > [multi-agent audit](#multi-agent-trace--audit) is the depth you grow into.
 
 ```python
@@ -72,8 +75,8 @@ response = client.chat.completions.create(model="gpt-4o", messages=[...])
 
 ## The Problem
 
-Multi-agent systems (CrewAI, LangGraph, AutoGen, OpenAI Agents, LlamaIndex)
-create **compound privacy risks** that single-agent tools can't detect:
+Multi-agent systems create **compound privacy risks** that single-agent tools
+can't detect:
 
 - Agent A shares salary data with Agent B (allowed by A's policy)
 - Agent B forwards a "summary" to an external partner (allowed by B's policy)
@@ -85,7 +88,7 @@ auditor ever seeing raw content**.
 
 📖 **[Worked case study](docs/CASE_STUDY.md)** — a leak that emerges only from
 *combining* two policy-compliant agents, caught with the raw PHI/PII never
-leaving the agents' environments (`python examples/case_study_healthcare_leak.py`).
+leaving the agents (`python examples/case_study_healthcare_leak.py`).
 
 ```
                        +---------------+
@@ -108,10 +111,9 @@ center), deployment topologies, and the tamper-evidence guarantees.
 
 ## Multi-Agent Trace & Audit
 
-The integrations capture the **real agent-to-agent interaction graph** — who
-sent what to whom — which is exactly what the compositional / cascade /
-cross-domain detectors analyze. Everything is built on `MultiAgentTracer`,
-which works with any framework (or none):
+The integrations capture the **real agent-to-agent interaction graph** — exactly
+what the compositional / cascade / cross-domain detectors analyze. Everything is
+built on `MultiAgentTracer`, which works with any framework (or none):
 
 ```python
 from federated_agent_audit import MultiAgentTracer, PrivacyPolicy
@@ -134,7 +136,7 @@ desensitized — whether or not anything went wrong. No raw content, ever:
 ```python
 tracer.timeline()   # [{seq, agent, to, action, domains, sensitivity, local_action, timestamp}, ...]
 tracer.summary()    # per-agent sent/received/internal counts + domains touched
-tracer.export()     # full interaction graph as a JSON-able dict (no raw text — hashes + metadata)
+tracer.export()     # full interaction graph as a JSON-able dict (hashes + metadata, no raw text)
 ```
 
 It catches the compound leak no single agent's policy can see — and the central
@@ -156,40 +158,34 @@ Privacy verification (central reports):  hr_bot → clean  health_bot → clean 
 ```python
 # CrewAI — captures agent delegation (Delegate/Ask coworker) as A→B edges
 from federated_agent_audit.sdk import crew_audit
-crew = crew_audit(crew, default_policy=policy)   # or policies={role: policy}
-crew.kickoff()
-result = crew._federated_tracer.network_audit()
+crew = crew_audit(crew, default_policy=policy)
+crew.kickoff(); result = crew._federated_tracer.network_audit()
 
 # LangChain / LangGraph — per-node identity + node-to-node hand-offs
 from federated_agent_audit.sdk import langchain_callback
 handler = langchain_callback(default_policy=policy)          # asynchronous=True for async graphs
-graph.invoke(input, config={"callbacks": [handler]})
-result = handler.tracer.network_audit()
+graph.invoke(input, config={"callbacks": [handler]}); result = handler.tracer.network_audit()
 
 # AutoGen / AG2 — hooks every agent-to-agent message
 from federated_agent_audit.sdk import autogen_audit
 tracer = autogen_audit([assistant, user_proxy, critic], default_policy=policy)
-user_proxy.initiate_chat(assistant, message="...")
-result = tracer.network_audit()
+user_proxy.initiate_chat(assistant, message="..."); result = tracer.network_audit()
 
 # OpenAI Agents SDK — captures first-class handoffs
 from federated_agent_audit.sdk import openai_agents_hooks
 hooks = openai_agents_hooks(default_policy=policy)
-await Runner.run(triage_agent, input="...", hooks=hooks)
-result = hooks.tracer.network_audit()
+await Runner.run(triage_agent, input="...", hooks=hooks); result = hooks.tracer.network_audit()
 
 # LlamaIndex AgentWorkflow — captures hand-offs from the event stream
 from federated_agent_audit.sdk import llamaindex_handler
 h = llamaindex_handler(default_policy=policy)
-async for event in workflow.run(user_msg="...").stream_events():
-    h.handle_event(event)
+async for event in workflow.run(user_msg="...").stream_events(): h.handle_event(event)
 result = h.tracer.network_audit()
 
 # Generic Python — single-agent decorator
 from federated_agent_audit import audited
 @audited(policy, to_agent="downstream")
-def my_agent(input_text: str) -> str:
-    return process(input_text)
+def my_agent(text: str) -> str: ...
 ```
 
 ## What It Detects
@@ -199,43 +195,31 @@ def my_agent(input_text: str) -> str:
 | **Cross-domain leak** | Health data reaches a social/external agent | Domain boundary analysis on metadata |
 | **Cross-owner leak** | My agent leaks *my* private data to another user's agent | Owner-boundary analysis (taint origin vs recipient owner) |
 | **Compositional inference** | Agent collects health + identity = reidentification | Quasi-identifier assembly detection |
-| **Aggregation attack** | 3 agents each share a fragment → hub reconstructs full profile | Multi-source convergence analysis |
+| **Aggregation attack** | 3 agents each share a fragment → hub rebuilds the profile | Multi-source convergence analysis |
 | **Cascading injection** | Prompt injection propagates agent-to-agent like a worm | Infection tree + patient-zero attribution |
-| **Collusion** | Two agents exchange complementary data to reconstruct a profile | Bidirectional complementary-flow detection |
+| **Collusion** | Two agents swap complementary data to reconstruct a profile | Bidirectional complementary-flow detection |
 | **Behavioral drift** | Agent suddenly changes behavior (possible compromise) | Cross-session z-score monitoring |
 | **Negative inference** | "I can't share that" confirms the data exists | Refusal pattern detection |
-| **Regulatory gap** | EU AI Act / GDPR / CA SB 243 / COPPA requirements unmet | Per-article compliance scoring |
+| **Regulatory gap** | EU AI Act / GDPR / CA SB 243 / COPPA unmet | Per-article compliance scoring |
 
 ## Detection Effectiveness
 
-A labeled benchmark of multi-agent scenarios (real compositional leaks vs.
-benign traffic) measures detection quality, not just speed:
+A labeled benchmark (real compositional leaks vs. benign traffic) measures
+detection quality, not just speed:
 
 ```bash
-python benchmarks/detection_eval.py            # precision / recall / F1
-python benchmarks/detection_eval.py --sweep    # threshold robustness
+python benchmarks/detection_eval.py          # precision / recall / F1 (clean desensitized data)
+python benchmarks/dp_eval.py                 # accuracy under full desensitizer + DP
 ```
 
-On the current set (**33 scenarios: 19 leak + 14 benign**, incl. adversarial
-cases — noise-buried leaks, diamond multi-path, same-domain laundering, an
-injection worm, sensitivity-under-reporting evasion, multi-origin aggregation,
-slow-drip identity assembly, cross-owner group leaks, collusion, high-volume
-benign hubs, cross-subject convergence) the pipeline
-reaches **precision 1.0 / recall 1.0 / F1 1.0** with **zero raw-content
-leakage** into central reports, stable across thresholds 0.3–0.8. Pure
-structural signals (topology, timing, behavioral) are reported separately and
-not counted as privacy-leak detections. `tests/test_detection_benchmark.py`
-locks the metrics as a regression gate.
+**On clean desensitized data** (33 scenarios: 19 leak + 14 benign, incl.
+adversarial cases — noise-buried leaks, diamond multi-path, same-domain
+laundering, an injection worm, sensitivity-under-reporting evasion, multi-origin
+aggregation, slow-drip identity assembly, cross-owner group leaks, collusion):
+**precision 1.0 / recall 1.0 / F1 1.0**, zero raw-content leakage, stable across
+thresholds 0.3–0.8. Locked by `tests/test_detection_benchmark.py`.
 
-Validated live against **LangGraph** (free, in-suite) and **CrewAI** + **OpenAI
-streaming** (opt-in examples, need an API key).
-
-### Accuracy under desensitization + DP
-
-The central auditor never sees raw content, so the real question is whether
-detection survives the noise. Running every scenario through the **full**
-pipeline — the 6-layer desensitizer *and* differential privacy
-(`python benchmarks/dp_eval.py`):
+**Under full desensitization + differential privacy** (averaged over trials):
 
 | DP epsilon | recall | specificity | F1 | raw leaks |
 |---|---|---|---|---|
@@ -243,21 +227,28 @@ pipeline — the 6-layer desensitizer *and* differential privacy
 | 1.0 | 0.89 | 0.93 | 0.91 | **0** |
 | 0.5 | 0.89 | 0.94 | 0.92 | **0** |
 
-The key design point: domains are protected **structurally** (k-anonymity
-generalization), not by per-domain randomized response — which fabricates
-spurious sensitive edges and collapses precision (specificity ~0.17). Taint is
-preserved through DP. Result: **F1 ≈ 0.91 under strong DP with zero raw-content
-leakage**, stable across epsilon. Locked by `tests/test_dp_robustness.py`.
+Domains are protected **structurally** (k-anonymity generalization), not by
+per-domain randomized response — which fabricates spurious sensitive edges and
+collapses precision to ~0.17 — and taint is preserved through DP. Locked by
+`tests/test_dp_robustness.py`. Validated live against **LangGraph** (in-suite)
+and **CrewAI** + **OpenAI streaming** (opt-in examples).
 
-## Forced-Embed & Attestation
+## Forced-Embed, Attestation & Integrity
 
-In a *forced-embed* deployment the auditor ships inside each downloaded agent
-(like a mandatory compliance SDK). Edge attestation makes that **tamper-evident**:
-the center pins known-good build fingerprints, checks an HMAC over each report,
-enforces per-agent sequence + hash-chain continuity, and flags under-reporting —
-so a modified-build / altered / omitted report is detected. It is tamper-*evident*,
-not tamper-proof; hardware attestation (TEE) is the next level. See
-`examples/marketplace_forced_embed.py`.
+For deployments where the auditor ships inside each downloaded agent (a mandatory
+compliance SDK), the central auditor can verify the edges aren't cheating —
+**tamper-evident**, without ever seeing raw content:
+
+- **Attestation** — build-fingerprint pinning + HMAC + per-agent sequence/hash
+  chain catches a modified-build / altered / omitted report. A pluggable backend
+  leaves a **TEE upgrade path** (`CallableBackend` + `evidence_validator`) to go
+  tamper-*proof*.
+- **Cross-corroboration** — recipients log desensitized receipts, so a sender
+  that drops an edge is caught; a single bad actor can't hide.
+- **Challenge / reveal** — the center can demand one committed entry with a
+  Merkle proof, without browsing the rest.
+
+Full loop: `python examples/marketplace_forced_embed.py`.
 
 ## Compliance Engine
 
@@ -268,8 +259,7 @@ from federated_agent_audit import ComplianceEngine
 
 engine = ComplianceEngine(eu_users=True, california_users=True, involves_children=False)
 report = engine.evaluate(audit_result)
-
-print(report.overall_score)  # 0.0 - 1.0  ·  report.status: compliant / partial / non_compliant
+print(report.overall_score, report.status)   # 0.0–1.0 · compliant / partial / non_compliant
 for gap in report.gaps():
     print(f"{gap.regulation} {gap.article}: {gap.remediation}")
 ```
@@ -277,8 +267,7 @@ for gap in report.gaps():
 ## CLI & YAML Policies
 
 ```bash
-federated-audit scan "Patient SSN is 123-45-6789"     # scan text
-echo "salary: $200k" | federated-audit scan --protect salary
+federated-audit scan "Patient SSN is 123-45-6789"     # scan text (or pipe via stdin)
 federated-audit validate policies/*.yaml              # validate policy files
 federated-audit demo                                  # quick multi-agent demo
 federated-audit server --port 8000                    # start the central audit server
@@ -292,39 +281,33 @@ acceptable_abstractions: {salary: compensation level, SSN: employee identifier}
 sensitivity_threshold: 3
 ```
 
-```python
-from federated_agent_audit import load_policy
-policy = load_policy("policies/hr_bot.yaml")
-```
-
 ## Installation
 
 ```bash
-pip install federated-agent-audit                      # core
-pip install "federated-agent-audit[crewai]"            # + a framework adapter
-                                                       #   (or langchain/langgraph/autogen/
-                                                       #    openai-agents/llamaindex)
-pip install "federated-agent-audit[transport]"         # + the central audit server
-pip install "federated-agent-audit[all]"               # everything
+pip install federated-agent-audit                 # core
+pip install "federated-agent-audit[crewai]"       # + a framework adapter (or langchain/
+                                                  #   langgraph/autogen/openai-agents/llamaindex)
+pip install "federated-agent-audit[transport]"    # + the central audit server
+pip install "federated-agent-audit[all]"          # everything
 ```
 
 ## How It Works
 
 ```
-49 modules  ·  696 tests  ·  0 external API calls required
+49 modules  ·  723 tests  ·  0 external API calls required
 
-Local (Phase 1):                    Network (Phase 2):
-  PrivacyGate (regex + PII)           Cross-domain / cross-owner detection
-  SemanticDetector (4-tier)           Compositional leak detection
-  TaintTracker (info flow)            Cascade infection tracking
-  Desensitizer (6-layer)              Aggregation / collusion analysis
-  MemoryAuditor (write audit)         Topology + blame attribution
-  Attestor (tamper-evidence)          Compliance engine
+Local (Phase 1, at the edge):        Network (Phase 2, at the center):
+  PrivacyGate (regex + PII)            Cross-domain / cross-owner detection
+  SemanticDetector (4-tier)            Compositional leak (quasi-id assembly)
+  TaintTracker (info flow)             Cascade infection (patient-zero)
+  Desensitizer (6-layer)               Aggregation / collusion / multihop
+  MemoryAuditor (write audit)          Topology + blame attribution
+  Attestor (tamper-evidence)           Compliance engine + risk aggregation
 ```
 
-**Privacy guarantee**: the central auditor architecturally cannot see raw
-content. Data is hashed, pseudonymized, and DP-noised before leaving local
-agents. Merkle-tree commitments make audit trails **tamper-evident** without
+**Privacy guarantee**: the central auditor architecturally cannot reconstruct
+raw content. Data is hashed, pseudonymized, and DP-noised before leaving local
+agents; Merkle-tree commitments make audit trails **tamper-evident** without
 revealing entries.
 
 ## Development
@@ -333,7 +316,7 @@ revealing entries.
 git clone https://github.com/Justin0504/federated-agent-audit
 cd federated-agent-audit
 pip install -e ".[dev,langchain,langgraph,transport,yaml]"
-pytest                                  # 696 tests
+pytest                                  # 723 tests
 ruff check src/ tests/ benchmarks/      # lint
 python examples/multiagent_trace_demo.py
 ```
