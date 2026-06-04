@@ -61,7 +61,16 @@ class DPConfig:
     epsilon_edge: float = 1.0  # privacy budget for edge existence
     epsilon_sensitivity: float = 1.0  # privacy budget for sensitivity levels
     epsilon_stats: float = 1.0  # privacy budget for aggregate statistics
-    epsilon_domains: float = 1.0  # privacy budget for domain labels
+    epsilon_domains: float = 1.0  # privacy budget for domain labels (if perturbed)
+    # Per-domain randomized response destroys the very signal the cross-domain /
+    # compositional audit relies on (it flips benign edges into spuriously
+    # sensitive ones). Domains are better protected structurally — by the
+    # desensitizer's k-anonymity generalization — so domain perturbation is
+    # OFF by default. Enable only if you accept the precision loss it causes.
+    perturb_domains: bool = False
+    # Preserve the information-flow taint label (with its already-desensitized
+    # origin) so taint-based detectors keep working under DP.
+    preserve_taint: bool = True
 
 
 def dp_perturb_edge(edge: DesensitizedEdge, config: DPConfig) -> DesensitizedEdge:
@@ -83,13 +92,17 @@ def dp_perturb_edge(edge: DesensitizedEdge, config: DPConfig) -> DesensitizedEdg
         edge.local_violation, config.epsilon_edge
     )
 
-    # perturb domains (randomized response per possible domain)
-    all_domains = {"health", "finance", "legal", "social", "schedule", "general"}
-    noisy_domains: list[str] = []
-    for d in all_domains:
-        present = d in edge.domains
-        if randomized_response(present, config.epsilon_domains):
-            noisy_domains.append(d)
+    # Domains: by default keep them (protected by k-anonymity generalization
+    # upstream). Optional per-domain randomized response is destructive to the
+    # cross-domain audit and must be explicitly enabled.
+    if config.perturb_domains:
+        all_domains = {"health", "finance", "legal", "social", "schedule", "general"}
+        out_domains = [
+            d for d in all_domains
+            if randomized_response(d in edge.domains, config.epsilon_domains)
+        ]
+    else:
+        out_domains = list(edge.domains)
 
     return DesensitizedEdge(
         edge_id=edge.edge_id,
@@ -99,10 +112,11 @@ def dp_perturb_edge(edge: DesensitizedEdge, config: DPConfig) -> DesensitizedEdg
         timestamp=edge.timestamp,
         message_type=edge.message_type,
         sensitivity_level=noisy_sensitivity,
-        domains=noisy_domains,
+        domains=out_domains,
         local_violation=noisy_violation,
         local_action=edge.local_action,
         content_hash=edge.content_hash,
+        taint=edge.taint if config.preserve_taint else None,
     )
 
 

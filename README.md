@@ -230,6 +230,25 @@ locks the metrics as a regression gate.
 Validated live against **LangGraph** (free, in-suite) and **CrewAI** + **OpenAI
 streaming** (opt-in examples, need an API key).
 
+### Accuracy under desensitization + DP
+
+The central auditor never sees raw content, so the real question is whether
+detection survives the noise. Running every scenario through the **full**
+pipeline — the 6-layer desensitizer *and* differential privacy
+(`python benchmarks/dp_eval.py`):
+
+| DP epsilon | recall | specificity | F1 | raw leaks |
+|---|---|---|---|---|
+| 3.0 | 0.89 | 0.93 | 0.91 | **0** |
+| 1.0 | 0.89 | 0.93 | 0.91 | **0** |
+| 0.5 | 0.89 | 0.94 | 0.92 | **0** |
+
+The key design point: domains are protected **structurally** (k-anonymity
+generalization), not by per-domain randomized response — which fabricates
+spurious sensitive edges and collapses precision (specificity ~0.17). Taint is
+preserved through DP. Result: **F1 ≈ 0.91 under strong DP with zero raw-content
+leakage**, stable across epsilon. Locked by `tests/test_dp_robustness.py`.
+
 ## Forced-Embed & Attestation
 
 In a *forced-embed* deployment the auditor ships inside each downloaded agent

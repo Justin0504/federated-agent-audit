@@ -342,16 +342,23 @@ class MultiAgentTracer:
         """
         return [aud.produce_report(apply_dp=apply_dp) for aud in self._auditors.values()]
 
-    def network_audit(self, apply_dp: bool = False) -> NetworkAuditResult:
-        """Run Phase-2 central audit across every agent's report."""
+    def network_audit(self, apply_dp: bool = False, dp_aware: bool | None = None) -> NetworkAuditResult:
+        """Run Phase-2 central audit across every agent's report.
+
+        ``dp_aware`` enables noise-robust detection (defaults to ``apply_dp``):
+        under DP-perturbed reports, detectors require corroboration so a single
+        noised domain flip doesn't fire — recovering precision.
+        """
+        if dp_aware is None:
+            dp_aware = apply_dp
         net = NetworkAuditor()
         for report in self.reports(apply_dp=apply_dp):
             net.ingest_report(report)
-        return net.audit()
+        return net.audit(dp_aware=dp_aware)
 
-    def aggregated(self, apply_dp: bool = False) -> AggregatedResult:
+    def aggregated(self, apply_dp: bool = False, dp_aware: bool | None = None) -> AggregatedResult:
         """Run the network audit then denoise into actionable incidents."""
-        return RiskAggregator().aggregate(self.network_audit(apply_dp=apply_dp))
+        return RiskAggregator().aggregate(self.network_audit(apply_dp=apply_dp, dp_aware=dp_aware))
 
     # ── Introspection ────────────────────────────────────────────────
 

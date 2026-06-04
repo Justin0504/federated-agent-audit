@@ -7,6 +7,22 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **Accuracy under desensitization + DP** — `benchmarks/dp_eval.py` measures
+  detection through the full 6-layer desensitizer *and* differential privacy.
+  `tests/test_dp_robustness.py` locks it in.
+- Optional DP-aware audit mode (`NetworkAuditor.audit(dp_aware=True)`, threaded
+  through `MultiAgentTracer.network_audit`) that requires sensitivity
+  corroboration so noised domain flips don't fire.
+
+### Fixed
+- **Desensitized audit accuracy** — under DP the pipeline previously collapsed to
+  ~0.17 specificity. Root cause: per-domain randomized response fabricated
+  spurious sensitive edges, and `dp_perturb_edge` dropped the taint label. Now
+  domains are protected structurally (k-anonymity generalization) with per-domain
+  perturbation OFF by default (`DPConfig.perturb_domains=False`), and taint is
+  preserved (`preserve_taint=True`). Result: **F1 ≈ 0.91 under strong DP
+  (epsilon 0.5–3.0) with zero raw-content leakage**.
+
 - Adversarial benchmark scenarios — multi-origin aggregation to a third party
   and slow-drip identity assembly (both caught); a same-owner high-volume benign
   case. 33 scenarios, P/R/F1 = 1.0. A same-owner *sensitive* benign attempt

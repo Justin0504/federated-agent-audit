@@ -39,9 +39,15 @@ logger = logging.getLogger(__name__)
 class NetworkAuditor:
     """Central auditor that operates on desensitized data only."""
 
+    # Under DP-aware mode, a sensitive domain must be backed by at least this
+    # sensitivity level to count — independent domain-flip noise on a benign
+    # low-sensitivity edge won't reach it.
+    _DP_SENSITIVITY_FLOOR = 3
+
     def __init__(self) -> None:
         self._reports: dict[str, LocalAuditReport] = {}  # agent_id -> report
         self._graph: nx.DiGraph = nx.DiGraph()
+        self._dp_aware = False
 
     def ingest_report(self, report: LocalAuditReport) -> None:
         """Ingest a local audit report. Only desensitized data is stored."""
@@ -78,8 +84,16 @@ class NetworkAuditor:
                 local_action=edge.local_action,
             )
 
-    def audit(self) -> NetworkAuditResult:
-        """Run all network-level audits on the desensitized interaction graph."""
+    def audit(self, dp_aware: bool = False) -> NetworkAuditResult:
+        """Run all network-level audits on the desensitized interaction graph.
+
+        Args:
+            dp_aware: when the reports were DP-perturbed, require corroboration
+                (a sensitive domain must be backed by sufficient sensitivity)
+                so a single independently-noised domain flip does not trigger a
+                detector — recovering precision under differential privacy.
+        """
+        self._dp_aware = dp_aware
         logger.info(
             "Starting network audit: %d agents, %d edges",
             self._graph.number_of_nodes(), self._graph.number_of_edges(),
@@ -168,6 +182,11 @@ class NetworkAuditor:
             sensitive_domains = {"health", "finance", "legal"}
             crossing = edge_domains & sensitive_domains
             if not crossing:
+                continue
+            # DP-aware: under domain-flip noise, require the sensitivity level to
+            # corroborate the sensitive domain (the two are independently noised,
+            # so a benign edge rarely has both flipped together).
+            if self._dp_aware and data.get("sensitivity_level", 0) < self._DP_SENSITIVITY_FLOOR:
                 continue
             # A *compositional* cross-domain risk requires the sensitive info to
             # either land in a KNOWN different domain, or keep flowing (the
