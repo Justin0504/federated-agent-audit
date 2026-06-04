@@ -12,3 +12,4 @@ venv/
 .ruff_cache/
 *.log
 .DS_Store
+.coverage

@@ -6,6 +6,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-06-04
+
+The federated forced-embed model, end to end: tamper-evident attestation (with a
+TEE upgrade path), graph cross-corroboration, an attested transport server, the
+cross-owner-leak detector for multi-user groups, three more framework
+integrations (AutoGen, OpenAI Agents, LlamaIndex), behavior tracing as a
+first-class pillar, and — the headline — audit accuracy preserved under full
+desensitization + differential privacy (F1 ≈ 0.91, zero raw leakage).
+
 ### Added
 - **Accuracy under desensitization + DP** — `benchmarks/dp_eval.py` measures
   detection through the full 6-layer desensitizer *and* differential privacy.
