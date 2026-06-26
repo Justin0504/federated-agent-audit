@@ -216,22 +216,32 @@ class NetworkAuditor:
         """Detect a data subject's private info reaching a *different owner's* agent.
 
         The defining risk of multi-user agent groups (each agent holds its own
-        owner's memory): if data about subject X (taint origin) flows to an agent
-        owned by Y (Y != X), X's private data has crossed an owner boundary —
-        even if every agent obeyed its own policy. Requires both a known data
-        subject (taint origin) and a known recipient owner (report user_id).
+        owner's memory): a flow originates under owning principal H (the
+        principal entitled to the subject's data) and reaches an agent owned by a
+        *different* principal Y (Y != H) — the subject's private data has crossed
+        an owner boundary, even if every agent obeyed its own policy.
+
+        The comparison is principal-vs-principal (same namespace): the flow's
+        ``origin_principal`` (owner of the originating agent, carried in the
+        taint) against the recipient agent's ``owner_principal`` (falling back to
+        ``user_id`` for single-tenant callers that never set it). The data
+        subject (``origin_boundary``) is reported for context but is a distinct
+        trust axis and is not used for the boundary test.
         """
         risks: list[CompositionalRisk] = []
         for edge in all_edges:
             if edge.taint is None:
                 continue
-            subject = edge.taint.origin_boundary
-            if not subject or subject == "multi":
-                continue
+            home = edge.taint.origin_principal
+            if not home or home == "multi":
+                continue  # unknown or merged origin principal — can't attribute
             recipient_report = self._reports.get(edge.to_agent)
-            owner = recipient_report.user_id if recipient_report else ""
-            if not owner or owner == subject:
-                continue  # unknown owner, or same person — not a cross-owner leak
+            owner = ""
+            if recipient_report:
+                owner = recipient_report.owner_principal or recipient_report.user_id
+            if not owner or owner == home:
+                continue  # unknown owner, or same principal — not a cross-owner leak
+            subject = edge.taint.origin_boundary or home
             # Only sensitive content crossing an owner boundary is a privacy leak.
             domains = set(edge.domains) | (edge.taint.domains or set())
             if not (domains & SENSITIVE_DOMAINS):
@@ -241,8 +251,9 @@ class NetworkAuditor:
                 involved_agents=[edge.from_agent, edge.to_agent],
                 involved_edges=[edge.edge_id],
                 description=(
-                    f"Subject '{subject}' data reached {edge.to_agent} "
-                    f"(owned by '{owner}', != subject) — private data crossed an owner boundary"
+                    f"Subject '{subject}' data (originating under principal "
+                    f"'{home}') reached {edge.to_agent} owned by principal "
+                    f"'{owner}' (!= '{home}') — private data crossed an owner boundary"
                 ),
                 severity=min(1.0, edge.sensitivity_level / 5.0),
                 source_domain=next(iter(domains & SENSITIVE_DOMAINS), "privacy"),

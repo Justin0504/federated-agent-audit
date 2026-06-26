@@ -31,7 +31,12 @@ class TaintLabel(BaseModel):
 
     domains: set[str] = Field(default_factory=set)
     max_sensitivity: int = Field(default=0, ge=0, le=5)
-    origin_boundary: str = ""  # pseudonymized user/source identifier
+    origin_boundary: str = ""  # the *data subject* — whose data this is
+    # The *owning principal* of the agent where this flow originated (who is
+    # entitled to hold the subject's data). A cross-owner leak is this principal
+    # differing from the recipient agent's owner. Distinct trust axis from the
+    # subject in origin_boundary; "multi" if a flow merges several principals.
+    origin_principal: str = ""
     hop_count: int = 0
     inference_risk: float = Field(default=0.0, ge=0.0, le=1.0)
 
@@ -133,7 +138,14 @@ class LocalAuditReport(BaseModel):
     """
 
     agent_id: str
+    # The *data subject* this agent acts on behalf of (whose data it processes).
+    # This is a property of the *information*, mirrored by taint origin_boundary.
     user_id: str = ""
+    # The *owning principal* that controls this agent and its private memory
+    # (e.g. the org/user who deployed it). A distinct trust-boundary axis from
+    # user_id: a cross-owner leak is subject X's data reaching an agent owned by
+    # principal Y != X. Empty falls back to user_id for backward compatibility.
+    owner_principal: str = ""
     report_id: str = Field(default_factory=lambda: uuid4().hex[:16])
     timestamp: datetime = Field(default_factory=_now)
     # desensitized edges this agent participated in

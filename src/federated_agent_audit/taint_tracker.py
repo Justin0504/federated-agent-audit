@@ -66,6 +66,7 @@ class TaintTracker:
         max_sens = outgoing_sensitivity
         max_hop = 0
         origins: set[str] = set()
+        principals: set[str] = set()
 
         for t in self._accumulated:
             merged_domains |= t.domains
@@ -73,6 +74,8 @@ class TaintTracker:
             max_hop = max(max_hop, t.hop_count)
             if t.origin_boundary:
                 origins.add(t.origin_boundary)
+            if t.origin_principal:
+                principals.add(t.origin_principal)
 
         if len(origins) == 1:
             origin = next(iter(origins))
@@ -81,10 +84,18 @@ class TaintTracker:
         else:
             origin = ""
 
+        if len(principals) == 1:
+            principal = next(iter(principals))
+        elif len(principals) > 1:
+            principal = "multi"
+        else:
+            principal = ""
+
         return TaintLabel(
             domains=merged_domains,
             max_sensitivity=max_sens,
             origin_boundary=origin,
+            origin_principal=principal,
             hop_count=max_hop + 1,
             inference_risk=self.check_compound_risk(),
         )
@@ -131,19 +142,22 @@ class TaintTracker:
     def desensitize_state(self, salt: str = "") -> list[TaintLabel]:
         """Return desensitized version of accumulated state for central reporting.
 
-        - origin_boundary is hashed (unlinkable without salt)
+        - origin_boundary and origin_principal are hashed (unlinkable without salt)
         - inference_risk is rounded to 1 decimal place
         """
+        def _hash(value: str) -> str:
+            if not value or value == "multi":
+                return value
+            material = f"{salt}:{value}" if salt else value
+            return hashlib.sha256(material.encode()).hexdigest()[:8]
+
         result: list[TaintLabel] = []
         for t in self._accumulated:
-            desens_origin = ""
-            if t.origin_boundary:
-                material = f"{salt}:{t.origin_boundary}" if salt else t.origin_boundary
-                desens_origin = hashlib.sha256(material.encode()).hexdigest()[:8]
             result.append(TaintLabel(
                 domains=t.domains,
                 max_sensitivity=t.max_sensitivity,
-                origin_boundary=desens_origin,
+                origin_boundary=_hash(t.origin_boundary),
+                origin_principal=_hash(t.origin_principal),
                 hop_count=t.hop_count,
                 inference_risk=round(t.inference_risk, 1),
             ))

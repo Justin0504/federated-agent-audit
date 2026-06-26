@@ -266,3 +266,37 @@ def test_cross_owner_requires_sensitive_domain():
                      privacy_tags=["social"], sensitivity_level=1, origin="alice")
     types = {r.risk_type for r in t.network_audit().compositional_risks}
     assert "cross_owner_leak" not in types
+
+
+def test_cross_owner_keys_on_owner_principal_not_user_id():
+    """The owning-principal axis is independent of the data-subject (user_id) axis.
+
+    Two agents share the SAME data subject (user_id='alice' — both serve Alice)
+    but are owned by DIFFERENT principals (a hospital vs an ad network). Alice's
+    diagnosis flowing from her clinical agent to the ad agent IS a cross-owner
+    leak, even though user_id matches — the detector must key on owner_principal.
+    """
+    t = MultiAgentTracer()
+    t.register_agent("clinic_agent", user_id="alice", owner_principal="hospital")
+    t.register_agent("ad_agent", user_id="alice", owner_principal="ad_network")
+    t.record_handoff("clinic_agent", "ad_agent", "alice's private diagnosis",
+                     privacy_tags=["health"], sensitivity_level=5, origin="alice")
+    types = {r.risk_type for r in t.network_audit().compositional_risks}
+    assert "cross_owner_leak" in types
+
+
+def test_same_principal_distinct_subjects_not_cross_owner():
+    """One principal owning agents for two subjects is not a cross-owner leak.
+
+    Both agents are owned by the same principal ('hospital'); a record about
+    subject 'alice' moving between them stays within one owning principal, so it
+    is not a cross-owner leak even though the receiving agent's user_id differs.
+    This is the case the old user_id-only detector got wrong.
+    """
+    t = MultiAgentTracer()
+    t.register_agent("intake_agent", user_id="alice", owner_principal="hospital")
+    t.register_agent("billing_agent", user_id="bob", owner_principal="hospital")
+    t.record_handoff("intake_agent", "billing_agent", "alice's private diagnosis",
+                     privacy_tags=["health"], sensitivity_level=5, origin="alice")
+    types = {r.risk_type for r in t.network_audit().compositional_risks}
+    assert "cross_owner_leak" not in types

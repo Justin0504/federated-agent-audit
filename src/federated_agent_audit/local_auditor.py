@@ -53,6 +53,7 @@ class LocalAuditor:
         agent_id: str,
         user_id: str,
         policy: PrivacyPolicy,
+        owner_principal: str = "",
         dp_config: DPConfig | None = None,
         canaries: list[str] | None = None,
         semantic_threshold: float = 0.72,
@@ -63,6 +64,10 @@ class LocalAuditor:
     ) -> None:
         self.agent_id = agent_id
         self.user_id = user_id
+        # The owning principal (who controls this agent/its memory). Distinct
+        # from user_id (the data subject). Defaults to user_id when unspecified,
+        # so single-tenant callers keep their existing semantics.
+        self.owner_principal = owner_principal or user_id
         self.policy = policy
         # Domains this agent is *declared* to operate in. Lets a pure-sink /
         # leaf agent (which never sends, so has no inferred domain) still
@@ -347,9 +352,17 @@ class LocalAuditor:
         # pseudonymize agent_id / user_id in the report itself
         report_agent_id = self.agent_id
         report_user_id = self.user_id
+        # The owning principal is a coarse trust-boundary label the center needs
+        # to detect cross-owner leaks. Under full desensitization it is dropped
+        # alongside user_id: the data subject (taint origin_boundary) is not
+        # pseudonymized, so a pseudonymized owner could not be compared against
+        # it without over-firing. Cross-owner detection therefore requires the
+        # clean (non-fully-desensitized) report path — a stated limitation.
+        report_owner = self.owner_principal
         if self._desensitizer is not None:
             report_agent_id = self._desensitizer.pseudonym_map.pseudonymize(self.agent_id)
             report_user_id = ""  # user_id never leaves container
+            report_owner = ""
 
         # cross-epoch commitment (if epoch chain is active)
         epoch_id = 0
@@ -365,6 +378,7 @@ class LocalAuditor:
         report = LocalAuditReport(
             agent_id=report_agent_id,
             user_id=report_user_id,
+            owner_principal=report_owner,
             edges=edges_to_report,
             received=list(self._receipts),
             total_interactions=total,

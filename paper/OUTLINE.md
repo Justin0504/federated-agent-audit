@@ -121,11 +121,23 @@ leaks from desensitized metadata and stays accurate under DP.
 ## What's missing to submit (checklist)
 
 - [x] E3 adapter built (`benchmarks/agentleak_integration.py`), runs on the
-      shipped sample. [ ] Generate AgentLeak's full 1000-scenario traces and run.
-- [ ] Formalize the privacy guarantee (non-invertibility argument; DP budget
-      accounting across layers).
+      shipped sample (1 scenario: detected, 0 raw leak). [ ] Full 1000-scenario
+      run is blocked on AgentLeak's harness: its `run` CLI is underdocumented
+      (no `--traces` flag as the README claims, no files written) and its live
+      trace format (`ExecutionTrace.channel_events`, keyed by channel) differs
+      from the shipped flat `inter_agent_message` sample the adapter parses —
+      so a runtime-format converter (+ likely contacting the authors) is needed.
+      The LLM path itself works (repointed to OpenAI). Treat as a pre-submission
+      follow-up, not a blocker for the method/contribution.
+- [x] Formalize the privacy guarantee — `docs/PRIVACY_GUARANTEE.md`:
+      architectural non-invertibility argument + layer-by-layer DP budget
+      accounting + the formal cross-owner-leak definition.
 - [ ] Recall under DP is 0.89 — a debiasing / cross-epoch aggregation step to
       push it up would strengthen E2.
-- [ ] Clean the `user_id` overload (data-subject vs owning-principal) into a
-      proper trust-boundary model — currently a known limitation.
+- [x] Cleaned the `user_id` overload into a proper trust-boundary model: a
+      dedicated `owner_principal` (agent axis) distinct from the data subject
+      (`origin_boundary`), with the cross-owner test now principal-vs-principal
+      via the taint's `origin_principal`. Pinned by two regression tests; clean
+      P/R/F1 still 1.0, DP F1 ≈ 0.92. Residual: cross-owner under full
+      desensitization (see ROADMAP).
 - [ ] Author list / advisor (fits Yue Zhao's ML-security line).

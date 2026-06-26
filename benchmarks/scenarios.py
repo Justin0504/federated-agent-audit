@@ -411,10 +411,12 @@ def replay(scenario: Scenario) -> MultiAgentTracer:
     agents = set(scenario.policies) | set(scenario.owners)
     for agent_id in agents:
         must_not_share = scenario.policies.get(agent_id, [])
+        owner = scenario.owners.get(agent_id, "")
         tracer.register_agent(
             agent_id,
             PrivacyPolicy(agent_id=agent_id, must_not_share=must_not_share),
-            user_id=scenario.owners.get(agent_id, ""),
+            user_id=owner,
+            owner_principal=owner,
         )
     for h in scenario.handoffs:
         tracer.record_handoff(

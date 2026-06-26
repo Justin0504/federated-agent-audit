@@ -100,6 +100,7 @@ class MultiAgentTracer:
         policy: PrivacyPolicy | None = None,
         user_id: str = "",
         domains: list[str] | None = None,
+        owner_principal: str = "",
     ) -> LocalAuditor:
         """Register an agent with its own policy and local auditor.
 
@@ -110,6 +111,11 @@ class MultiAgentTracer:
             domains: the agent's *declared* operating domains. Useful for
                 pure-sink agents that never send (so their domain can't be
                 inferred): declaring it sharpens cross-domain detection.
+            owner_principal: the principal that owns this agent and its private
+                memory — the owning-principal trust axis, distinct from
+                ``user_id`` (the data subject). Set this in multi-user agent
+                groups so cross-owner leaks (subject X's data reaching an agent
+                owned by Y != X) are detected. Defaults to ``user_id``.
         """
         if agent_id in self._auditors:
             return self._auditors[agent_id]
@@ -121,6 +127,7 @@ class MultiAgentTracer:
             agent_id=agent_id,
             user_id=user_id,
             policy=pol,
+            owner_principal=owner_principal,
             dp_config=self._dp_config,
             desens_config=self._desens_config,
             declared_domains=domains,
@@ -180,6 +187,9 @@ class MultiAgentTracer:
                     domains=set(tags),
                     max_sensitivity=sens,
                     origin_boundary=origin,
+                    # the principal entitled to this subject's data is the owner
+                    # of the agent where the flow originated
+                    origin_principal=aud.owner_principal,
                     hop_count=0,
                 ).model_dump(),
             )
