@@ -49,8 +49,8 @@ its visibility is the metadata, not the messages.
 The obvious objection is that detection cannot survive such aggressive
 protection. Our central empirical finding is that **it can — if the protection
 is designed for it.** Running every scenario through the full six-layer
-desensitizer *and* differential privacy, the audit holds **F1 ≈ 0.91 at
-ε ∈ [0.5, 3] with zero raw-content leakage**. A naïve design collapses to ~0.17
+desensitizer *and* differential privacy, the audit holds **F1 ≈ 0.97 at
+ε ∈ [0.5, 3] (recall ≈ 1.0) with zero raw-content leakage**. A naïve design collapses to ~0.17
 specificity; the difference is a single design choice — protecting domain labels
 *structurally* (k-anonymity generalization) rather than by per-domain randomized
 response, which fabricates spurious sensitive edges and destroys the very signal
@@ -71,8 +71,8 @@ the audit reads.
    no-raw-content invariant.
 3. **A privacy–utility result**: the first measurement of cross-agent
    detection accuracy under the full desensitization + DP pipeline, the
-   diagnosis of why a naïve design fails, and a fix that recovers F1 ≈ 0.91 at
-   strong DP with zero leakage.
+   diagnosis of why a naïve design fails, and a fix that recovers F1 ≈ 0.97 at
+   strong DP (recall ≈ 1.0) with zero leakage.
 4. **Integrity for forced-embed deployments**: tamper-evident attestation
    (build pinning + HMAC + hash-chained reports, with a TEE upgrade path) and
    graph cross-corroboration (a sender that drops an edge is exposed by the
@@ -171,8 +171,11 @@ rare/identifying combinations while preserving the common-domain signal the
 detectors need; DP is reserved for sensitivity, edge-existence, and aggregate
 statistics, which detection tolerates because its decisions aggregate over the
 graph. Preserving the taint label through DP keeps the flow detectors alive.
-With this design the audit holds **F1 ≈ 0.91 across ε ∈ [0.5, 3], with zero raw
-content reaching the center** (§Evaluation). A complementary DP-aware mode
+With this design the audit holds **F1 ≈ 0.97 across ε ∈ [0.5, 3] (recall ≈ 1.0),
+with zero raw content reaching the center** (§Evaluation). Preserving the
+injection flag and pseudonymizing the owning principal with a shared map (so the
+cross-owner test holds in pseudonym space) recover the two categories a naïve DP
+path structurally drops. A complementary DP-aware mode
 requires sensitivity corroboration so residual noised signals do not fire.
 
 ### 2.5 Integrity for forced-embed deployments
@@ -230,7 +233,7 @@ cross-owner definition) is in `docs/PRIVACY_GUARANTEE.md`.
 
 *Next sections (to draft): §3 Evaluation (E1–E5 per OUTLINE), §4 Related Work
 (expand the positioning table into prose), §5 Limitations (cross-owner detection
-needs the clean report path under full desensitization; DP recall 0.89; the
+dummy-edge topology noise caps specificity at ≈ 0.95; the
 forced-embed honesty boundary), §6 Conclusion. References: Sum-Leaks
 (2509.14284), AgentLeak (2602.11510), DP-in-agents (2603.17902), info-theoretic
 privacy control (2603.05520), MAGPIE (2510.15186).*

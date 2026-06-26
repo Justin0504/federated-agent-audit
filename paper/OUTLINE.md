@@ -24,7 +24,7 @@ system** rather than an attack/benchmark study.
 > compositional, cross-domain, cross-owner, and cascade privacy risks from
 > **desensitized metadata it can never invert to raw content**. We show the
 > central detection stays accurate under strong protection: running the full
-> 6-layer desensitizer *and* differential privacy, the audit holds **F1 ≈ 0.91
+> 6-layer desensitizer *and* differential privacy, the audit holds **F1 ≈ 0.97
 > (ε∈[0.5,3]) with zero raw-content leakage**, where a naive DP design collapses
 > to ~0.17 specificity — the gap turns on protecting domains *structurally*
 > (k-anonymity) rather than by destroying the very signal the audit reads. The
@@ -51,7 +51,7 @@ system** rather than an attack/benchmark study.
    DP pipeline, and identify why a naive design fails (per-domain randomized
    response fabricates spurious sensitive edges; dropped taint disables flow
    detectors). Protecting domains structurally and preserving taint recovers
-   **F1 ≈ 0.91 at ε∈[0.5,3] with zero raw leakage**.
+   **F1 ≈ 0.97 at ε∈[0.5,3] (recall ≈ 1.0) with zero raw leakage**.
 4. **Integrity for forced-embed deployments.** Tamper-evident edge attestation
    (build pinning + HMAC + sequence/hash-chain, with a TEE upgrade path) and
    graph cross-corroboration (recipients' receipts catch a sender that omits an
@@ -94,7 +94,7 @@ leaks from desensitized metadata and stays accurate under DP.
 - **E1 — Detection effectiveness (clean desensitized).** Our 33-scenario labeled
   benchmark: P/R/F1, specificity, no-raw-leak invariant, threshold sweep.
 - **E2 — Accuracy under desensitization + DP.** `benchmarks/dp_eval.py`:
-  recall/specificity/F1 vs ε; the naive-vs-structural ablation (0.17 → 0.93).
+  recall/specificity/F1 vs ε; the naive-vs-structural ablation (0.17 → 0.97).
 - **E3 — External benchmark (AgentLeak).** `benchmarks/agentleak_integration.py`
   replays AgentLeak's `inter_agent_message` traces into our auditor, maps each
   scenario's `vault \ allowed_set` to per-agent policies, and reports detection
@@ -132,12 +132,15 @@ leaks from desensitized metadata and stays accurate under DP.
 - [x] Formalize the privacy guarantee — `docs/PRIVACY_GUARANTEE.md`:
       architectural non-invertibility argument + layer-by-layer DP budget
       accounting + the formal cross-owner-leak definition.
-- [ ] Recall under DP is 0.89 — a debiasing / cross-epoch aggregation step to
-      push it up would strengthen E2.
+- [x] Recall under DP raised 0.89 → ≈ 1.0 (F1 ≈ 0.97): preserve the injection
+      flag through DP and pseudonymize (not drop) the owning principal + taint
+      subject/principal with a shared map, recovering the two categories a naïve
+      DP path structurally dropped. Residual: dummy-edge topology noise caps
+      specificity at ≈ 0.95 (indistinguishable by design).
 - [x] Cleaned the `user_id` overload into a proper trust-boundary model: a
       dedicated `owner_principal` (agent axis) distinct from the data subject
       (`origin_boundary`), with the cross-owner test now principal-vs-principal
       via the taint's `origin_principal`. Pinned by two regression tests; clean
-      P/R/F1 still 1.0, DP F1 ≈ 0.92. Residual: cross-owner under full
+      P/R/F1 still 1.0, DP F1 ≈ 0.97 (recall ≈ 1.0). Residual: cross-owner under full
       desensitization (see ROADMAP).
 - [ ] Author list / advisor (fits Yue Zhao's ML-security line).

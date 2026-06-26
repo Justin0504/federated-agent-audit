@@ -7,11 +7,14 @@ the 6-layer desensitizer plus differential privacy — and measures how well the
 audit holds up, averaged over trials (DP is stochastic).
 
 Why it matters: the central auditor never sees raw content, so the real question
-is whether detection stays accurate once the data is noised. It does — provided
-domains are protected structurally (k-anonymity generalization) rather than by
-per-domain randomized response, which destroys the cross-domain signal the audit
-relies on (`DPConfig.perturb_domains=False` by default), and the taint label is
-preserved (`preserve_taint=True`).
+is whether detection stays accurate once the data is noised. It does (F1 ≈ 0.97,
+recall ≈ 1.0, specificity ≈ 0.95, zero raw leakage) — provided domains are
+protected structurally (k-anonymity generalization) rather than by per-domain
+randomized response, which destroys the cross-domain signal the audit relies on
+(`DPConfig.perturb_domains=False` by default); the taint label and the
+injection flag are preserved (so flow/cascade detectors survive); and the owning
+principal and taint subject/principal are pseudonymized with a shared map (so
+cross-owner detection survives without leaking raw identities).
 
 Run:
     python benchmarks/dp_eval.py

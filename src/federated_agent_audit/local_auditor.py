@@ -290,6 +290,30 @@ class LocalAuditor:
         )
 
     @staticmethod
+    def _pseudonymize_edge_taint(edge: DesensitizedEdge, pm) -> DesensitizedEdge:
+        """Return a copy of ``edge`` with the taint subject/principal pseudonymized.
+
+        Pseudonymizes ``origin_boundary`` (data subject) and ``origin_principal``
+        (owning principal) with the report's shared pseudonym map, so that across
+        reports equal identities map to equal pseudonyms — keeping cross-owner
+        and subject-grouping detectors valid while hiding the raw identities the
+        preserved taint would otherwise expose to the center. ``"multi"`` is a
+        reserved sentinel and passes through unchanged. Does not mutate the live
+        edge used for taint propagation.
+        """
+        if edge.taint is None:
+            return edge
+
+        def _ps(value: str) -> str:
+            return value if (not value or value == "multi") else pm.pseudonymize(value)
+
+        new_taint = edge.taint.model_copy(update={
+            "origin_boundary": _ps(edge.taint.origin_boundary),
+            "origin_principal": _ps(edge.taint.origin_principal),
+        })
+        return edge.model_copy(update={"taint": new_taint})
+
+    @staticmethod
     def _auto_detect_embeddings(policy: PrivacyPolicy):
         """Auto-detect sentence-transformers and create similarity function."""
         try:
@@ -352,17 +376,20 @@ class LocalAuditor:
         # pseudonymize agent_id / user_id in the report itself
         report_agent_id = self.agent_id
         report_user_id = self.user_id
-        # The owning principal is a coarse trust-boundary label the center needs
-        # to detect cross-owner leaks. Under full desensitization it is dropped
-        # alongside user_id: the data subject (taint origin_boundary) is not
-        # pseudonymized, so a pseudonymized owner could not be compared against
-        # it without over-firing. Cross-owner detection therefore requires the
-        # clean (non-fully-desensitized) report path — a stated limitation.
         report_owner = self.owner_principal
         if self._desensitizer is not None:
-            report_agent_id = self._desensitizer.pseudonym_map.pseudonymize(self.agent_id)
+            pm = self._desensitizer.pseudonym_map
+            report_agent_id = pm.pseudonymize(self.agent_id)
             report_user_id = ""  # user_id never leaves container
-            report_owner = ""
+            # Pseudonymize the owning principal with the shared (consistent-salt)
+            # map instead of dropping it. The taint principals are pseudonymized
+            # with the SAME map below, so the cross-owner test stays a valid
+            # principal-vs-principal equality in pseudonym space — the center
+            # tells "different owner" apart without learning who. Net effect:
+            # cross-owner detection works under full desensitization, and the
+            # previously-raw taint subject/principal are now hidden too.
+            report_owner = pm.pseudonymize(self.owner_principal) if self.owner_principal else ""
+            edges_to_report = [self._pseudonymize_edge_taint(e, pm) for e in edges_to_report]
 
         # cross-epoch commitment (if epoch chain is active)
         epoch_id = 0

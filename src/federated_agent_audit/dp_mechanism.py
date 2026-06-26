@@ -117,6 +117,11 @@ def dp_perturb_edge(edge: DesensitizedEdge, config: DPConfig) -> DesensitizedEdg
         local_action=edge.local_action,
         content_hash=edge.content_hash,
         taint=edge.taint if config.preserve_taint else None,
+        # injection_detected is a safety/provenance signal, not a privacy-sensitive
+        # attribute about the subject — preserved faithfully (like taint) so the
+        # cascade/injection detectors keep working under DP. It reveals no raw
+        # content (a single bit that the local injection detector fired).
+        injection_detected=edge.injection_detected,
     )
 
 
@@ -149,6 +154,9 @@ def dp_perturb_report(
     return LocalAuditReport(
         agent_id=report.agent_id,
         user_id=report.user_id,
+        # owner_principal is a pseudonym (or empty) — a coarse trust label, not a
+        # perturbable statistic; carried through so cross-owner detection survives DP.
+        owner_principal=report.owner_principal,
         report_id=report.report_id,
         timestamp=report.timestamp,
         edges=noisy_edges,

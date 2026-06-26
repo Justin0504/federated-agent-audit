@@ -22,14 +22,13 @@ and issues tagged **good first issue** for entry points.
 - **Richer agent context**: let agents *declare* their operating domain and
   trust tier (today domains are inferred from outgoing traffic), improving
   cross-domain precision for sink/leaf agents.
-- **Cross-owner detection under full desensitization** *(follow-up to the
-  trust-boundary model, now landed)*: the `user_id` overload is resolved — a
-  dedicated `owner_principal` (agent axis) is now distinct from the data subject
-  (`origin_boundary`), and the cross-owner test is principal-vs-principal via the
-  taint's `origin_principal` (see `docs/PRIVACY_GUARANTEE.md`). Remaining work:
-  under the full desensitizer the principal labels are dropped, so cross-owner
-  detection needs the clean report path. A consistent cross-report principal
-  pseudonymization scheme would let it run under DP too.
+- ~~**Cross-owner detection under full desensitization**~~ *(done)*: the
+  `user_id` overload is resolved (dedicated `owner_principal` distinct from the
+  data subject), the cross-owner test is principal-vs-principal via the taint's
+  `origin_principal`, and it now survives full desensitization + DP — the owning
+  principal and taint subject/principal are pseudonymized with one shared map, so
+  the test holds in pseudonym space without leaking raw identities. Recall under
+  DP rose 0.89 → ≈ 1.0 (F1 ≈ 0.97); see `docs/PRIVACY_GUARANTEE.md`.
 - **Streaming desensitization**: inline redaction for streamed LLM responses
   (today streaming blocks on violation rather than redacting).
 

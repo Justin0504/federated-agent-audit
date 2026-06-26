@@ -103,6 +103,15 @@ independent mechanisms. We account the budget layer by layer.
 | 5. Local DP | randomized response on **sensitivity**, edge existence, aggregates | ε_LDP per perturbed attribute |
 | 6. Dummy edges | injected indistinguishable edges | strengthens edge-existence plausible deniability |
 
+The taint's data subject (`origin_boundary`) and owning principal
+(`origin_principal`), and the report's `owner_principal`, are **pseudonymized
+with one shared map** rather than carried raw: equal identities map to equal
+pseudonyms (so the cross-owner and subject-grouping detectors still work in
+pseudonym space) while the raw identities never reach the center. Safety signals
+that carry no subject content — the `injection_detected` bit and the taint label
+— are **preserved faithfully** (not noised), since noising them would only
+disable detection without protecting the subject.
+
 **Composition.** Layers 1–4 and 6 are structural (hashing / generalization /
 masking) and do not draw from the ε budget. The DP cost is concentrated in
 layer 5. Across the `d` independently-perturbed attributes of an edge, **basic
@@ -117,30 +126,29 @@ the dominant utility-affecting perturbation.
 (layer 4, k-anonymity) rather than by per-domain randomized response. Applying
 LDP per domain bit at ε = 1 flips ≈ 27% of bits, fabricating spurious sensitive
 edges and collapsing specificity to ≈ 0.17. Reserving DP for sensitivity,
-edge-existence, and aggregates — and **preserving the taint label through DP** —
-keeps the flow detectors alive. Net result (measured, `benchmarks/dp_eval.py`):
-**F1 ≈ 0.92 at ε ∈ [0.5, 3], specificity ≥ 0.95, recall 0.89, with zero raw
-leakage.** The privacy spend buys protection on exactly the channels detection
-tolerates, because detection decisions aggregate over the graph rather than
-trusting any single noised attribute.
+edge-existence, and aggregates — and **preserving the taint label and the
+injection flag through DP** — keeps the flow, cascade, and cross-owner detectors
+alive. Net result (measured, `benchmarks/dp_eval.py`): **F1 ≈ 0.97 at
+ε ∈ [0.5, 3], specificity ≈ 0.95, recall ≈ 1.0, with zero raw leakage.** The
+privacy spend buys protection on exactly the channels detection tolerates,
+because detection decisions aggregate over the graph rather than trusting any
+single noised attribute. (The residual ≈ 0.05 specificity gap is dummy-edge
+topology noise — indistinguishable by design — not a content leak.)
 
 ---
 
 ## 4. Stated limitations
 
-1. **Cross-owner detection requires the clean report path.** Under the full
-   desensitizer, `owner_principal` (and `user_id`) are dropped, and
-   `origin_principal` is hashed but the data subject is not pseudonymized with a
-   matching map — so the center cannot run the principal-vs-principal boundary
-   test without risking over-firing. Cross-owner leaks are therefore detected on
-   non-fully-desensitized reports. Lifting this needs a consistent
-   principal-pseudonymization scheme shared across reports (future work).
-2. **Recall under DP is 0.89.** A cross-epoch / debiasing aggregation step to
-   recover the noised tail would raise it; logged in `ROADMAP.md`.
-3. **Forced-embed honesty is tamper-*evident*, not tamper-*proof*.** A colluding
+1. **Dummy-edge topology noise.** The ≈ 0.05 specificity gap under DP comes from
+   injected dummy edges that occasionally complete a benign chain into a
+   multi-hop-escalation pattern. Dummies are indistinguishable from real edges by
+   design (that is their purpose), so the center cannot exclude them; this trades
+   a little specificity for edge-existence plausible deniability. It is topology
+   noise, never a content leak.
+2. **Forced-embed honesty is tamper-*evident*, not tamper-*proof*.** A colluding
    sender–recipient pair can still suppress a shared edge; a TEE attestation
    backend (the `CallableBackend` plug point) is the path to the stronger
    guarantee.
-4. **DP composition is accounted under basic/parallel composition.** Tighter
+3. **DP composition is accounted under basic/parallel composition.** Tighter
    advanced-composition or zCDP accounting would yield a smaller effective ε for
    the same noise and is left as an accounting refinement.

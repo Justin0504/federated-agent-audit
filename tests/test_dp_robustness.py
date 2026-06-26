@@ -85,7 +85,42 @@ def test_recall_reasonable_under_dp():
     from scenarios import POSITIVE
     dp = DPConfig(epsilon_edge=1.0, epsilon_sensitivity=1.0, epsilon_stats=1.0)
     rec = sum(_flagged(s, dp, trials=8) for s in POSITIVE) / len(POSITIVE)
-    assert rec >= 0.7, f"recall too low under DP: {rec:.2f}"
+    # Preserving the injection flag and pseudonymizing (not dropping) the owning
+    # principal recovered the two categories that were structurally missed under
+    # DP, lifting recall from ~0.89 to ~1.0.
+    assert rec >= 0.9, f"recall too low under DP: {rec:.2f}"
+
+
+def test_injection_cascade_detected_under_dp():
+    """The injection_detected flag is preserved through DP, so the cascade /
+    injection detectors keep working (was 0.0 recall when the flag was dropped)."""
+    from scenarios import POSITIVE
+    scn = next(s for s in POSITIVE if s.name == "injection_worm_cascade")
+    dp = DPConfig(epsilon_edge=1.0, epsilon_sensitivity=1.0, epsilon_stats=1.0)
+    assert _flagged(scn, dp, trials=12) >= 0.7
+
+
+def test_cross_owner_detected_under_dp():
+    """Cross-owner leaks survive full desensitization: the owning principal is
+    pseudonymized (not dropped) with the same map as the taint principal, so the
+    principal-vs-principal test still holds in pseudonym space (was 0.0 before)."""
+    from scenarios import POSITIVE
+    scn = next(s for s in POSITIVE if s.name == "cross_owner_group_leak")
+    dp = DPConfig(epsilon_edge=1.0, epsilon_sensitivity=1.0, epsilon_stats=1.0)
+    assert _flagged(scn, dp, trials=12) >= 0.7
+
+
+def test_dp_pseudonymizes_taint_subject_and_principal():
+    """Under the full desensitizer the previously-raw taint subject/principal are
+    pseudonymized — equal identities stay equal, but the raw names don't leak."""
+    t = MultiAgentTracer(dp_config=DPConfig(), desens_config=DesensitizationConfig())
+    t.register_agent("clinic", user_id="alice", owner_principal="hospital")
+    t.register_agent("ads", user_id="alice", owner_principal="ad_network")
+    t.record_handoff("clinic", "ads", "alice's private diagnosis",
+                     privacy_tags=["health"], sensitivity_level=5, origin="alice")
+    blob = " ".join(rep.model_dump_json() for rep in t.reports(apply_dp=True))
+    for raw in ("alice", "hospital", "ad_network"):
+        assert raw not in blob, f"raw identity {raw!r} leaked into central report"
 
 
 def test_no_raw_leak_under_dp():

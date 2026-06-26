@@ -6,6 +6,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **Detection recall under DP raised 0.89 → ≈ 1.0 (F1 ≈ 0.97).** Two leak
+  categories were structurally missed under full desensitization: the
+  `injection_detected` flag was dropped by `dp_perturb_edge` (disabling the
+  cascade/injection detectors), and the owning principal was blanked (disabling
+  cross-owner). Now the injection flag and taint are preserved faithfully, and
+  the owning principal + taint subject/principal are pseudonymized with one
+  shared map — so cross-owner detection survives DP *and* the previously-raw
+  taint identities no longer leak. Specificity ≈ 0.95 unchanged (dummy-edge
+  topology noise); zero raw-content leakage. Four new regression tests.
+
 ## [0.4.0] — 2026-06-26
 
 A trust-boundary correctness release: the cross-owner detector now reasons over
