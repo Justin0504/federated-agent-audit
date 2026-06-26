@@ -120,15 +120,19 @@ leaks from desensitized metadata and stays accurate under DP.
 
 ## What's missing to submit (checklist)
 
-- [x] E3 adapter built (`benchmarks/agentleak_integration.py`), runs on the
-      shipped sample (1 scenario: detected, 0 raw leak). [ ] Full 1000-scenario
-      run is blocked on AgentLeak's harness: its `run` CLI is underdocumented
-      (no `--traces` flag as the README claims, no files written) and its live
-      trace format (`ExecutionTrace.channel_events`, keyed by channel) differs
-      from the shipped flat `inter_agent_message` sample the adapter parses —
-      so a runtime-format converter (+ likely contacting the authors) is needed.
-      The LLM path itself works (repointed to OpenAI). Treat as a pre-submission
-      follow-up, not a blocker for the method/contribution.
+- [x] E3 adapter built and **format-tolerant** (`benchmarks/agentleak_integration.py`):
+      normalizes all four AgentLeak trace shapes — flat `inter_agent_message`,
+      evaluator `inter_agent_messages` (from/to/content_preview),
+      `ExecutionTrace.channel_events["C2_inter_agent"]`, and the internal-channels
+      `channel_c2` ({from,to,message,pii_exposed}) dump — to (src,dst,content)+leak
+      label (5 layout tests in `tests/test_agentleak_adapter.py`). Runs clean on
+      the shipped **multi-domain internal-channel traces** (3 scenarios across
+      health/finance/legal: recall 1.0, precision 1.0, **0 raw leak**) and on the
+      1-scenario flat sample. [ ] The headline 1000-scenario number still needs
+      AgentLeak's LLM harness to *generate* the inter-agent messages
+      (`scenarios_full_1000.jsonl` ships scenarios/vaults, not traces) — API keys
+      + a generation run. The adapter will consume that output unmodified once it
+      exists. Pre-submission follow-up, not a blocker for the method.
 - [x] Formalize the privacy guarantee — `docs/PRIVACY_GUARANTEE.md`:
       architectural non-invertibility argument + layer-by-layer DP budget
       accounting + the formal cross-owner-leak definition.

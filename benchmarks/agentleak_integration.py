@@ -75,24 +75,93 @@ def load_scenarios(path: str) -> dict:
     return scenarios
 
 
+# AgentLeak emits inter-agent messages in more than one shape across versions.
+# We normalize all of them to (src, dst, content). Keys are tried in order so a
+# new field name degrades gracefully rather than crashing.
+_SRC_KEYS = ("source_agent", "from", "sender", "src", "from_agent")
+_DST_KEYS = ("dest_agent", "to", "recipient", "dst", "to_agent")
+_CONTENT_KEYS = ("message_content", "content", "content_preview", "message", "text")
+
+
+def _first(d: dict, keys, default=""):
+    for k in keys:
+        v = d.get(k)
+        if v:
+            return v
+    return default
+
+
+def _msg_from(d: dict) -> tuple[str, str, str]:
+    return (
+        str(_first(d, _SRC_KEYS, "agent")),
+        str(_first(d, _DST_KEYS, "agent")),
+        str(_first(d, _CONTENT_KEYS, "")),
+    )
+
+
 def load_traces(path: str) -> dict:
-    """scenario_id -> {messages: [(src, dst, content)], leaked: bool}"""
+    """scenario_id -> {messages: [(src, dst, content)], leaked: bool}.
+
+    Accepts three layouts, auto-detected per JSON line:
+
+    1. **Flat events** (the shipped sample): one event per line with
+       ``event_type == "inter_agent_message"`` and ``source_agent`` /
+       ``dest_agent`` / ``message_content`` / ``vault_leakage``.
+    2. **Evaluator messages**: one ``inter_agent_messages`` record per line with
+       ``from`` / ``to`` / ``content_preview`` (leak label optional).
+    3. **ExecutionTrace dumps**: one ``trace.to_dict()`` per line, with
+       ``channel_events["C2_inter_agent"]`` events ``{content, metadata}`` (from/to
+       read from ``metadata``) and ground truth from a non-empty ``leaks_detected``
+       or a C2 ``metadata.defense_detected_patterns``.
+
+    This makes the adapter consume the live harness output (whichever
+    representation it emits) without further code changes once full traces exist.
+    """
     by_scn: dict = {}
     for line in open(path):
         line = line.strip()
         if not line:
             continue
         e = json.loads(line)
-        if e.get("event_type") != "inter_agent_message":
+
+        # Layout 4: internal-channels dump — channel_c2 = {from, to, message,
+        # pii_exposed}. pii_exposed doubles as the leak ground truth and the
+        # secret list (captured under "secrets" for policy derivation).
+        if "channel_c2" in e:
+            sid = e.get("scenario_id")
+            rec = by_scn.setdefault(sid, {"messages": [], "leaked": False, "secrets": []})
+            c2 = e["channel_c2"]
+            for ev in (c2 if isinstance(c2, list) else [c2]):
+                src, dst, content = _msg_from(ev)
+                rec["messages"].append((src, dst, content))
+                pii = ev.get("pii_exposed") or []
+                if pii:
+                    rec["leaked"] = True
+                    rec["secrets"].extend(str(x) for x in pii if len(str(x)) >= 3)
+            continue
+
+        # Layout 3: a whole ExecutionTrace with channel_events
+        if "channel_events" in e:
+            sid = e.get("scenario_id")
+            rec = by_scn.setdefault(sid, {"messages": [], "leaked": False})
+            c2 = e["channel_events"].get("C2_inter_agent", [])
+            for ev in c2:
+                meta = ev.get("metadata", {}) or {}
+                src, dst, _ = _msg_from(meta)
+                rec["messages"].append((src, dst, ev.get("content", "")))
+                if meta.get("defense_detected_patterns") or meta.get("vault_leakage"):
+                    rec["leaked"] = True
+            if e.get("leaks_detected"):
+                rec["leaked"] = True
+            continue
+
+        # Layouts 1 & 2: a single message record per line
+        if e.get("event_type") not in (None, "inter_agent_message"):
             continue
         sid = e.get("scenario_id")
         rec = by_scn.setdefault(sid, {"messages": [], "leaked": False})
-        rec["messages"].append((
-            e.get("source_agent", "agent"),
-            e.get("dest_agent", "agent"),
-            e.get("message_content", ""),
-        ))
-        if e.get("vault_leakage"):
+        rec["messages"].append(_msg_from(e))
+        if e.get("vault_leakage") or e.get("leaked"):
             rec["leaked"] = True
     return by_scn
 
@@ -105,7 +174,11 @@ def evaluate(scenarios: dict, traces: dict, threshold: float = 0.5) -> dict:
         if not trace["messages"]:
             continue
         n += 1
-        scn = scenarios.get(sid, {"forbidden": [], "all_secrets": []})
+        scn = scenarios.get(sid)
+        if scn is None:
+            # self-contained traces (layout 4): secrets embedded in the trace
+            embedded = trace.get("secrets", [])
+            scn = {"forbidden": embedded, "all_secrets": embedded}
 
         tracer = MultiAgentTracer()
         agents = {m[0] for m in trace["messages"]} | {m[1] for m in trace["messages"]}
@@ -145,12 +218,13 @@ def evaluate(scenarios: dict, traces: dict, threshold: float = 0.5) -> dict:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Evaluate against the AgentLeak benchmark")
-    ap.add_argument("--scenarios", required=True, help="AgentLeak scenarios .jsonl")
+    ap.add_argument("--scenarios", help="AgentLeak scenarios .jsonl (optional for "
+                    "self-contained traces that embed pii_exposed)")
     ap.add_argument("--traces", required=True, help="AgentLeak inter-channel traces .jsonl")
     ap.add_argument("--threshold", type=float, default=0.5)
     args = ap.parse_args(argv)
 
-    scenarios = load_scenarios(args.scenarios)
+    scenarios = load_scenarios(args.scenarios) if args.scenarios else {}
     traces = load_traces(args.traces)
     m = evaluate(scenarios, traces, args.threshold)
 

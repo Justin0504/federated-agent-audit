@@ -6,6 +6,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **AgentLeak adapter is now format-tolerant** (`benchmarks/agentleak_integration.py`):
+  normalizes all four AgentLeak trace shapes (flat `inter_agent_message`,
+  evaluator `inter_agent_messages`, `ExecutionTrace.channel_events`, and the
+  `channel_c2` internal-channels dump) to (src,dst,content)+leak label, so it
+  consumes the live harness output unmodified. Runs clean on the shipped
+  multi-domain internal-channel traces (health/finance/legal: recall 1.0,
+  precision 1.0, 0 raw leak). 5 layout tests in `tests/test_agentleak_adapter.py`.
+
 ### Fixed
 - **Detection recall under DP raised 0.89 → ≈ 1.0 (F1 ≈ 0.97).** Two leak
   categories were structurally missed under full desensitization: the
