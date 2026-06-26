@@ -6,6 +6,33 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-06-26
+
+A trust-boundary correctness release: the cross-owner detector now reasons over
+two genuinely distinct trust axes, plus a formal privacy guarantee and the first
+paper draft.
+
+### Added
+- **`owner_principal` trust axis** (`LocalAuditReport`, `LocalAuditor`,
+  `MultiAgentTracer.register_agent`) — the principal that owns an agent and its
+  memory, distinct from the data subject (`user_id` / taint `origin_boundary`).
+- **`TaintLabel.origin_principal`** — the owning principal where a flow
+  originated, seeded from the source agent's owner and propagated through taint
+  emit/desensitize, so cross-owner detection is principal-vs-principal.
+- **`docs/PRIVACY_GUARANTEE.md`** — architectural non-invertibility argument,
+  layer-by-layer DP budget accounting, and the formal cross-owner-leak definition.
+- **`paper/DRAFT.md`** — Introduction + Method, expanded from `paper/OUTLINE.md`.
+- **`benchmarks/agentleak_integration.py`** — external-benchmark adapter that
+  replays AgentLeak inter-agent traces into the auditor (runs on the shipped
+  sample with zero raw-content leakage).
+
+### Fixed
+- **Cross-owner detector no longer misfires for org-owned agents.** It compared a
+  data subject against an owning principal — different namespaces that never
+  match, firing for any organization-owned recipient. Now compares the flow's
+  `origin_principal` against the recipient's `owner_principal` (same namespace).
+  Two regression tests pin the decoupling; clean P/R/F1 stays 1.0, DP F1 ≈ 0.92.
+
 ## [0.3.0] — 2026-06-04
 
 The federated forced-embed model, end to end: tamper-evident attestation (with a

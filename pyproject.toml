@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "federated-agent-audit"
-version = "0.3.0"
+version = "0.4.0"
 description = "Privacy-preserving audit framework for multi-agent AI systems. Detects cross-agent data leaks, inference attacks, and compliance violations — without accessing raw content."
 readme = "README.md"
 license = {text = "Apache-2.0"}
