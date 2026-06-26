@@ -6,6 +6,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-06-26
+
+Detection accuracy under differential privacy raised to F1 ≈ 0.97 (recall ≈ 1.0),
+plus a format-tolerant external-benchmark adapter.
+
 ### Added
 - **AgentLeak adapter is now format-tolerant** (`benchmarks/agentleak_integration.py`):
   normalizes all four AgentLeak trace shapes (flat `inter_agent_message`,
