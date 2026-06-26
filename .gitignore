@@ -13,3 +13,7 @@ venv/
 *.log
 .DS_Store
 .coverage
+
+# Generated AgentLeak traces contain raw LLM messages (with vault content) — never commit
+*_traces*.jsonl
+agentleak_traces*.jsonl

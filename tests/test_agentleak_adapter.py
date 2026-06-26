@@ -16,7 +16,7 @@ import sys
 _BENCH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "benchmarks")
 sys.path.insert(0, _BENCH)
 
-from agentleak_integration import load_traces  # noqa: E402
+from agentleak_integration import load_scenarios, load_traces  # noqa: E402
 
 
 def _write(tmp_path, lines) -> str:
@@ -70,6 +70,34 @@ def test_execution_trace_leaks_detected_marks_leaked(tmp_path):
     ])
     t = load_traces(path)
     assert t["s4"]["leaked"] is True
+
+
+def test_load_scenarios_flat_vault(tmp_path):
+    path = _write(tmp_path, [
+        {"id": "s1", "allowed_set": ["name"],
+         "vault": {"name": "Alice", "ssn": "123-45-6789"}},
+    ])
+    sc = load_scenarios(path)["s1"]
+    assert "123-45-6789" in sc["forbidden"]  # ssn not in allowed_set
+    assert "Alice" not in sc["forbidden"]    # name is allowed
+    assert "Alice" in sc["all_secrets"]
+
+
+def test_load_scenarios_nested_private_vault(tmp_path):
+    """The full dataset nests secrets under private_vault.records[].fields and
+    keys scenarios by scenario_id — both must parse (was a silent recall-killer)."""
+    path = _write(tmp_path, [
+        {"scenario_id": "agentleak_hea_1", "allowed_set": ["patient_name"],
+         "private_vault": {"records": [
+             {"fields": {"patient_name": {"value": "Bob"},
+                         "ssn": {"value": "939-79-6410"},
+                         "confidential_notes": {"value": "CANARY_X"}}}]}},
+    ])
+    sc = load_scenarios(path)["agentleak_hea_1"]
+    assert "939-79-6410" in sc["forbidden"]
+    assert "CANARY_X" in sc["forbidden"]
+    assert "Bob" not in sc["forbidden"]      # patient_name is allowed
+    assert "Bob" in sc["all_secrets"]
 
 
 def test_missing_agents_degrade_to_placeholder(tmp_path):
