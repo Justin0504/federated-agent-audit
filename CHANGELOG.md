@@ -6,6 +6,27 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-06-27
+
+External-validity release: validated on AgentLeak's own 600 multi-agent
+scenarios (real LLM-generated inter-agent traces) at recall 1.0, precision 0.972,
+zero raw vault content reaching the center.
+
+### Added
+- **Real external-benchmark (E3) result.** `benchmarks/agentleak_generate_traces.py`
+  drives AgentLeak's official multi-agent scenarios through an LLM (one agent per
+  role) to produce genuine inter-agent traces, labeling `vault_leakage` by
+  AgentLeak's own rule. On **all 600 multi-agent scenarios** (495 leaks, 82.5%
+  internal-channel rate): **recall 1.0, precision 0.972, 0 raw vault content into
+  the central auditor** (TP=495, FP=14, TN=91, FN=0).
+
+### Fixed
+- **AgentLeak scorer parsed only the flat vault layout** — now also reads the full
+  dataset's nested `private_vault.records[].fields` and the `scenario_id` key (the
+  flat-only parser silently produced empty policies → near-zero recall on real
+  data). The raw-leak invariant now matches secrets as whole tokens so a short
+  numeric secret can't false-collide with a hex hash/id/timestamp.
+
 ## [0.5.0] — 2026-06-26
 
 Detection accuracy under differential privacy raised to F1 ≈ 0.97 (recall ≈ 1.0),
@@ -16,20 +37,8 @@ plus a format-tolerant external-benchmark adapter.
   normalizes all four AgentLeak trace shapes (flat `inter_agent_message`,
   evaluator `inter_agent_messages`, `ExecutionTrace.channel_events`, and the
   `channel_c2` internal-channels dump) to (src,dst,content)+leak label, so it
-  consumes the live harness output unmodified. 7 layout/scenario tests in
+  consumes the live harness output unmodified. Layout tests in
   `tests/test_agentleak_adapter.py`.
-- **Real external-benchmark (E3) result.** `benchmarks/agentleak_generate_traces.py`
-  drives AgentLeak's official multi-agent scenarios through an LLM (one agent per
-  role) to produce genuine inter-agent traces, labeling `vault_leakage` by
-  AgentLeak's own rule. On 200 scenarios (172 leaks, 86% internal-channel rate):
-  **recall 1.0, precision 0.935, 0 raw vault content into the central auditor.**
-
-### Fixed
-- **AgentLeak scorer parsed only the flat vault layout** — now also reads the full
-  dataset's nested `private_vault.records[].fields` and the `scenario_id` key (the
-  flat-only parser silently produced empty policies → near-zero recall on real
-  data). The raw-leak invariant now matches secrets as whole tokens so a short
-  numeric secret can't false-collide with a hex hash/id/timestamp.
 
 ### Fixed
 - **Detection recall under DP raised 0.89 → ≈ 1.0 (F1 ≈ 0.97).** Two leak

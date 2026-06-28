@@ -27,9 +27,12 @@ system** rather than an attack/benchmark study.
 > 6-layer desensitizer *and* differential privacy, the audit holds **F1 ≈ 0.97
 > (ε∈[0.5,3]) with zero raw-content leakage**, where a naive DP design collapses
 > to ~0.17 specificity — the gap turns on protecting domains *structurally*
-> (k-anonymity) rather than by destroying the very signal the audit reads. The
-> system ships as an open-source library with adapters for six agent frameworks,
-> plus tamper-evident attestation for forced-embed deployments.
+> (k-anonymity) rather than by destroying the very signal the audit reads. On
+> AgentLeak's own 600 multi-agent scenarios (real LLM-generated inter-agent
+> traces) we detect **100% of internal-channel leaks at 0.97 precision with zero
+> raw vault content reaching the center**. The system ships as an open-source
+> library with adapters for six agent frameworks, plus tamper-evident attestation
+> for forced-embed deployments.
 
 ## Contributions (the four claims)
 
@@ -102,13 +105,12 @@ leaks from desensitized metadata and stays accurate under DP.
   field ∉ `allowed_set` — appearing in the message), then replay into our
   federated auditor (`benchmarks/agentleak_integration.py`) and score vs. that
   ground truth, verifying the center sees zero raw vault content.
-  **Result on 200 scenarios** (172 leaks, an 86% internal-channel leak rate
-  matching AgentLeak's headline): **recall 1.0, precision 0.935, 0 raw vault
-  content into the center.** The 12 "false positives" are the local PII gate
-  catching generic PII (emails/phone/SSN-shaped) that AgentLeak's vault-value-only
-  ground truth doesn't label — over-detection vs. a narrow oracle, not error.
-  Scaling to the full 600 multi-agent scenarios is just more generation budget;
-  the harness is in place and reproducible.
+  **Result on all 600 multi-agent scenarios** (495 leaks, an 82.5% internal-channel
+  leak rate matching AgentLeak's headline): **recall 1.0, precision 0.972, 0 raw
+  vault content into the center** (TP=495, FP=14, TN=91, FN=0). The 14 "false
+  positives" are the local PII gate catching generic PII (emails/phone/SSN-shaped)
+  that AgentLeak's vault-value-only ground truth doesn't label — over-detection
+  vs. a narrow oracle, not error.
 - **E4 — Integrity.** Attestation rejection rates on modified-build / tampered /
   omitting agents; cross-corroboration catch rate vs. # honest counterparties.
 - **E5 — Cost.** Latency/throughput (existing `benchmarks/run_all.py`).
@@ -136,12 +138,12 @@ leaks from desensitized metadata and stays accurate under DP.
       1-scenario flat sample. **E3 now has a real LLM-generated number**: we wrote
       `benchmarks/agentleak_generate_traces.py` (an LLM plays each agent over
       AgentLeak's official multi-agent scenarios, labeling `vault_leakage` by
-      AgentLeak's own rule) and ran 200 scenarios → **recall 1.0, precision 0.935,
-      0 raw vault content into the center** (172 leaks / 86% internal-channel rate,
-      matching AgentLeak). Generating the harness surfaced and fixed two real
-      scorer bugs (nested `private_vault.records[].fields` parsing; whole-token
-      raw-leak matching so short numeric secrets don't false-collide with hashes).
-      [ ] Scaling to all 600 MA scenarios is just more generation budget.
+      AgentLeak's own rule) and ran **all 600 multi-agent scenarios → recall 1.0,
+      precision 0.972, 0 raw vault content into the center** (495 leaks / 82.5%
+      internal-channel rate, matching AgentLeak). Generating the harness surfaced
+      and fixed two real scorer bugs (nested `private_vault.records[].fields`
+      parsing; whole-token raw-leak matching so short numeric secrets don't
+      false-collide with hashes).
 - [x] Formalize the privacy guarantee — `docs/PRIVACY_GUARANTEE.md`:
       architectural non-invertibility argument + layer-by-layer DP budget
       accounting + the formal cross-owner-leak definition.

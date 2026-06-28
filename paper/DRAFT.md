@@ -67,8 +67,10 @@ the audit reads.
    including a cross-owner detector for multi-user agent groups (each agent
    holds its owner's private memory), where the defining risk is one subject's
    data reaching a *different* owner's agent. We achieve precision/recall/F1
-   = 1.0 on a labeled 33-scenario benchmark with adversarial cases, under a
-   no-raw-content invariant.
+   = 1.0 on a labeled 33-scenario benchmark with adversarial cases, and on
+   AgentLeak's own 600 multi-agent scenarios (real LLM-generated inter-agent
+   traces) we detect 100% of internal-channel leaks at 0.97 precision — all
+   under a no-raw-content invariant the center provably upholds.
 3. **A privacy–utility result**: the first measurement of cross-agent
    detection accuracy under the full desensitization + DP pipeline, the
    diagnosis of why a naïve design fails, and a fix that recovers F1 ≈ 0.97 at
