@@ -38,6 +38,11 @@ class PrivacyLabel(BaseModel):
     purpose: list[str] = Field(default_factory=list)         # permitted uses
     allowed_recipients: list[str] = Field(default_factory=list)  # principals
     ttl_hops: int = Field(default=1, ge=0)   # max onward hops before it must stop
+    # Stable datum identity assigned by the originating agent and preserved by
+    # forwarding agents (even when they re-word the content). Lets hop/ttl
+    # tracking follow a datum across paraphrasing — content hashing alone breaks
+    # when a relay rephrases. Empty → fall back to the content hash.
+    provenance_id: str = ""
 
 
 class AgentClearance(BaseModel):

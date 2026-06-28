@@ -35,11 +35,12 @@ class A2AScenario:
 
 
 def _part(text, subject, owner, sens, category, purpose, allowed, ttl=1,
-          inferred=()) -> Part:
+          inferred=(), prov="") -> Part:
     return label_part(Part(text=text), PrivacyLabel(
         data_subject=subject, owning_principal=owner, sensitivity=sens,
         category=list(category), inferred_categories=list(inferred),
         purpose=list(purpose), allowed_recipients=list(allowed), ttl_hops=ttl,
+        provenance_id=prov,
     ))
 
 
@@ -108,12 +109,12 @@ SCENARIOS: list[A2AScenario] = [
                     from_principal=ALICE, to_principal=BOB,
                     parts=[_part("specialist referral details", "subject:alice",
                                  ALICE, 4, ["health"], ["care"],
-                                 [BOB, "tenant:carol"], ttl=1)]),
+                                 [BOB, "tenant:carol"], ttl=1, prov="prov:ref1")]),
             Message(message_id="m2", from_agent="bob_cal", to_agent="carol_cal",
                     from_principal=BOB, to_principal="tenant:carol",
-                    parts=[_part("specialist referral details", "subject:alice",
+                    parts=[_part("forwarding Alice's referral note", "subject:alice",
                                  ALICE, 4, ["health"], ["care"],
-                                 [BOB, "tenant:carol"], ttl=1)]),
+                                 [BOB, "tenant:carol"], ttl=1, prov="prov:ref1")]),
         ],
         expected_types={"ttl_violation"},
     ),

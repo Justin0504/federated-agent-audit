@@ -17,3 +17,6 @@ venv/
 # Generated AgentLeak traces contain raw LLM messages (with vault content) — never commit
 *_traces*.jsonl
 agentleak_traces*.jsonl
+
+# A2A-MT generated suite artifact (LLM content) — regenerable
+a2a_mt_suite*.jsonl

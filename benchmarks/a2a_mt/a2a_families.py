@@ -86,10 +86,11 @@ def gen_ttl() -> list[A2AScenario]:
             allow = chain[1:]  # every downstream principal is an allowed recipient
             msgs = []
             for h in range(hops):
-                part = _p("referral details", data_subject="subject:s1",
+                part = _p(f"referral relay {h}", data_subject="subject:s1",
                           owning_principal="tenant:a", sensitivity=4,
                           category=["health"], purpose=["care"],
-                          allowed_recipients=allow, ttl_hops=ttl)
+                          allowed_recipients=allow, ttl_hops=ttl,
+                          provenance_id="prov:ttl")
                 msgs.append(_m(f"m{h+1}", agents[h], agents[h + 1],
                                chain[h], chain[h + 1], [part]))
             clr = [AgentClearance(agent_id=a, principal=chain[i + 1], purposes=["care"])

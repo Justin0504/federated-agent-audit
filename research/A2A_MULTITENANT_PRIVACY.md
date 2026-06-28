@@ -211,10 +211,21 @@ Verbatim disclosure/purpose/hop checks are label-driven and tractable. The
    detected and `clean_single_inference_hint` is correctly not — A2A-MT v0 holds
    **P/R/F1 = 1.0 across all four violation types (disclosure / purpose / ttl /
    inference), 0 raw content into the center**.
-5. **Scale A2A-MT** — add the group-assistant, marketplace-delegation, and
-   cross-tenant-aggregation families; LLM-generate Part content (reuse the
-   AgentLeak harness). Then write the paper. The product (in-container
-   multi-agent data privacy) is the single-tenant projection of the same engine.
+5. **Scale A2A-MT** — ✅ parameterized families (`a2a_families.py`) sweep each
+   violation type with near-miss controls → 38 scenarios, P/R/F1 = 1.0, 0 raw
+   leaks. LLM Part-content fill + JSONL export (`a2a_generate_text.py`); the
+   realistic-content artifact re-audits at P/R/F1 = 1.0, 0 raw leaks. Scaling
+   surfaced and fixed two real correctness issues:
+   - **ttl was fragile to paraphrasing** — content-hash hop tracking broke when a
+     relay re-worded the data. Added a stable `provenance_id` to the label
+     (preserved across forwards); hop/ttl now follows the datum, not the wording.
+   - **the no-content invariant false-fired** on prose tokens that coincided with
+     governance labels or schema field names (both legitimately in the center
+     view). Now excludes all label values + schema tokens, flagging only genuine
+     content leakage.
+   *(next)* more families (group-assistant, marketplace, cross-tenant
+   aggregation); then write the paper. The product (in-container multi-agent data
+   privacy) is the single-tenant projection of the same engine.
 
 ---
 

@@ -106,14 +106,17 @@ class A2AAuditor:
     # ── phase 1: desensitize to the center view ─────────────────────
     def _desensitize(self, messages: list[Message]) -> list[_Edge]:
         edges: list[_Edge] = []
-        hops: dict[str, int] = defaultdict(int)  # content_hash -> times relayed
+        hops: dict[str, int] = defaultdict(int)  # datum identity -> times relayed
         for msg in messages:
             for i, part in enumerate(msg.parts):
                 label = extract_label(part.metadata)
                 if label is None:
                     continue  # unlabeled parts carry no governance semantics in v0
                 h = _hash(part.text)
-                hops[h] += 1
+                # Track a datum by its stable provenance id (preserved across
+                # paraphrasing forwards); fall back to the content hash.
+                datum = label.provenance_id or h
+                hops[datum] += 1
                 edges.append(_Edge(
                     message_id=msg.message_id,
                     part_index=i,
@@ -123,7 +126,7 @@ class A2AAuditor:
                     to_principal=msg.to_principal,
                     content_hash=h,
                     label=label,
-                    hop_count=hops[h],
+                    hop_count=hops[datum],
                 ))
         return edges
 
@@ -255,9 +258,13 @@ class A2AAuditor:
         a content token that is *not* a label value appears in the center view.
         """
         blob = " ".join(e.model_dump_json() for e in edges)
+        # Tokens legitimately in the center view: every edge's label values
+        # (governance metadata, intentionally shared) and the schema field names.
+        allowed = set(_SCHEMA_TOKENS)
+        for e in edges:
+            allowed |= _label_tokens(e.label)
         leaks = 0
         for e in edges:
-            allowed = _label_tokens(e.label)
             text = self._text_for_edge(messages, e)
             for tok in _content_tokens(text):
                 if tok in allowed:
@@ -278,6 +285,18 @@ class A2AAuditor:
 def _content_tokens(text: str) -> list[str]:
     """Distinctive content tokens (len >= 4) to test the no-raw-content invariant."""
     return [t for t in re.findall(r"[A-Za-z0-9_./@-]+", text) if len(t) >= 4]
+
+
+def _schema_tokens() -> frozenset[str]:
+    """Center-view schema field names (tokenized) — structure, not content."""
+    names = set(_Edge.model_fields) | set(PrivacyLabel.model_fields)
+    toks: set[str] = set()
+    for n in names:
+        toks.update(re.findall(r"[A-Za-z0-9]+", n))
+    return frozenset(toks)
+
+
+_SCHEMA_TOKENS = _schema_tokens()
 
 
 def _label_tokens(label) -> set[str]:
