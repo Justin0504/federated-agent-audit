@@ -17,15 +17,12 @@ from federated_agent_audit.a2a import A2AAuditor
 
 
 def run() -> dict:
-    label_scn = [s for s in SCENARIOS if s.requires == "label"]
-    infer_scn = [s for s in SCENARIOS if s.requires == "inference"]
-
     tp = fp = fn = tn = 0
     raw_leaks = 0
     type_hits: dict[str, tuple[int, int]] = {}  # type -> (detected, expected)
     rows = []
 
-    for s in label_scn:
+    for s in SCENARIOS:
         result = A2AAuditor(clearances=s.clearances).audit(s.messages)
         raw_leaks += result.raw_leaks
         detected = result.types()
@@ -48,18 +45,10 @@ def run() -> dict:
     precision = tp / (tp + fp) if (tp + fp) else 1.0
     f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
 
-    # v1 target: inference-only scenarios v0 cannot yet detect
-    infer_detected = []
-    for s in infer_scn:
-        result = A2AAuditor(clearances=s.clearances).audit(s.messages)
-        infer_detected.append((s.name, bool(result.violations), result.raw_leaks))
-        raw_leaks += result.raw_leaks
-
     return {
         "rows": rows, "tp": tp, "fp": fp, "fn": fn, "tn": tn,
         "precision": round(precision, 3), "recall": round(recall, 3),
-        "f1": round(f1, 3), "raw_leaks": raw_leaks,
-        "type_hits": type_hits, "infer": infer_detected,
+        "f1": round(f1, 3), "raw_leaks": raw_leaks, "type_hits": type_hits,
     }
 
 
@@ -72,16 +61,12 @@ def main() -> int:
         flag = "" if ok == "ok" else "   <-- MISS"
         print(f"  {ok:5s} {kind:6s} {name:30s} {detected}{flag}")
     print("  " + "-" * 64)
-    print(f"  label-driven (v0):  P={m['precision']}  R={m['recall']}  F1={m['f1']}  "
+    print(f"  P={m['precision']}  R={m['recall']}  F1={m['f1']}  "
           f"(TP={m['tp']} FP={m['fp']} TN={m['tn']} FN={m['fn']})")
     print("  per-violation-type coverage:")
     for t, (d, e) in sorted(m["type_hits"].items()):
         print(f"    {t:26s} {d}/{e}")
     print(f"  raw Part content reaching the center: {m['raw_leaks']} (must be 0)")
-    if m["infer"]:
-        print("\n  cross-tenant INFERENCE scenarios (v1 target — v0 expected to miss):")
-        for name, detected, leaks in m["infer"]:
-            print(f"    {name:30s} detected={detected}  raw_leaks={leaks}")
     return 0
 
 

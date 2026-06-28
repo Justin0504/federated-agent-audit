@@ -201,9 +201,16 @@ Verbatim disclosure/purpose/hop checks are label-driven and tractable. The
    label-driven violations (cross-tenant disclosure / purpose / ttl), 0 raw Part
    content into the center; the inference-only scenario is correctly left for
    v1.** 11 tests in `tests/test_a2a_mt.py`.
-4. **Cross-tenant inference detector v0** — composition over the desensitized
-   graph; measure inference gain on the `inference_busy_pattern`-style scenarios.
-   *(next)*
+4. **Cross-tenant inference detector v0** — ✅ `A2AAuditor._cross_tenant_inference`.
+   Center-blind: local auditors tag each Part's *inferred* sensitive category
+   (the content gestures toward, e.g. an oncology-center mention → `health`); only
+   the tag travels. The center accumulates tags per (recipient principal,
+   subject) and flags when ≥ 2 converging fragments let a principal infer a
+   sensitive category it was never authorized for (inference_gain = 1−2⁻ᵏ). One
+   incidental hint does not fire. The benchmark's `inference_busy_pattern` is now
+   detected and `clean_single_inference_hint` is correctly not — A2A-MT v0 holds
+   **P/R/F1 = 1.0 across all four violation types (disclosure / purpose / ttl /
+   inference), 0 raw content into the center**.
 5. **Scale A2A-MT** — add the group-assistant, marketplace-delegation, and
    cross-tenant-aggregation families; LLM-generate Part content (reuse the
    AgentLeak harness). Then write the paper. The product (in-container

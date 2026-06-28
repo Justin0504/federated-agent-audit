@@ -28,7 +28,13 @@ class PrivacyLabel(BaseModel):
     data_subject: str = ""               # whom this Part is about
     owning_principal: str = ""           # who owns/controls it (a tenant)
     sensitivity: int = Field(default=0, ge=0, le=5)
-    category: list[str] = Field(default_factory=list)        # e.g. ["health"]
+    category: list[str] = Field(default_factory=list)        # declared domain(s)
+    # Sensitive categories the *content gestures toward* even when its declared
+    # category is benign — computed locally (the local auditor sees content);
+    # only the category TAG travels to the center, never the content. This is the
+    # signal the cross-tenant inference detector accumulates. E.g. a "schedule"
+    # Part mentioning an oncology center carries inferred_categories=["health"].
+    inferred_categories: list[str] = Field(default_factory=list)
     purpose: list[str] = Field(default_factory=list)         # permitted uses
     allowed_recipients: list[str] = Field(default_factory=list)  # principals
     ttl_hops: int = Field(default=1, ge=0)   # max onward hops before it must stop

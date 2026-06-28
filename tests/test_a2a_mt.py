@@ -113,6 +113,54 @@ def test_ttl_violation_on_forward():
     assert "ttl_violation" in r.types()
 
 
+# ── detector: cross-tenant inference ────────────────────────────────
+
+
+def _hinted(text, mid, inferred, sens=2):
+    lbl = PrivacyLabel(data_subject="subject:alice", owning_principal="tenant:alice",
+                       sensitivity=sens, category=["schedule"],
+                       inferred_categories=list(inferred), purpose=["scheduling"],
+                       allowed_recipients=["tenant:bob"])
+    m = _msg(text, lbl, fp="tenant:alice", tp="tenant:bob")
+    m.message_id = mid
+    return m
+
+
+def test_inference_fires_on_converging_fragments():
+    msgs = [_hinted("recurring Tuesday block", "m1", ["health"]),
+            _hinted("near the oncology center", "m2", ["health"])]
+    r = A2AAuditor().audit(msgs)
+    assert "cross_tenant_inference" in r.types()
+
+
+def test_inference_not_fired_on_single_hint():
+    r = A2AAuditor().audit([_hinted("near the hospital district", "m1", ["health"])])
+    assert "cross_tenant_inference" not in r.types()
+
+
+def test_inference_skipped_when_category_authorized():
+    # Alice explicitly shares health with Bob (declared category health, allowed) →
+    # Bob inferring health is not a new leak.
+    lbl = PrivacyLabel(data_subject="subject:alice", owning_principal="tenant:alice",
+                       sensitivity=2, category=["health"],
+                       inferred_categories=["health"], allowed_recipients=["tenant:bob"])
+    m1 = _msg("a", lbl, tp="tenant:bob")
+    m1.message_id = "m1"
+    m2 = _msg("b", lbl, tp="tenant:bob")
+    m2.message_id = "m2"
+    r = A2AAuditor().audit([m1, m2])
+    assert "cross_tenant_inference" not in r.types()
+
+
+def test_inference_center_blind():
+    msgs = [_hinted("RAWTOKEN_ONE near oncology", "m1", ["health"]),
+            _hinted("RAWTOKEN_TWO every Tuesday", "m2", ["health"])]
+    r = A2AAuditor().audit(msgs)
+    blob = " ".join(e.model_dump_json() for e in r.center_view)
+    assert "RAWTOKEN_ONE" not in blob and "RAWTOKEN_TWO" not in blob
+    assert r.raw_leaks == 0
+
+
 # ── center-blind invariant ──────────────────────────────────────────
 
 
@@ -128,10 +176,10 @@ def test_no_raw_content_in_center_view():
 # ── benchmark regression gate ───────────────────────────────────────
 
 
-def test_a2a_mt_benchmark_v0():
+def test_a2a_mt_benchmark():
     from a2a_eval import run
     m = run()
     assert m["precision"] == 1.0 and m["recall"] == 1.0
     assert m["raw_leaks"] == 0
-    # v0 is expected to miss the inference-only scenario (the v1 research target)
-    assert all(detected is False for _, detected, _ in m["infer"])
+    # the cross-tenant inference scenario is now detected (≥2 converging fragments)
+    assert m["type_hits"].get("cross_tenant_inference") == (1, 1)

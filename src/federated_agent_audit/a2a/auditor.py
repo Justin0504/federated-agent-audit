@@ -32,6 +32,13 @@ from .types import Message
 # Sensitivity at or above which a cross-tenant disclosure is a violation.
 DISCLOSURE_SENSITIVITY_FLOOR = 3
 
+# Sensitive categories whose *inferred* accumulation across edges is a leak.
+SENSITIVE_CATEGORIES = {"health", "finance", "legal"}
+
+# How many converging inference fragments (about one subject, to one principal)
+# make a confident cross-tenant inference. One incidental hint is tolerated.
+INFERENCE_FRAGMENT_THRESHOLD = 2
+
 
 class Violation(BaseModel):
     """A detected cross-tenant privacy violation (over desensitized metadata)."""
@@ -91,6 +98,7 @@ class A2AAuditor:
         violations += self._cross_tenant_disclosure(edges)
         violations += self._purpose_violation(edges)
         violations += self._ttl_violation(edges)
+        violations += self._cross_tenant_inference(edges)
 
         raw_leaks = self._count_raw_leaks(messages, edges)
         return AuditResult(violations=violations, center_view=edges, raw_leaks=raw_leaks)
@@ -180,6 +188,59 @@ class A2AAuditor:
                     detail=(f"data forwarded {e.hop_count} hops, exceeding "
                             f"ttl_hops={e.label.ttl_hops}"),
                     severity=min(1.0, 0.4 + 0.2 * (e.hop_count - e.label.ttl_hops)),
+                ))
+        return out
+
+    def _cross_tenant_inference(self, edges: list[_Edge]) -> list[Violation]:
+        """Detect a leak that no single edge commits: a recipient principal Q
+        accumulates enough inference fragments about subject S to infer a
+        sensitive category S never authorized Q to learn.
+
+        Center-blind: operates on the ``inferred_categories`` *tags* the local
+        auditors attached (never the content), accumulating them per
+        (recipient principal, subject). Requires ≥ THRESHOLD converging fragments
+        so one incidental hint does not fire.
+        """
+        # group edges by (recipient principal, data subject)
+        groups: dict[tuple[str, str], list[_Edge]] = defaultdict(list)
+        for e in edges:
+            subj = e.label.data_subject
+            if not e.to_principal or not subj:
+                continue
+            groups[(e.to_principal, subj)].append(e)
+
+        out: list[Violation] = []
+        for (principal, subject), grp in groups.items():
+            # categories the recipient is legitimately cleared to know about S
+            authorized = set()
+            for e in grp:
+                if e.to_principal == e.label.owning_principal or \
+                        e.to_principal in e.label.allowed_recipients:
+                    authorized.update(e.label.category)
+
+            # count distinct fragments (by content hash) per inferred category
+            frags: dict[str, set[str]] = defaultdict(set)
+            for e in grp:
+                for cat in e.label.inferred_categories:
+                    frags[cat].add(e.content_hash)
+
+            for cat, hashes in frags.items():
+                if cat not in SENSITIVE_CATEGORIES:
+                    continue
+                if cat in authorized:
+                    continue  # S already let Q know this category explicitly
+                k = len(hashes)
+                if k < INFERENCE_FRAGMENT_THRESHOLD:
+                    continue
+                out.append(Violation(
+                    type="cross_tenant_inference",
+                    message_id=grp[0].message_id,
+                    data_subject=subject, owning_principal=grp[0].label.owning_principal,
+                    recipient_principal=principal,
+                    detail=(f"'{principal}' can infer '{cat}' about '{subject}' "
+                            f"from {k} converging fragments, though never "
+                            f"explicitly told — inference_gain≈{1 - 2 ** (-k):.2f}"),
+                    severity=min(1.0, 1 - 2 ** (-k)),
                 ))
         return out
 
