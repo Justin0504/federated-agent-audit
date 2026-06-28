@@ -246,17 +246,46 @@ class A2AAuditor:
 
     # ── invariant: the center view must hold no raw Part content ─────
     def _count_raw_leaks(self, messages: list[Message], edges: list[_Edge]) -> int:
+        """Count Parts whose *content* leaked into the center view.
+
+        Governance labels (category / purpose / inferred / principals / subject)
+        are intentionally in the center view, so a content word that merely
+        coincides with one of its own declared label values is NOT a leak — it
+        reveals nothing the label did not already declare. We flag a Part only if
+        a content token that is *not* a label value appears in the center view.
+        """
         blob = " ".join(e.model_dump_json() for e in edges)
         leaks = 0
-        for msg in messages:
-            for part in msg.parts:
-                for tok in _content_tokens(part.text):
-                    if re.search(rf"\b{re.escape(tok)}\b", blob):
-                        leaks += 1
-                        break
+        for e in edges:
+            allowed = _label_tokens(e.label)
+            text = self._text_for_edge(messages, e)
+            for tok in _content_tokens(text):
+                if tok in allowed:
+                    continue
+                if re.search(rf"\b{re.escape(tok)}\b", blob):
+                    leaks += 1
+                    break
         return leaks
+
+    @staticmethod
+    def _text_for_edge(messages: list[Message], edge: _Edge):
+        for msg in messages:
+            if msg.message_id == edge.message_id and edge.part_index < len(msg.parts):
+                return msg.parts[edge.part_index].text
+        return ""
 
 
 def _content_tokens(text: str) -> list[str]:
     """Distinctive content tokens (len >= 4) to test the no-raw-content invariant."""
     return [t for t in re.findall(r"[A-Za-z0-9_./@-]+", text) if len(t) >= 4]
+
+
+def _label_tokens(label) -> set[str]:
+    """Tokens that legitimately appear in the center view as governance metadata."""
+    vals = (list(label.category) + list(label.inferred_categories)
+            + list(label.purpose) + list(label.allowed_recipients)
+            + [label.data_subject, label.owning_principal])
+    toks: set[str] = set()
+    for v in vals:
+        toks.update(re.findall(r"[A-Za-z0-9_./@-]+", str(v)))
+    return toks

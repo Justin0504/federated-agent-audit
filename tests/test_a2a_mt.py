@@ -181,5 +181,9 @@ def test_a2a_mt_benchmark():
     m = run()
     assert m["precision"] == 1.0 and m["recall"] == 1.0
     assert m["raw_leaks"] == 0
-    # the cross-tenant inference scenario is now detected (≥2 converging fragments)
-    assert m["type_hits"].get("cross_tenant_inference") == (1, 1)
+    assert len(m["rows"]) >= 30  # golden + generated families
+    # every violation type is exercised and fully covered (detected == expected)
+    for t in ("cross_tenant_disclosure", "purpose_violation", "ttl_violation",
+              "cross_tenant_inference"):
+        d, e = m["type_hits"][t]
+        assert d == e and e >= 1, (t, d, e)

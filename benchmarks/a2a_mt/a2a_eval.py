@@ -11,18 +11,19 @@ Run:  python benchmarks/a2a_mt/a2a_eval.py
 
 from __future__ import annotations
 
-from a2a_scenarios import SCENARIOS
+from a2a_families import full_suite
 
 from federated_agent_audit.a2a import A2AAuditor
 
 
-def run() -> dict:
+def run(scenarios=None) -> dict:
+    scenarios = full_suite() if scenarios is None else scenarios
     tp = fp = fn = tn = 0
     raw_leaks = 0
     type_hits: dict[str, tuple[int, int]] = {}  # type -> (detected, expected)
     rows = []
 
-    for s in SCENARIOS:
+    for s in scenarios:
         result = A2AAuditor(clearances=s.clearances).audit(s.messages)
         raw_leaks += result.raw_leaks
         detected = result.types()
@@ -55,11 +56,15 @@ def run() -> dict:
 def main() -> int:
     m = run()
     print("=" * 68)
-    print("  A2A-MT v0 — multi-tenant cross-tenant privacy detection")
+    print(f"  A2A-MT — multi-tenant cross-tenant privacy detection "
+          f"({len(m['rows'])} scenarios)")
     print("=" * 68)
-    for name, kind, ok, detected in m["rows"]:
-        flag = "" if ok == "ok" else "   <-- MISS"
-        print(f"  {ok:5s} {kind:6s} {name:30s} {detected}{flag}")
+    misses = [r for r in m["rows"] if r[2] != "ok"]
+    if misses:
+        for name, kind, ok, detected in misses:
+            print(f"  MISS  {kind:6s} {name:34s} {detected}")
+    else:
+        print("  all scenarios classified correctly")
     print("  " + "-" * 64)
     print(f"  P={m['precision']}  R={m['recall']}  F1={m['f1']}  "
           f"(TP={m['tp']} FP={m['fp']} TN={m['tn']} FN={m['fn']})")
