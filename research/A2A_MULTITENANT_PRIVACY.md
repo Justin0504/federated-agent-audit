@@ -192,15 +192,22 @@ Verbatim disclosure/purpose/hop checks are label-driven and tractable. The
 
 ## 10. Near-term plan
 
-1. **This doc** — lock the model + extension schema. ✅ (iterate)
-2. **Spec the extension** as a small, concrete `a2a.privacy/v1` schema + a
-   conformance note (how an AgentCard declares clearances; how a Part is labeled).
-3. **Build A2A-MT v0** — 1 scenario family (calendar negotiation), ~20 labeled
-   scenarios, the generator, and the violation-type scorer. Prove the loop.
+1. **This doc** — lock the model + extension schema. ✅
+2. **Spec the extension as code** — `a2a.privacy/v1` (`src/federated_agent_audit/a2a/`):
+   `PrivacyLabel` + `AgentClearance` + the A2A-shaped `Message`/`Part` model and a
+   center-blind `A2AAuditor`. ✅
+3. **Build A2A-MT v0** — calendar-negotiation family (`benchmarks/a2a_mt/`), 7
+   labeled scenarios, violation-type scorer. ✅ **Result: P/R/F1 = 1.0 on the
+   label-driven violations (cross-tenant disclosure / purpose / ttl), 0 raw Part
+   content into the center; the inference-only scenario is correctly left for
+   v1.** 11 tests in `tests/test_a2a_mt.py`.
 4. **Cross-tenant inference detector v0** — composition over the desensitized
-   graph; measure inference gain.
-5. Scale the benchmark; write the paper. The product (in-container multi-agent
-   data privacy) is the single-tenant projection of the same engine.
+   graph; measure inference gain on the `inference_busy_pattern`-style scenarios.
+   *(next)*
+5. **Scale A2A-MT** — add the group-assistant, marketplace-delegation, and
+   cross-tenant-aggregation families; LLM-generate Part content (reuse the
+   AgentLeak harness). Then write the paper. The product (in-container
+   multi-agent data privacy) is the single-tenant projection of the same engine.
 
 ---
 
