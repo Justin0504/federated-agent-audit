@@ -26,6 +26,7 @@ from .privacy import (
     extract_label,
     label_part,
 )
+from .session import AuditSession
 from .types import Message, Part
 
 __all__ = [
@@ -39,4 +40,5 @@ __all__ = [
     "A2AAuditor",
     "AuditResult",
     "Violation",
+    "AuditSession",
 ]

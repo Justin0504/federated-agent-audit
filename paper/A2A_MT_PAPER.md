@@ -24,6 +24,58 @@ content), the auditor reaches **P/R/F1 = 1.0 with zero raw content reaching the
 center**, including the compositional inference case that no single message
 commits.
 
+## 1. Introduction
+
+Agents are starting to talk to *each other*. Protocols like A2A (v1.0, under the
+Linux Foundation), MCP, and ACP let agents built by different teams and vendors
+discover capabilities and delegate work across organizational boundaries. As this
+agent-to-agent fabric forms, a question with no answer today becomes urgent:
+**when my agent hands data to your agent, what did it just share — and was it
+allowed to?**
+
+Three forces make this acute. First, **the leakage is on the internal channel**:
+recent measurement finds inter-agent messages leak sensitive information far more
+than final outputs, and that current frameworks offer no way to monitor or
+restrict internal-channel communication [AgentLeak]. Second, **the risk is
+compositional**: a privacy violation can emerge from the combination of
+individually-benign messages, even when each agent obeys its own policy
+[Sum-Leaks]. Third, and unique to the cross-organization setting, **the parties
+do not trust each other**: in a multi-tenant interaction the *other* agent is the
+adversary, and no party will route raw content through a central observer to be
+audited — which is exactly what centralized observability (LangSmith, Langfuse)
+requires.
+
+The protocols themselves do not help. We verified against the A2A v1.0
+specification that its data model — `AgentCard`, `Task`, `Message`, `Part` — has
+**no data-governance semantics**: no field marks whom a datum is about, who owns
+it, what it may be used for, or which agent may receive it. A2A provides
+free-form `metadata` and an `extensions` array, and a loosely-specified `tenant`
+field that routes but does not govern. Privacy is delegated to "external access
+control" that, for cross-tenant interactions, does not exist.
+
+We close this gap with three contributions:
+
+1. **`a2a.privacy/v1`** — a small privacy-typing extension carried in
+   `Part.metadata` that gives every shared datum an owner, a subject, a
+   sensitivity, a purpose, a recipient set, a hop limit, and a stable provenance
+   id. It composes with unmodified A2A through the protocol's own extension
+   mechanism.
+2. **A multi-tenant threat model and a center-blind auditor.** We separate the
+   data **subject**, the **owning principal**, and the **agent principal**, and
+   build an auditor that detects cross-tenant disclosure, purpose-limitation,
+   hop/TTL, and *cross-tenant inference* violations from desensitized metadata it
+   can never invert to raw content — the deployable, privacy-preserving
+   counterpart to centralized observability.
+3. **A2A-MT, the first multi-tenant agent-privacy benchmark**, with parameterized
+   families and realistic LLM-generated Part content. The auditor reaches
+   **P/R/F1 = 1.0 with zero raw content reaching the center**, including the
+   compositional inference case no single message commits; the build surfaced and
+   fixed two correctness issues that hand-written tests hid.
+
+The same engine, with every principal set equal, is the **in-container** case —
+one organization auditing its own multi-agent app — so the research result and a
+practical product share one implementation.
+
 ## 4. Method
 
 ### 4.1 Background: A2A and the governance gap
@@ -187,8 +239,47 @@ threshold is the open hard case — the `provenance_id` and inference-gain
 machinery are the starting point.
 
 ## 8. Related work
-AgentLeak (2602.11510) and Sum-Leaks (2509.14284) measure / mitigate
-single-tenant compositional leakage; protocol-security analyses (2511.03841,
-2506.23260) note A2A's lack of governance primitives. We *define* that layer, lift
-the setting to multi-tenant, and supply a center-blind auditor and the first
-multi-tenant benchmark.
+
+**Measuring agent privacy leakage.** *AgentLeak* [1] builds a benchmark and a
+32-class taxonomy and measures that inter-agent channels leak far more than final
+outputs, concluding that no internal-channel controls exist. *"The Sum Leaks More
+Than Its Parts"* [2] establishes the conceptual core — local-policy compliance
+does not compose, and combinations of benign disclosures reidentify. Both study a
+**single-tenant** system (one vault, system→output boundary) and stop at
+measurement or agent-behavior mitigation. We lift the setting to multi-tenant,
+where the boundary is *between* mutually-distrusting agents, and supply a
+deployable detector rather than a measurement.
+
+**Privacy theory for agents.** Work on differential privacy for generative agents
+and information-theoretic analyses [3] characterize when local privacy fails to
+compose, but provide analysis, not an accurate operational auditor. Our
+single-tenant predecessor establishes that detection survives the full
+desensitizer + DP at F1 ≈ 0.97; here we reuse that engine and add the multi-tenant
+typing and inference detector.
+
+**Agent communication protocols and their security.** Comparative security
+analyses of agent protocols [4] and protocol-exploit studies [5] flag that A2A
+and peers lack data-governance primitives — exactly the gap we fill. We do not
+propose a new protocol; we add a typed governance layer *inside* A2A's extension
+mechanism so it composes with deployed agents.
+
+**Centralized observability.** LangSmith, Langfuse, Zenity, and Capsule sit in
+the path and must ingest raw prompts/outputs to function. For the cross-tenant or
+regulated deployments that most need auditing, that is disqualifying. Our
+center-blind design provides the one property they structurally lack — auditing
+without seeing content — which is also what makes the multi-tenant setting
+tractable at all.
+
+## References
+
+[1] *AgentLeak: Benchmarking Privacy Leakage in Multi-Agent LLM Systems.*
+arXiv:2602.11510.
+[2] Patil et al. *The Sum Leaks More Than Its Parts.* arXiv:2509.14284.
+[3] *Differential Privacy in Generative AI Agents* (arXiv:2603.17902);
+*Information-theoretic limits of local privacy composition* (arXiv:2603.05520).
+[4] *Security Analysis of Agentic AI Communication Protocols: A Comparative
+Evaluation.* arXiv:2511.03841.
+[5] *From Prompt Injections to Protocol Exploits: Threats in LLM-Powered AI Agent
+Workflows.* arXiv:2506.23260.
+[6] *Agent2Agent (A2A) Protocol Specification*, v1.0. a2a-protocol.org, Linux
+Foundation.

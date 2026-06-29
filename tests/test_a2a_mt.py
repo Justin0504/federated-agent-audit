@@ -12,6 +12,7 @@ import sys
 from federated_agent_audit.a2a import (
     A2AAuditor,
     AgentClearance,
+    AuditSession,
     Message,
     Part,
     PrivacyLabel,
@@ -171,6 +172,51 @@ def test_no_raw_content_in_center_view():
     assert r.raw_leaks == 0
     blob = " ".join(e.model_dump_json() for e in r.center_view)
     assert "CANARY_SECRET_TOKEN_XYZ" not in blob
+
+
+# ── AuditSession ergonomic drop-in ──────────────────────────────────
+
+
+def test_audit_session_catches_disclosure_and_purpose():
+    audit = AuditSession()
+    audit.declare("analytics", principal="vendor:adtech", purposes=["marketing"])
+    audit.send("triage", "analytics", "SSN 412-99-7720 balance 1240",
+               from_principal="org:acme", to_principal="vendor:adtech",
+               data_subject="cust:1", owning_principal="org:acme", sensitivity=5,
+               category=["finance"], purpose=["support"], allowed_recipients=["org:acme"])
+    r = audit.run()
+    assert {"cross_tenant_disclosure", "purpose_violation"} <= r.types()
+    assert r.raw_leaks == 0
+
+
+def test_audit_session_clean_when_authorized():
+    audit = AuditSession()
+    audit.send("a", "b", "referral note", from_principal="org:acme",
+               to_principal="org:acme", data_subject="cust:1",
+               owning_principal="org:acme", sensitivity=4, category=["health"],
+               allowed_recipients=["org:acme"])
+    r = audit.run()
+    assert not r.violations and r.raw_leaks == 0
+
+
+def test_langgraph_integration_example():
+    """The worked LangGraph integration catches the leak with zero raw content."""
+    import pytest
+    pytest.importorskip("langgraph")
+    import importlib.util
+    path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                        "examples", "a2a_langgraph_app.py")
+    spec = importlib.util.spec_from_file_location("a2a_langgraph_app", path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["a2a_langgraph_app"] = mod  # so get_type_hints(State) resolves
+    spec.loader.exec_module(mod)
+
+    audit = AuditSession()
+    audit.declare("analytics", principal=mod.VENDOR, purposes=["marketing"])
+    mod.build_app().invoke({"ticket": "", "route": "", "audit": audit})
+    r = audit.run()
+    assert "cross_tenant_disclosure" in r.types()
+    assert r.raw_leaks == 0
 
 
 # ── benchmark regression gate ───────────────────────────────────────
