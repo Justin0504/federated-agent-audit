@@ -81,11 +81,34 @@ def run(scenario_id: str) -> dict:
     scn = SCENARIOS.get(scenario_id)
     if scn is None:
         return {"error": "unknown scenario"}
+    return _execute(scn["title"], scn["blurb"], scn["clearances"], scn["hops"])
 
+
+def run_custom(payload: dict) -> dict:
+    """Audit a user-supplied trace. ``payload`` = {clearances: {agent:[principal,
+    [purposes]]}, hops: [{from_agent,to_agent,from_principal,to_principal,text,
+    data_subject,owning_principal,purpose,allowed_recipients,ttl_hops?}]}."""
+    try:
+        clearances = {a: (v[0], list(v[1])) for a, v in payload.get("clearances", {}).items()}
+        hops = []
+        for h in payload.get("hops", []):
+            policy = {k: h[k] for k in ("data_subject", "owning_principal", "purpose",
+                                        "allowed_recipients", "ttl_hops", "provenance_id")
+                      if k in h}
+            hops.append((h["from_agent"], h["to_agent"], h["from_principal"],
+                         h["to_principal"], h.get("text", ""), policy))
+        if not hops:
+            return {"error": "no hops provided"}
+    except (KeyError, TypeError, IndexError) as e:
+        return {"error": f"malformed trace: {e}"}
+    return _execute("Custom trace", "Your own multi-agent interaction.", clearances, hops)
+
+
+def _execute(title: str, blurb: str, clearances: dict, hops: list) -> dict:
     audit = AuditSession()
-    for agent, (principal, purposes) in scn["clearances"].items():
+    for agent, (principal, purposes) in clearances.items():
         audit.declare(agent, principal=principal, purposes=purposes)
-    for frm, to, fp, tp, text, policy in scn["hops"]:
+    for frm, to, fp, tp, text, policy in hops:
         audit.observe(frm, to, text, from_principal=fp, to_principal=tp, **policy)
 
     result = A2AAuditor(
@@ -93,9 +116,9 @@ def run(scenario_id: str) -> dict:
 
     # violation message_ids that fired
     flagged = {v.message_id for v in result.violations}
-    hops = []
-    for (frm, to, fp, tp, text, _policy), edge in zip(scn["hops"], result.center_view):
-        hops.append({
+    hop_views = []
+    for (frm, to, fp, tp, text, _policy), edge in zip(hops, result.center_view):
+        hop_views.append({
             "from_agent": frm, "to_agent": to,
             "from_principal": fp, "to_principal": tp,
             "text": text,
@@ -106,11 +129,11 @@ def run(scenario_id: str) -> dict:
             "flagged": edge.message_id in flagged,
         })
     return {
-        "title": scn["title"], "blurb": scn["blurb"], "hops": hops,
+        "title": title, "blurb": blurb, "hops": hop_views,
         "violations": [{"type": v.type, "detail": v.detail,
                         "severity": round(v.severity, 2)} for v in result.violations],
         "raw_leaks": result.raw_leaks,
         "center_view": [{"from": h["from_principal"], "to": h["to_principal"],
                          "hash": h["content_hash"], "category": h["label"]["category"],
-                         "sensitivity": h["label"]["sensitivity"]} for h in hops],
+                         "sensitivity": h["label"]["sensitivity"]} for h in hop_views],
     }

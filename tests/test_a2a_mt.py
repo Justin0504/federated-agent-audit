@@ -369,6 +369,18 @@ def test_demo_scenarios_and_dashboard():
         assert vtype in [v["type"] for v in d["violations"]], sid
         assert d["raw_leaks"] == 0                            # center-blind always
 
+    # bring-your-own trace: tagger derives labels, auditor catches the leak
+    payload = {"clearances": {"ads": ["vendor:adtech", ["marketing"]]},
+               "hops": [{"from_agent": "app", "to_agent": "ads",
+                         "from_principal": "org:acme", "to_principal": "vendor:adtech",
+                         "text": "User u123 diagnosed with diabetes, balance $4,200",
+                         "data_subject": "user:u123", "owning_principal": "org:acme",
+                         "purpose": ["support"], "allowed_recipients": ["org:acme"]}]}
+    d = c.post("/api/v1/a2a/demo/audit", json=payload).json()
+    assert "cross_tenant_disclosure" in [v["type"] for v in d["violations"]]
+    assert d["raw_leaks"] == 0
+    assert c.post("/api/v1/a2a/demo/audit", json={"hops": [{"x": 1}]}).json()["error"]
+
 
 # ── formal inference-gain model ─────────────────────────────────────
 
