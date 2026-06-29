@@ -34,20 +34,28 @@ audit.declare("triage",    principal="org:acme",      purposes=["support"])
 
 ### Step 2 — mirror each agent-to-agent hand-off
 
-Wherever agent A hands data to agent B, add one line. `text` is hashed locally;
-only the label travels to the audit.
+Wherever agent A hands data to agent B, add one line. The recommended production
+path is `observe(...)`: you supply only the text and the *policy intent*
+(who/whom/purpose/recipients); the local tagger derives the content fields
+(category, inferred-categories, sensitivity) from the text. `text` is hashed
+locally — only labels travel to the audit.
 
 ```python
-audit.send(
+audit.observe(
     "triage", "analytics", message_text,
     from_principal="org:acme", to_principal="vendor:adtech",
     data_subject="customer:8842",        # whom it's about
     owning_principal="org:acme",         # who owns it
-    sensitivity=5, category=["finance"],
     purpose=["support"],                 # what it may be used for
     allowed_recipients=["org:acme"],     # who may receive it
 )
 ```
+
+Prefer to label content fields yourself? Use `send(...)` with explicit
+`sensitivity` / `category` / `inferred_categories`. See
+`examples/a2a_live_app.py` for a runnable pipeline whose agents make **real LLM
+calls** — the tagger labels their real output and the audit catches the leak,
+with zero content leaving the process.
 
 ### Step 3 — audit
 
