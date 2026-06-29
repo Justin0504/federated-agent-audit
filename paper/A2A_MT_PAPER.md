@@ -212,9 +212,24 @@ how scaling an external benchmark exposes real bugs:
    legitimately in the center view. Excluding label + schema tokens flags only
    genuine content leakage; the check then reads 0 across all scenarios.
 
-*(Planned: E5 — accuracy under the 6-layer desensitizer + DP, reusing the
-single-tenant DP-robustness result; E6 — an adaptive peer that paraphrases to
-evade per-edge sensitivity while accumulating inference.)*
+**E5 — Adaptive evasion.** An adversarial sender that *knows* the inference
+detector tries to leak a sensitive inference while evading it
+(`benchmarks/a2a_mt/a2a_adaptive.py`). The design **resists** the evasions that
+attack the *wording or routing*: paraphrasing each fragment (detection is
+tag-based, not text-based), splitting fragments across several of the recipient's
+agents (grouping is by owning principal, not agent), and partial under-tagging
+(≥ 2 tagged fragments still trigger). It is **evaded only by a dishonest *local*
+labeler** — suppressing the inferred-category tags entirely, or forging distinct
+subject ids so fragments do not group — which is precisely the trust assumption
+the forced-embed integrity layer (build-pinned attestation) and canonical
+owner-issued subject ids are designed to remove. Sub-threshold leakage evades
+only by leaking strictly less, a privacy/utility cost borne by the attacker. This
+maps the design's guarantees honestly: it is robust against an adversarial
+*sender's wording and routing*, and reduces the residual attack surface to *local
+labeler integrity*, which the integrity layer attests.
+
+*(Planned: E6 — accuracy under the 6-layer desensitizer + DP on the A2A path,
+reusing the single-tenant DP-robustness result.)*
 
 ## 7. Discussion
 

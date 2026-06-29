@@ -219,6 +219,31 @@ def test_langgraph_integration_example():
     assert r.raw_leaks == 0
 
 
+# ── adaptive evasion (honest resistance map) ────────────────────────
+
+
+def test_adaptive_evasion_resistance():
+    from a2a_adaptive import (
+        base,
+        detected,
+        paraphrase,
+        principal_split,
+        sub_threshold,
+        subject_alias,
+        under_tag,
+    )
+    # resisted: detection survives these evasions
+    assert detected(base())
+    assert detected(paraphrase())
+    assert detected(principal_split())
+    assert detected(under_tag(2))
+    # evaded: these defeat detection (documented limitations needing attestation/
+    # canonical ids), or cost the attacker information
+    assert not detected(sub_threshold())
+    assert not detected(under_tag(1))
+    assert not detected(subject_alias())
+
+
 # ── benchmark regression gate ───────────────────────────────────────
 
 
