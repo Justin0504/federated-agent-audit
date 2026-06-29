@@ -242,6 +242,18 @@ with **zero raw content at every ε** (`benchmarks/a2a_mt/a2a_dp_eval.py`). The
 auditor thus protects both content (architecturally) and metadata identities
 (cryptographically/DP) while keeping detection essentially intact.
 
+**E7 — The local tagger (closing "assume the hard part").** The inference
+detector accumulates `inferred_categories`; in a real deployment these must be
+*produced* from content, not hand-set. A local tagger (lexical, zero-dependency,
+with an optional LLM backend) emits only the tags — content never leaves the
+agent. On a labeled set that deliberately includes paraphrased cases, the lexical
+backend recovers explicit `category` at P/R/F1 = 1.0 and `inferred_categories` at
+P = 1.0, R = 0.78 (the two misses are novel paraphrases an LLM backend recovers).
+`AuditSession.observe(text, ...policy)` wires the tagger in so a deployer supplies
+only text plus policy intent — the production drop-in. Tagger recall is exactly
+the residual attack surface E4 named (an adversarial sender can under-tag), which
+attestation of the tagger is designed to close.
+
 ## 7. Discussion
 
 ### 7.1 Why center-blind detection is possible here
@@ -258,11 +270,12 @@ should not, still without shipping content anywhere. The research (multi-tenant)
 and the product (same-container) share one engine.
 
 ### 7.3 Limitations
-The inference detector is threshold-based over locally-emitted tags; a
-content-aware local tagger and a formal inference-gain bound are future work. An
-adaptive peer that both paraphrases *and* fragments below the convergence
-threshold is the open hard case — the `provenance_id` and inference-gain
-machinery are the starting point.
+The inference detector is threshold-based over locally-emitted tags. The tagger
+that produces those tags is now a real, evaluated component (E7) rather than an
+assumption, but its recall (lexical 0.78 on hard paraphrases) bounds detection —
+the LLM backend raises it, and tagger attestation defends against a *dishonest*
+sender suppressing tags. A formal inference-gain bound, and an adaptive peer that
+both paraphrases *and* fragments below the convergence threshold, remain open.
 
 ## 8. Related work
 

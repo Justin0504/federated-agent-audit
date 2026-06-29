@@ -219,6 +219,46 @@ def test_langgraph_integration_example():
     assert r.raw_leaks == 0
 
 
+# ── local privacy tagger + auto-tagging ─────────────────────────────
+
+
+def test_tagger_explicit_and_inferred():
+    from federated_agent_audit.a2a import PrivacyTagger
+    t = PrivacyTagger()
+    assert "health" in t.tag("patient diagnosed with cancer, chemotherapy")["category"]
+    # a schedule note hinting at health → inferred, not explicit
+    tags = t.tag("busy Tuesday, appointment at the oncology center")
+    assert tags["inferred_categories"] == ["health"]
+    assert "health" not in tags["category"]
+
+
+def test_tagger_word_boundary_no_false_positive():
+    from federated_agent_audit.a2a import PrivacyTagger
+    # "plea" must not fire on "please"
+    assert PrivacyTagger().tag("please send the deck")["category"] == []
+
+
+def test_tagger_clean_text_no_tags():
+    from federated_agent_audit.a2a import PrivacyTagger
+    tags = PrivacyTagger().tag("let's grab lunch at noon")
+    assert tags["inferred_categories"] == [] and tags["sensitivity"] <= 1
+
+
+def test_audit_session_observe_auto_tags_inference():
+    """observe() runs the tagger so the dev supplies only text + policy; two
+    health-hinting schedule notes to Bob trigger the inference detector."""
+    audit = AuditSession()
+    for txt in ("busy every Tuesday at the oncology center",
+                "can only meet near the cancer center"):
+        audit.observe("alice_cal", "bob_cal", txt,
+                      from_principal="tenant:alice", to_principal="tenant:bob",
+                      data_subject="subject:alice", owning_principal="tenant:alice",
+                      purpose=["scheduling"], allowed_recipients=["tenant:bob"])
+    r = audit.run()
+    assert "cross_tenant_inference" in r.types()
+    assert r.raw_leaks == 0
+
+
 # ── metadata desensitization + DP ───────────────────────────────────
 
 

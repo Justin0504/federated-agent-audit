@@ -27,6 +27,7 @@ from .privacy import (
     label_part,
 )
 from .session import AuditSession
+from .tagger import PrivacyTagger
 from .types import Message, Part
 
 __all__ = [
@@ -41,4 +42,5 @@ __all__ = [
     "AuditResult",
     "Violation",
     "AuditSession",
+    "PrivacyTagger",
 ]

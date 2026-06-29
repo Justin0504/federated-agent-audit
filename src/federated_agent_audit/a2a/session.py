@@ -25,16 +25,19 @@ from __future__ import annotations
 
 from .auditor import A2AAuditor, AuditResult
 from .privacy import AgentClearance, PrivacyLabel, label_part
+from .tagger import PrivacyTagger
 from .types import Message, Part
 
 
 class AuditSession:
     """Collects labeled agent-to-agent hops and audits them, center-blind."""
 
-    def __init__(self, sensitivity_floor: int = 3) -> None:
+    def __init__(self, sensitivity_floor: int = 3,
+                 tagger: PrivacyTagger | None = None) -> None:
         self._messages: list[Message] = []
         self._clearances: dict[str, AgentClearance] = {}
         self._floor = sensitivity_floor
+        self._tagger = tagger or PrivacyTagger()
         self._n = 0
 
     def declare(self, agent_id: str, *, principal: str = "",
@@ -64,6 +67,31 @@ class AuditSession:
             from_principal=from_principal, to_principal=to_principal,
             parts=[part]))
         return self
+
+    def observe(self, from_agent: str, to_agent: str, text: str, *,
+                from_principal: str = "", to_principal: str = "",
+                data_subject: str = "", owning_principal: str = "",
+                purpose: list[str] | None = None,
+                allowed_recipients: list[str] | None = None,
+                ttl_hops: int = 1, provenance_id: str = "",
+                message_id: str = "") -> "AuditSession":
+        """Auto-tagging hop: the local tagger derives content fields from ``text``
+        (category, inferred_categories, sensitivity); the caller supplies only the
+        policy intent (who/whom/purpose/recipients). This is the drop-in shape for
+        production — wrap a hand-off with text + policy and nothing else.
+
+        The tagger runs locally on ``text``; only its tags travel to the audit.
+        """
+        tags = self._tagger.tag(text)
+        return self.send(
+            from_agent, to_agent, text, from_principal=from_principal,
+            to_principal=to_principal, message_id=message_id,
+            data_subject=data_subject, owning_principal=owning_principal,
+            sensitivity=tags["sensitivity"], category=tags["category"],
+            inferred_categories=tags["inferred_categories"],
+            purpose=list(purpose or []),
+            allowed_recipients=list(allowed_recipients or []),
+            ttl_hops=ttl_hops, provenance_id=provenance_id)
 
     def run(self) -> AuditResult:
         """Audit everything collected so far (center-blind)."""

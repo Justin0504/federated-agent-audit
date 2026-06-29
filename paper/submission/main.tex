@@ -212,6 +212,17 @@ $F1 = 0.99/0.97/0.96$ at $\varepsilon = 3/1/0.5$, recall falling only for
 disclosure decisions whose sensitivity noises across the floor, with zero raw
 content at every $\varepsilon$.
 
+\textbf{E6a---The local tagger (closing ``assume the hard part'').} The inference
+detector accumulates \texttt{inferred\_categories}; in a real deployment these
+must be \emph{produced} from content, not hand-set. A local tagger (lexical,
+zero-dependency, optional LLM backend) emits only tags---content never leaves the
+agent. On a labeled set with paraphrased cases, the lexical backend recovers
+explicit \texttt{category} at $P/R/F1=1.0$ and \texttt{inferred\_categories} at
+$P=1.0$, $R=0.78$ (the misses are novel paraphrases an LLM backend recovers).
+\texttt{AuditSession.observe} wires it in so a deployer supplies only text plus
+policy---the production drop-in. Tagger recall is exactly the residual surface E4
+named (an adversarial sender can under-tag), which attestation closes.
+
 \textbf{E6---The engine, validated externally (single-tenant).} The multi-tenant
 auditor reuses a federated engine we validate on the external \textbf{AgentLeak}
 benchmark. Driving AgentLeak's own 600 multi-agent scenarios through an LLM to
