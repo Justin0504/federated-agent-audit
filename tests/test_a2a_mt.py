@@ -219,6 +219,30 @@ def test_langgraph_integration_example():
     assert r.raw_leaks == 0
 
 
+# ── metadata desensitization + DP ───────────────────────────────────
+
+
+def test_desensitize_is_lossless_and_hides_identities():
+    """Pseudonymizing identities with a shared salt keeps detection exact while
+    the center never learns the real principals/subjects."""
+    lbl = PrivacyLabel(data_subject="subject:alice", owning_principal="tenant:hospital",
+                       sensitivity=5, category=["health"], allowed_recipients=["tenant:hospital"])
+    msgs = [_msg("chemo note", lbl, tp="tenant:adtech")]
+    r = A2AAuditor(desensitize=True).audit(msgs)
+    assert "cross_tenant_disclosure" in r.types()       # still detected
+    blob = " ".join(e.model_dump_json() for e in r.center_view)
+    for real in ("alice", "hospital", "adtech"):
+        assert real not in blob                          # identities hidden
+    assert r.raw_leaks == 0
+
+
+def test_dp_keeps_zero_raw_leaks():
+    lbl = PrivacyLabel(data_subject="subject:alice", owning_principal="tenant:hospital",
+                       sensitivity=5, category=["health"], allowed_recipients=["tenant:hospital"])
+    r = A2AAuditor(desensitize=True, epsilon=0.5).audit([_msg("secret", lbl, tp="tenant:x")])
+    assert r.raw_leaks == 0
+
+
 # ── adaptive evasion (honest resistance map) ────────────────────────
 
 

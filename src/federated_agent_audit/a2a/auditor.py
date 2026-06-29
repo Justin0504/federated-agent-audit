@@ -22,10 +22,12 @@ from __future__ import annotations
 
 import hashlib
 import re
+import secrets
 from collections import defaultdict
 
 from pydantic import BaseModel, Field
 
+from ..dp_mechanism import discrete_laplace
 from .privacy import AgentClearance, PrivacyLabel, extract_label
 from .types import Message
 
@@ -87,9 +89,41 @@ class A2AAuditor:
         self,
         clearances: list[AgentClearance] | None = None,
         sensitivity_floor: int = DISCLOSURE_SENSITIVITY_FLOOR,
+        desensitize: bool = False,
+        epsilon: float | None = None,
+        salt: str = "",
     ) -> None:
         self._clearance = {c.agent_id: c for c in (clearances or [])}
         self._floor = sensitivity_floor
+        # Optional center-side privacy hardening of the metadata itself:
+        # pseudonymize identity-bearing label fields with a per-audit shared salt
+        # (so cross-tenant comparisons still hold in pseudonym space without the
+        # center learning real principals/subjects) and DP-noise sensitivity.
+        # Categories / inferred-categories / purpose are kept structurally — the
+        # single-tenant lesson: do not randomized-response the signal you audit.
+        self._desens = desensitize
+        self._epsilon = epsilon
+        self._salt = salt or secrets.token_hex(8)
+
+    def _ps(self, value: str) -> str:
+        if not self._desens or not value or value == "multi":
+            return value
+        return "ps:" + hashlib.sha256(f"{self._salt}:{value}".encode()).hexdigest()[:12]
+
+    def _harden(self, label: PrivacyLabel) -> PrivacyLabel:
+        if not self._desens and self._epsilon is None:
+            return label
+        sens = label.sensitivity
+        if self._epsilon is not None:
+            sens = max(0, min(5, discrete_laplace(sens, sensitivity=1,
+                                                  epsilon=self._epsilon)))
+        return label.model_copy(update={
+            "data_subject": self._ps(label.data_subject),
+            "owning_principal": self._ps(label.owning_principal),
+            "allowed_recipients": [self._ps(r) for r in label.allowed_recipients],
+            "provenance_id": self._ps(label.provenance_id),
+            "sensitivity": sens,
+        })
 
     # ── public API ──────────────────────────────────────────────────
     def audit(self, messages: list[Message]) -> AuditResult:
@@ -109,9 +143,10 @@ class A2AAuditor:
         hops: dict[str, int] = defaultdict(int)  # datum identity -> times relayed
         for msg in messages:
             for i, part in enumerate(msg.parts):
-                label = extract_label(part.metadata)
-                if label is None:
+                raw_label = extract_label(part.metadata)
+                if raw_label is None:
                     continue  # unlabeled parts carry no governance semantics in v0
+                label = self._harden(raw_label)
                 h = _hash(part.text)
                 # Track a datum by its stable provenance id (preserved across
                 # paraphrasing forwards); fall back to the content hash.
@@ -122,8 +157,8 @@ class A2AAuditor:
                     part_index=i,
                     from_agent=msg.from_agent,
                     to_agent=msg.to_agent,
-                    from_principal=msg.from_principal,
-                    to_principal=msg.to_principal,
+                    from_principal=self._ps(msg.from_principal),
+                    to_principal=self._ps(msg.to_principal),
                     content_hash=h,
                     label=label,
                     hop_count=hops[datum],

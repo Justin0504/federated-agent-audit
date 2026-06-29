@@ -228,8 +228,19 @@ maps the design's guarantees honestly: it is robust against an adversarial
 *sender's wording and routing*, and reduces the residual attack surface to *local
 labeler integrity*, which the integrity layer attests.
 
-*(Planned: E6 — accuracy under the 6-layer desensitizer + DP on the A2A path,
-reusing the single-tenant DP-robustness result.)*
+**E6 — Metadata desensitization + DP.** The center already sees no content; we
+additionally harden the *metadata*. Identity-bearing label fields (subject,
+principals, recipients, provenance) are pseudonymized with a per-audit shared
+salt — so cross-tenant comparisons (principal-vs-principal, group-by-subject)
+still hold in pseudonym space while the center learns no real identity — and
+`sensitivity` is DP-noised; categories and inferred-category tags are kept
+structurally (the single-tenant lesson: do not randomized-response the signal
+being audited). Pseudonymization is **lossless** (P/R/F1 = 1.0, consistent salt).
+Adding DP on sensitivity, F1 = **0.99 / 0.97 / 0.96 at ε = 3 / 1 / 0.5** (recall
+falls only for disclosure decisions whose sensitivity noises across the floor),
+with **zero raw content at every ε** (`benchmarks/a2a_mt/a2a_dp_eval.py`). The
+auditor thus protects both content (architecturally) and metadata identities
+(cryptographically/DP) while keeping detection essentially intact.
 
 ## 7. Discussion
 
