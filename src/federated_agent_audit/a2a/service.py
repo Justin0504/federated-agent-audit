@@ -36,8 +36,12 @@ def create_app(trusted_builds: dict | None = None,
                clearances: list[AgentClearance] | None = None):
     try:
         from fastapi import FastAPI
+        from fastapi.responses import HTMLResponse
     except ImportError as e:  # pragma: no cover
         raise ImportError("FastAPI is required: pip install 'federated-agent-audit[transport]'") from e
+
+    from . import demo as _demo
+    from .dashboard import DASHBOARD_HTML
 
     verifier = A2AVerifier(trusted_builds or {})
     require_attestation = bool(trusted_builds)
@@ -45,6 +49,18 @@ def create_app(trusted_builds: dict | None = None,
     store: list[dict] = []           # recorded violations (desensitized only)
 
     app = FastAPI(title="A2A Privacy Audit Service", version="1.0")
+
+    @app.get("/", response_class=HTMLResponse)
+    def dashboard():
+        return DASHBOARD_HTML
+
+    @app.get("/api/v1/a2a/demo/list")
+    def demo_list():
+        return _demo.list_scenarios()
+
+    @app.get("/api/v1/a2a/demo/run/{scenario_id}")
+    def demo_run(scenario_id: str):
+        return _demo.run(scenario_id)
 
     @app.get("/healthz")
     def healthz():

@@ -348,6 +348,28 @@ def test_a2a_audit_service():
     assert client.get("/api/v1/a2a/violations").json()["count"] >= 1
 
 
+# ── demo dashboard + scenarios ──────────────────────────────────────
+
+
+def test_demo_scenarios_and_dashboard():
+    import pytest
+    pytest.importorskip("fastapi")
+    from fastapi.testclient import TestClient
+
+    from federated_agent_audit.a2a.service import create_app
+    c = TestClient(create_app())
+    assert "<title>" in c.get("/").text                      # dashboard served
+    ids = [s["id"] for s in c.get("/api/v1/a2a/demo/list").json()]
+    assert {"support_leak", "calendar_inference", "marketplace"} <= set(ids)
+    expect = {"support_leak": "cross_tenant_disclosure",
+              "calendar_inference": "cross_tenant_inference",
+              "marketplace": "ttl_violation"}
+    for sid, vtype in expect.items():
+        d = c.get(f"/api/v1/a2a/demo/run/{sid}").json()
+        assert vtype in [v["type"] for v in d["violations"]], sid
+        assert d["raw_leaks"] == 0                            # center-blind always
+
+
 # ── formal inference-gain model ─────────────────────────────────────
 
 
