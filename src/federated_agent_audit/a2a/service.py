@@ -66,6 +66,10 @@ def create_app(trusted_builds: dict | None = None,
     def demo_audit(payload: dict):
         return _demo.run_custom(payload)
 
+    @app.get("/api/v1/a2a/demo/live")
+    def demo_live():
+        return _demo.run_live()
+
     @app.get("/healthz")
     def healthz():
         return {"ok": True, "require_attestation": require_attestation,

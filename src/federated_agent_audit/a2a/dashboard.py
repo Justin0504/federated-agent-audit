@@ -52,7 +52,10 @@ background:rgba(63,125,79,.13);color:var(--ok);border:1px solid var(--ok)}
 <p class="sub">Catch cross-agent data leaks — without the center ever seeing the data.</p></div>
 <button class="theme" id="theme">◐ theme</button></div>
 <div class="scn" id="scn"></div>
-<div style="margin:-6px 0 18px"><button class="theme" id="byo">✎ audit your own trace</button>
+<div style="margin:-6px 0 18px">
+<button class="theme" id="live" style="border-color:var(--ok);color:var(--ok)">▶ run live (real LLM)</button>
+<button class="theme" id="byo">✎ audit your own trace</button>
+<span id="lerr" style="color:var(--bad);margin-left:10px;font-size:13px"></span>
 <div id="byop" style="display:none;margin-top:10px">
 <textarea id="ta" spellcheck="false" style="width:100%;height:150px;font:12.5px ui-monospace,Menlo,monospace;
 background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px"></textarea>
@@ -104,6 +107,11 @@ data_subject:"user:u123",owning_principal:"org:acme",purpose:["support"],allowed
 document.getElementById('ta').value=JSON.stringify(EXAMPLE,null,2);
 document.getElementById('byo').onclick=()=>{const p=document.getElementById('byop');
 p.style.display=p.style.display==='none'?'block':'none';};
+document.getElementById('live').onclick=async()=>{const b=document.getElementById('live'),err=document.getElementById('lerr');
+err.textContent='';b.textContent='⏳ calling LLM…';b.disabled=true;
+try{const d=await(await fetch('api/v1/a2a/demo/live')).json();
+if(d.error){err.textContent=d.error}else{render(d);document.getElementById('out').scrollIntoView({behavior:'smooth'})}}
+finally{b.textContent='▶ run live (real LLM)';b.disabled=false;}};
 document.getElementById('runc').onclick=async()=>{const err=document.getElementById('cerr');err.textContent='';
 let body;try{body=JSON.parse(document.getElementById('ta').value)}catch(e){err.textContent='invalid JSON';return}
 const d=await(await fetch('api/v1/a2a/demo/audit',{method:'POST',headers:{'Content-Type':'application/json'},

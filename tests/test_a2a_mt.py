@@ -381,6 +381,16 @@ def test_demo_scenarios_and_dashboard():
     assert d["raw_leaks"] == 0
     assert c.post("/api/v1/a2a/demo/audit", json={"hops": [{"x": 1}]}).json()["error"]
 
+    # live LLM endpoint without a key → graceful error (the live path itself needs
+    # OPENAI_API_KEY and is exercised manually, not in CI)
+    import os
+    saved = os.environ.pop("OPENAI_API_KEY", None)
+    try:
+        assert "OPENAI_API_KEY" in c.get("/api/v1/a2a/demo/live").json()["error"]
+    finally:
+        if saved is not None:
+            os.environ["OPENAI_API_KEY"] = saved
+
 
 # ── formal inference-gain model ─────────────────────────────────────
 
