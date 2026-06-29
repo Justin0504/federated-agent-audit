@@ -294,8 +294,12 @@ detector accumulates `inferred_categories`; in a real deployment these must be
 *produced* from content, not hand-set. A local tagger (lexical, zero-dependency,
 with an optional LLM backend) emits only the tags — content never leaves the
 agent. On a labeled set that deliberately includes paraphrased cases, the lexical
-backend recovers explicit `category` at P/R/F1 = 1.0 and `inferred_categories` at
-P = 1.0, R = 0.78 (the two misses are novel paraphrases an LLM backend recovers).
+backend recovers explicit (sensitive) `category` at P/R/F1 = 1.0 and
+`inferred_categories` at P = 1.0, R = 0.78; the two misses are novel paraphrases
+("the place where they treat tumors"), and the **LLM backend (gpt-4o-mini)
+recovers them — inferred-category recall 0.78 → 1.0** at P = 1.0
+(sensitive-category P/R = 0.75/1.0; its one over-tag, "SSN on file" → finance, is
+defensible).
 `AuditSession.observe(text, ...policy)` wires the tagger in so a deployer supplies
 only text plus policy intent — the production drop-in. Tagger recall is exactly
 the residual attack surface E4 named (an adversarial sender can under-tag), which
@@ -338,7 +342,8 @@ and the product (same-container) share one engine.
 ### 7.3 Limitations
 The inference detector is threshold-based over locally-emitted tags. The tagger
 that produces those tags is now a real, evaluated component (E7) rather than an
-assumption, but its recall (lexical 0.78 on hard paraphrases) bounds detection —
+assumption with a measured recall (lexical 0.78, LLM-backed 1.0 on hard
+paraphrases) that bounds detection —
 the LLM backend raises it, and tagger attestation defends against a *dishonest*
 sender suppressing tags. A formal inference-gain bound, and an adaptive peer that
 both paraphrases *and* fragments below the convergence threshold, remain open.

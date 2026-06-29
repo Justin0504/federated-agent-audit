@@ -52,6 +52,53 @@ _NEUTRAL = {"schedule": {"meet", "meeting", "available", "free", "busy", "tuesda
                          "calendar", "reschedule", "slot", "standup", "pm", "am"}}
 
 
+def llm_tagger(model: str = "gpt-4o-mini", client=None) -> Callable[[str], dict]:
+    """A higher-recall tagger backend backed by an LLM (runs locally on content).
+
+    Returns a callable ``text -> {category, inferred_categories, sensitivity}`` for
+    ``PrivacyTagger(llm=...)``. Catches the paraphrased / novel-phrasing hints the
+    lexical floor misses. Only the tags it returns ever leave the agent.
+    """
+    import json
+
+    sys_prompt = (
+        "You tag an agent message for privacy, locally. Return ONLY JSON: "
+        '{"category":[...],"inferred_categories":[...],"sensitivity":<0-5>}.\n'
+        "Decide by whether the SENSITIVE FACT is STATED or merely IMPLIED:\n"
+        "- category: the message STATES a sensitive value/fact (a diagnosis, a "
+        "balance/SSN/charge, a lawsuit), use health/finance/legal; or the benign "
+        "topic, use schedule.\n"
+        "- inferred_categories: the message does NOT state a sensitive fact, but a "
+        "place/activity/context lets one INFER a sensitive domain. Put that domain "
+        "(health/finance/legal) here, NOT in category.\n"
+        "Examples:\n"
+        "'diagnosed with depression' -> category health.\n"
+        "'appointment at the oncology center' -> category [schedule], inferred [health].\n"
+        "'balance is $4,000' -> category finance.\n"
+        "'meeting at the bank about the loan' -> category [schedule], inferred [finance].\n"
+        "'hearing at court that morning' -> category [schedule], inferred [legal].\n"
+        "'the people I owe money to' -> inferred [finance].\n"
+        "'lunch at noon' -> category [schedule], inferred [].\n"
+        "sensitivity 0-5. Output strictly the JSON object.")
+
+    def _tag(text: str) -> dict:
+        nonlocal client
+        if client is None:
+            from openai import OpenAI
+            client = OpenAI()
+        r = client.chat.completions.create(
+            model=model, temperature=0,
+            response_format={"type": "json_object"},
+            messages=[{"role": "system", "content": sys_prompt},
+                      {"role": "user", "content": text}])
+        d = json.loads(r.choices[0].message.content or "{}")
+        return {"category": list(d.get("category", [])),
+                "inferred_categories": list(d.get("inferred_categories", [])),
+                "sensitivity": int(d.get("sensitivity", 0) or 0)}
+
+    return _tag
+
+
 class PrivacyTagger:
     """Produce content-derived label fields from raw Part text, locally."""
 

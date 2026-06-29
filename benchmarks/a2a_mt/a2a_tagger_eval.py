@@ -13,7 +13,9 @@ Run:  python benchmarks/a2a_mt/a2a_tagger_eval.py
 
 from __future__ import annotations
 
-from federated_agent_audit.a2a.tagger import PrivacyTagger
+import os
+
+from federated_agent_audit.a2a.tagger import PrivacyTagger, llm_tagger
 
 # (text, expected_category[], expected_inferred[]) — ground truth
 CASES = [
@@ -41,15 +43,21 @@ CASES = [
 ]
 
 
-def run() -> dict:
-    tagger = PrivacyTagger()
+# Only sensitive categories are a privacy signal; the benign "schedule" tag is
+# context, scored out so a liberal schedule tag doesn't distort the numbers.
+SENSITIVE = {"health", "finance", "legal"}
+
+
+def run(tagger=None) -> dict:
+    tagger = tagger or PrivacyTagger()
     cat_tp = cat_fp = cat_fn = 0
     inf_tp = inf_fp = inf_fn = 0
     misses = []
     for text, exp_cat, exp_inf in CASES:
         got = tagger.tag(text)
-        gc, gi = set(got["category"]), set(got["inferred_categories"])
-        ec, ei = set(exp_cat), set(exp_inf)
+        gc = set(got["category"]) & SENSITIVE
+        gi = set(got["inferred_categories"])
+        ec, ei = set(exp_cat) & SENSITIVE, set(exp_inf)
         cat_tp += len(gc & ec)
         cat_fp += len(gc - ec)
         cat_fn += len(ec - gc)
@@ -70,19 +78,32 @@ def run() -> dict:
 
 
 def main() -> int:
-    m = run()
     print("=" * 66)
-    print("  Local privacy tagger — lexical backend (honest numbers)")
+    print("  Local privacy tagger evaluation (honest numbers)")
     print("=" * 66)
-    print(f"  category     P/R/F1 = {m['category']}")
-    print(f"  inferred     P/R/F1 = {m['inferred']}")
-    if m["misses"]:
-        print("\n  misses (the LLM backend / attestation address these):")
-        for text, gc, ec, gi, ei in m["misses"]:
-            print(f"    {text[:46]!r}")
-            print(f"      cat got={gc} exp={ec} | inferred got={gi} exp={ei}")
-    print("\n  Lexical is the zero-dependency floor; pass an LLM callable to")
-    print("  PrivacyTagger(llm=...) to recover the paraphrased misses.")
+    lex = run(PrivacyTagger())
+    print("  lexical backend (zero-dependency floor):")
+    print(f"    category   P/R/F1 = {lex['category']}")
+    print(f"    inferred   P/R/F1 = {lex['inferred']}")
+
+    if os.environ.get("OPENAI_API_KEY"):
+        llm = run(PrivacyTagger(llm=llm_tagger()))
+        print("\n  lexical + LLM backend (gpt-4o-mini):")
+        print(f"    category   P/R/F1 = {llm['category']}")
+        print(f"    inferred   P/R/F1 = {llm['inferred']}")
+        print(f"\n  inferred recall: {lex['inferred'][1]} (lexical) "
+              f"-> {llm['inferred'][1]} (LLM-backed)")
+        if llm["misses"]:
+            print("  remaining misses:")
+            for text, gc, ec, gi, ei in llm["misses"]:
+                print(f"    {text[:46]!r}  inferred got={gi} exp={ei}")
+    else:
+        print("\n  set OPENAI_API_KEY to also evaluate the LLM backend "
+              "(recovers paraphrase misses).")
+        if lex["misses"]:
+            print("  lexical misses (paraphrases):")
+            for text, gc, ec, gi, ei in lex["misses"]:
+                print(f"    {text[:46]!r}  inferred got={gi} exp={ei}")
     return 0
 
 
