@@ -308,6 +308,46 @@ def test_adaptive_evasion_resistance():
     assert not detected(subject_alias())
 
 
+# ── deployable audit service ────────────────────────────────────────
+
+
+def test_a2a_audit_service():
+    import pytest
+    pytest.importorskip("fastapi")
+    from fastapi.testclient import TestClient
+
+    from federated_agent_audit.a2a import A2AAttestor, A2AAuditor, AgentClearance
+    from federated_agent_audit.a2a.service import create_app
+
+    fp, key = "build:v1", b"trusted-key"
+    clr = [AgentClearance(agent_id="analytics", principal="vendor:adtech",
+                          purposes=["marketing"])]
+    app = create_app(trusted_builds={fp: key}, clearances=clr)
+    client = TestClient(app)
+
+    # an agent computes its desensitized result locally
+    lbl = PrivacyLabel(data_subject="customer:1", owning_principal="org:acme",
+                       sensitivity=5, category=["finance"], allowed_recipients=["org:acme"])
+    result = A2AAuditor(clearances=clr).audit(
+        [_msg("SSN 412-99-7720", lbl, to="analytics", tp="vendor:adtech")])
+    edges = [e.model_dump() for e in result.center_view]
+
+    # honest, trusted build → accepted + detected, no raw content shipped
+    att = A2AAttestor("acme", fp, key).attest(result)
+    resp = client.post("/api/v1/a2a/report", json={
+        "edges": edges, "attestation": att.__dict__, "agent_id": "acme"}).json()
+    assert resp["accepted"] is True
+    assert any(v["type"] == "cross_tenant_disclosure" for v in resp["violations"])
+
+    # modified build → rejected
+    bad = A2AAttestor("acme", "build:tampered", b"x").attest(result)
+    resp2 = client.post("/api/v1/a2a/report", json={
+        "edges": edges, "attestation": bad.__dict__}).json()
+    assert resp2["accepted"] is False
+
+    assert client.get("/api/v1/a2a/violations").json()["count"] >= 1
+
+
 # ── formal inference-gain model ─────────────────────────────────────
 
 

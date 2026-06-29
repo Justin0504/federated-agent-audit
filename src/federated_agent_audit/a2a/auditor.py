@@ -129,14 +129,23 @@ class A2AAuditor:
     # ── public API ──────────────────────────────────────────────────
     def audit(self, messages: list[Message]) -> AuditResult:
         edges = self._desensitize(messages)
+        violations = self.detect(edges)
+        raw_leaks = self._count_raw_leaks(messages, edges)
+        return AuditResult(violations=violations, center_view=edges, raw_leaks=raw_leaks)
+
+    def detect(self, edges: list[_Edge]) -> list[Violation]:
+        """Run the detector suite on already-desensitized edges.
+
+        The center-side entry point: an agent ships its desensitized center-view
+        edges; the center re-runs the detectors authoritatively (not trusting the
+        agent's own violation claims) over them.
+        """
         violations: list[Violation] = []
         violations += self._cross_tenant_disclosure(edges)
         violations += self._purpose_violation(edges)
         violations += self._ttl_violation(edges)
         violations += self._cross_tenant_inference(edges)
-
-        raw_leaks = self._count_raw_leaks(messages, edges)
-        return AuditResult(violations=violations, center_view=edges, raw_leaks=raw_leaks)
+        return violations
 
     # ── phase 1: desensitize to the center view ─────────────────────
     def _desensitize(self, messages: list[Message]) -> list[_Edge]:

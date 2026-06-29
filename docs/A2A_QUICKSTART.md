@@ -93,7 +93,23 @@ That's the whole integration. In a LangGraph/CrewAI app, the natural home for
 | `ttl_hops` | max onward hops |
 | `provenance_id` | stable datum id, preserved across forwards |
 
-## 5. Single-tenant? Same API.
+## 5. Deploy the center as a service
+
+Agents run the local audit and ship only the desensitized edges + a build
+attestation to a central service; no content leaves the agent.
+
+```python
+from federated_agent_audit.a2a.service import create_app
+app = create_app(trusted_builds={"build:v1": b"key"}, clearances=[...])
+# uvicorn -- POST /api/v1/a2a/report  (verifies attestation, re-runs detectors)
+#            GET  /api/v1/a2a/violations
+```
+
+The service rejects reports from untrusted/modified builds, re-runs the detectors
+authoritatively (not trusting the agent's own claims), and records only
+desensitized governance metadata.
+
+## 6. Single-tenant? Same API.
 
 For one organization's app, set every `*_principal` to your org and use
 `allowed_recipients` / `purpose` to express which internal agents and tools may
