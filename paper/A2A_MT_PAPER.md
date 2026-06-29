@@ -256,6 +256,21 @@ with **zero raw content at every ε** (`benchmarks/a2a_mt/a2a_dp_eval.py`). The
 auditor thus protects both content (architecturally) and metadata identities
 (cryptographically/DP) while keeping detection essentially intact.
 
+**E6b — Privacy–utility frontier (baselines).** We compare against the
+observability alternatives on detection F1 vs. the raw content the central party
+must ingest (`benchmarks/a2a_mt/a2a_baselines.py`):
+
+| Approach | F1 | content→center (chars) | identities |
+|---|---|---|---|
+| Centralized-full (sees all content) | 1.00 | 1{,}380 | yes |
+| Output-only observability | 0.67 | 947 | yes (final hop) |
+| **Ours (federated, center-blind)** | **1.00** | **0** | none (pseudonymized) |
+
+Ours matches the centralized observer's detection while exposing *zero* content
+and no real identities---Pareto-dominant on privacy. Output-only is cheap but
+blind to the internal-channel and compositional leaks (F1 0.67), the very class
+the literature shows dominates~\cite{agentleak}.
+
 **E7 — The local tagger (closing "assume the hard part").** The inference
 detector accumulates `inferred_categories`; in a real deployment these must be
 *produced* from content, not hand-set. A local tagger (lexical, zero-dependency,

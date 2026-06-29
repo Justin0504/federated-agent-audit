@@ -220,6 +220,26 @@ $F1 = 0.99/0.97/0.96$ at $\varepsilon = 3/1/0.5$, recall falling only for
 disclosure decisions whose sensitivity noises across the floor, with zero raw
 content at every $\varepsilon$.
 
+\textbf{E6b---Privacy--utility frontier.} Against the observability alternatives
+(Table~\ref{tab:frontier}), ours matches the centralized observer's detection
+while exposing \emph{zero} content and no real identities---Pareto-dominant on
+privacy. Output-only observability is cheap but blind to the internal-channel and
+compositional leaks ($F1=0.67$) that dominate the threat~\cite{agentleak}.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lccc}
+\toprule
+Approach & F1 & content$\to$center & identities \\
+\midrule
+Centralized-full (sees content) & 1.00 & 1{,}380 ch & yes \\
+Output-only observability & 0.67 & 947 ch & yes \\
+\textbf{Ours (federated, center-blind)} & \textbf{1.00} & \textbf{0} & none \\
+\bottomrule
+\end{tabular}
+\caption{Privacy--utility frontier on A2A-MT.}
+\label{tab:frontier}
+\end{table}
+
 \textbf{E6a---The local tagger (closing ``assume the hard part'').} The inference
 detector accumulates \texttt{inferred\_categories}; in a real deployment these
 must be \emph{produced} from content, not hand-set. A local tagger (lexical,

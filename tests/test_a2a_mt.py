@@ -308,6 +308,24 @@ def test_adaptive_evasion_resistance():
     assert not detected(subject_alias())
 
 
+# ── privacy-utility frontier (baselines) ────────────────────────────
+
+
+def test_frontier_ours_dominates_output_only():
+    from a2a_baselines import _content_chars, _f1
+    from a2a_families import full_suite
+
+    from federated_agent_audit.a2a import A2AAuditor
+    suite = full_suite()
+    ours = _f1(suite, lambda s: bool(
+        A2AAuditor(clearances=s.clearances).audit(s.messages).violations))
+    output_only = _f1(suite, lambda s: bool(
+        A2AAuditor(clearances=s.clearances).audit(s.messages[-1:]).violations))
+    assert ours == 1.0                      # full detection
+    assert output_only < ours               # output-only is blind to internal channel
+    assert _content_chars(suite, "all") > 0  # centralized would ingest content; ours ingests 0
+
+
 # ── forced-embed attestation closes the E4 evasions ─────────────────
 
 
