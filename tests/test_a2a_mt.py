@@ -308,6 +308,25 @@ def test_adaptive_evasion_resistance():
     assert not detected(subject_alias())
 
 
+# ── formal inference-gain model ─────────────────────────────────────
+
+
+def test_inference_gain_model():
+    from federated_agent_audit.a2a.inference import (
+        fragments_to_fire,
+        inference_gain,
+        posterior,
+    )
+    # closed-form detection bound: two converging fragments
+    assert fragments_to_fire() == 2
+    # posterior is monotonically increasing in k, gain too
+    assert posterior(1) < posterior(2) < posterior(3)
+    assert inference_gain(1) < inference_gain(2)
+    # the threshold sits between k=1 and k=2 (one hint tolerated, two flagged)
+    from federated_agent_audit.a2a.inference import GAIN_THRESHOLD
+    assert inference_gain(1) < GAIN_THRESHOLD <= inference_gain(2)
+
+
 # ── privacy-utility frontier (baselines) ────────────────────────────
 
 

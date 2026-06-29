@@ -145,11 +145,24 @@ are disjoint from the data's permitted purposes.
 \item \textbf{Hop/TTL}: a datum (tracked by \texttt{provenance\_id}) is relayed
 more than \texttt{ttl\_hops} times; robust to a forwarder re-wording content.
 \item \textbf{Cross-tenant inference}: no single edge is a disclosure, but a
-recipient principal accumulates $\geq k$ converging \texttt{inferred\_categories}
+recipient principal accumulates converging \texttt{inferred\_categories}
 fragments about one subject, letting it infer a sensitive category it was never
-authorized for; we score inference gain $1-2^{-k}$ and require $k\geq2$ so a single
-incidental hint does not fire.
+authorized for; we ground this in the bound below.
 \end{enumerate}
+
+\paragraph{A formal inference-gain bound.} We model what a recipient infers about
+a subject's sensitive attribute $A$ from $k$ converging fragments. Treating each
+as conditionally-independent evidence with likelihood ratio
+$\lambda=P(\text{frag}\mid A)/P(\text{frag}\mid\neg A)$, the posterior odds
+multiply, $O_k=O_0\lambda^{k}$ with $O_0=p_0/(1-p_0)$, so the posterior is
+$P(A\mid k)=O_k/(1+O_k)$ and the inference gain is $g(k)=P(A\mid k)-p_0$. The
+detector fires when $g(k)\ge\delta$.
+\textit{Proposition.} It fires iff
+$k\ge k^{*}=\lceil\log_\lambda(O_\delta/O_0)\rceil$ with
+$O_\delta=(p_0+\delta)/(1-p_0-\delta)$. For defaults $(p_0,\lambda,\delta)=
+(0.1,3,0.3)$, $k^{*}=2$: one hint never fires, two converging fragments do
+(posterior $0.50$, gain $0.40$). This replaces the heuristic $1-2^{-k}$ with a
+calibrated quantity and a closed-form bound; deployments tune $(p_0,\lambda,\delta)$.
 
 \section{The A2A-MT benchmark}
 No multi-tenant agent-privacy benchmark exists---AgentLeak and Sum-Leaks are

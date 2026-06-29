@@ -155,10 +155,28 @@ Four detectors, each over the desensitized edges:
    re-wording the content.
 4. **Cross-tenant inference** — the hard, composition-aware case: no single edge
    is a disclosure (each Part is benign data the recipient is allowed to hold),
-   but a recipient principal accumulates ≥ *k* converging `inferred_categories`
+   but a recipient principal accumulates converging `inferred_categories`
    fragments about one subject, letting it infer a sensitive category it was
-   never authorized for. We score inference gain `1 − 2^{−k}`; one incidental
-   hint (k = 1) does not fire, so the detector does not over-claim.
+   never authorized for. We ground this in the model of §4.6 rather than a count.
+
+### 4.6 A formal inference-gain bound
+
+We model what a recipient principal can infer about a subject's sensitive
+attribute *A* from *k* converging quasi-identifier fragments. Treating each
+fragment as conditionally-independent evidence with likelihood ratio
+λ = P(fragment | A) / P(fragment | ¬A), the recipient's posterior **odds**
+multiply: *O_k = O_0 · λ^k*, where *O_0 = p_0/(1−p_0)* for prior *p_0*. The
+posterior belief is *P(A | k) = O_k/(1+O_k)* and the **inference gain** is
+*g(k) = P(A | k) − p_0*. The detector fires when *g(k) ≥ δ*, i.e. when the
+recipient's *provable* belief gain crosses the policy threshold.
+
+**Proposition.** With prior *p_0*, per-fragment likelihood ratio λ > 1, and
+threshold δ, the detector fires iff
+*k ≥ k\* = ⌈ log_λ (O_δ / O_0) ⌉*, where *O_δ = (p_0+δ)/(1−p_0−δ)*. For the
+defaults (*p_0 = 0.1, λ = 3, δ = 0.3*), *k\* = 2*: one incidental hint never
+fires; two converging fragments do (posterior 0.50, gain 0.40). This replaces the
+heuristic 1 − 2^{−k} with a calibrated quantity and a closed-form detection bound
+(`src/.../a2a/inference.py`); deployments tune (*p_0, λ, δ*) to their risk policy.
 
 ## 5. The A2A-MT benchmark
 

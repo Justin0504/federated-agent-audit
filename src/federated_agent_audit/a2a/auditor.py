@@ -28,6 +28,7 @@ from collections import defaultdict
 from pydantic import BaseModel, Field
 
 from ..dp_mechanism import discrete_laplace
+from .inference import GAIN_THRESHOLD, inference_gain, posterior
 from .privacy import AgentClearance, PrivacyLabel, extract_label
 from .types import Message
 
@@ -268,7 +269,11 @@ class A2AAuditor:
                 if cat in authorized:
                     continue  # S already let Q know this category explicitly
                 k = len(hashes)
-                if k < INFERENCE_FRAGMENT_THRESHOLD:
+                # Fire when the recipient's provable Bayesian belief gain over the
+                # prior crosses the policy threshold (closed-form k* = 2 for the
+                # defaults); a single incidental hint stays below it.
+                gain = inference_gain(k)
+                if gain < GAIN_THRESHOLD:
                     continue
                 out.append(Violation(
                     type="cross_tenant_inference",
@@ -276,9 +281,9 @@ class A2AAuditor:
                     data_subject=subject, owning_principal=grp[0].label.owning_principal,
                     recipient_principal=principal,
                     detail=(f"'{principal}' can infer '{cat}' about '{subject}' "
-                            f"from {k} converging fragments, though never "
-                            f"explicitly told — inference_gain≈{1 - 2 ** (-k):.2f}"),
-                    severity=min(1.0, 1 - 2 ** (-k)),
+                            f"from {k} converging fragments: posterior "
+                            f"P({cat})={posterior(k):.2f}, gain={gain:.2f}"),
+                    severity=min(1.0, posterior(k)),
                 ))
         return out
 
