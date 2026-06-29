@@ -1,0 +1,266 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\title{\textbf{Privacy Typing for Multi-Tenant Agent Interaction:\\
+A Federated, Center-Blind Auditor and an A2A Extension}}
+\author{Aojie (Justin) Yuan\\\small University of Southern California}
+\date{}
+
+\newcommand{\sys}{\textsc{FedAgentAudit}}
+\newcommand{\ext}{\texttt{a2a.privacy/v1}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Multi-agent LLM systems leak private information mostly through their
+\emph{internal} agent-to-agent channels, and the leakage is often
+\emph{compositional}: a violation emerges from the combination of
+individually-benign messages. The natural fix---centralized
+observability---requires shipping raw prompts to a third party, which the most
+sensitive deployments cannot do, and it does not even apply across organizational
+boundaries, where agents belong to mutually-distrusting owners. We present a
+\emph{federated, center-blind} auditor that detects compositional, cross-domain,
+and cross-owner privacy risks from desensitized metadata it can never invert to
+raw content, and we lift it to the \emph{multi-tenant} setting that emerging
+agent-to-agent protocols create. Concretely we contribute: (i) \ext{}, a
+privacy-typing extension that gives every datum shared over the A2A protocol an
+owner, a subject, a sensitivity, a purpose, a recipient set, a hop limit, and a
+stable provenance id, carried in A2A's own extension mechanism; (ii) a multi-tenant
+threat model separating the data \emph{subject}, the \emph{owning principal}, and
+the \emph{agent principal}, with a center-blind auditor for four violation
+classes---cross-tenant disclosure, purpose limitation, hop/TTL, and \emph{cross-tenant
+inference}; and (iii) \textsc{A2A-MT}, the first multi-tenant agent-privacy
+benchmark. The auditor reaches $P/R/F1 = 1.0$ with zero raw content reaching the
+center, holds $F1\approx0.97$ when both content and metadata identities are
+protected (DP), survives adversarial paraphrasing and routing evasions, and---on
+the single-tenant projection that is the deployable product---detects $100\%$ of
+internal-channel leaks at $0.97$ precision on the external AgentLeak benchmark,
+again with zero raw content egress.
+\end{abstract}
+
+\section{Introduction}
+Agents are starting to talk to \emph{each other}. Protocols such as A2A (v1.0,
+Linux Foundation), MCP, and ACP let agents built by different teams discover
+capabilities and delegate work across organizational boundaries. As this fabric
+forms, a question with no answer today becomes urgent: \emph{when my agent hands
+data to your agent, what did it just share, and was it allowed to?}
+
+Three forces make this acute. First, \textbf{leakage is on the internal channel}:
+measurement finds inter-agent messages leak far more than final outputs, and that
+current frameworks offer no way to monitor internal communication~\cite{agentleak}.
+Second, \textbf{the risk is compositional}: a violation can emerge from benign
+messages even when each agent obeys its own policy~\cite{sumleaks}. Third, and
+unique to cross-organization settings, \textbf{the parties distrust each other}:
+the \emph{other} agent is the adversary, and no party will route raw content
+through a central observer---exactly what centralized observability (LangSmith,
+Langfuse) requires.
+
+The protocols do not help. We verified against the A2A v1.0 specification that its
+data model (\texttt{AgentCard}, \texttt{Task}, \texttt{Message}, \texttt{Part})
+has \textbf{no data-governance semantics}: no field marks whom a datum is about,
+who owns it, what it may be used for, or which agent may receive it. A2A provides
+free-form \texttt{metadata}, an \texttt{extensions} array, and a loosely-specified
+\texttt{tenant} field that routes but does not govern.
+
+We close this gap. Our contributions:
+\begin{enumerate}[leftmargin=1.4em]
+\item \textbf{\ext{}}, a privacy-typing extension carried in \texttt{Part.metadata}
+that types every shared datum (owner, subject, sensitivity, category, purpose,
+recipient set, hop limit, provenance id) and composes with unmodified A2A.
+\item \textbf{A multi-tenant threat model and a center-blind auditor.} We separate
+the data subject, owning principal, and agent principal, and detect cross-tenant
+disclosure, purpose, hop/TTL, and \emph{cross-tenant inference} from desensitized
+metadata the center cannot invert---the privacy-preserving counterpart to
+centralized observability.
+\item \textbf{\textsc{A2A-MT}}, the first multi-tenant agent-privacy benchmark
+(parameterized families, realistic LLM-generated content), plus validation of the
+underlying engine on the external AgentLeak benchmark.
+\end{enumerate}
+Setting every principal equal collapses the system to the \textbf{in-container}
+case---one organization auditing its own multi-agent app---so the research result
+and a practical product share one implementation.
+
+\section{Background and the governance gap}
+An A2A interaction is a sequence of \texttt{Message}s between agents; each carries
+\texttt{Part}s (text/data/file) and free-form \texttt{metadata}. The model has no
+field for ownership, sensitivity, purpose, or recipient restriction; privacy is
+delegated to ``external access control'' that, across tenants, does not exist. We
+add the missing layer inside A2A's extension mechanism so it composes with
+deployed agents, and audit it with a \emph{federated} architecture: each agent
+desensitizes locally; a central auditor reasons over a graph of metadata it can
+never invert to content.
+
+\section{Threat model}
+Three roles a single identifier must not conflate: the \textbf{data subject} (whom
+a Part is about), the \textbf{owning principal} (who controls the data and the
+originating agent), and the \textbf{agent principal} (an agent's AgentCard
+identity). We assume: (a) \emph{peers are adversarial-curious}---a receiving agent
+of a different tenant may try to learn more than authorized, verbatim or by
+inference; (b) \emph{the auditor is center-blind}---it detects from desensitized
+metadata and never sees raw \texttt{Part} content, and no tenant reveals content
+to it or to peers; (c) \emph{A2A transport is given}---we annotate and audit, not
+replace.
+
+\section{The \ext{} extension}
+Each privacy-relevant \texttt{Part} carries a label under
+\texttt{Part.metadata["a2a.privacy/v1"]}:
+\[
+\textsf{PrivacyLabel} = \{\,
+\text{subject},\ \text{owner},\ \text{sensitivity}\!\in\![0,5],\ \text{category}[],
+\]
+\[
+\text{inferred\_categories}[],\ \text{purpose}[],\ \text{allowed\_recipients}[],\
+\text{ttl\_hops},\ \text{provenance\_id}\,\}.
+\]
+Identifiers are opaque (\texttt{subject:alice}, \texttt{tenant:hospital})---governance
+metadata, never content. An \texttt{AgentClearance} (an AgentCard declaration)
+states the purposes an agent is cleared for, so cross-tenant rules are checkable
+from public metadata. Two fields are central to the results:
+\textbf{inferred\_categories} is computed \emph{locally} (the local auditor sees
+content; ``near the oncology center'' $\rightarrow$ \texttt{health}) and only the
+tag travels---the signal the inference detector accumulates without the center
+reading content; \textbf{provenance\_id} is a stable datum identity assigned by the
+origin and preserved by forwarders even when they re-word the data, so hop/TTL
+tracking follows a datum across paraphrasing (a content hash breaks the moment a
+relay rephrases).
+
+\section{The center-blind auditor and detectors}
+The auditor desensitizes each labeled \texttt{Part} into a center-view edge
+carrying a one-way content hash, the principals, and the label---no raw text. It
+asserts this invariant on its own output: a content token may appear in the center
+view only if it is a declared label value or a schema field name; any other token
+is a leak. Four detectors run over this graph:
+\begin{enumerate}[leftmargin=1.4em]
+\item \textbf{Cross-tenant disclosure}: sensitive data ($\geq\tau$) reaches a
+principal that neither owns it nor is an allowed recipient.
+\item \textbf{Purpose limitation}: data reaches an agent whose clearance purposes
+are disjoint from the data's permitted purposes.
+\item \textbf{Hop/TTL}: a datum (tracked by \texttt{provenance\_id}) is relayed
+more than \texttt{ttl\_hops} times; robust to a forwarder re-wording content.
+\item \textbf{Cross-tenant inference}: no single edge is a disclosure, but a
+recipient principal accumulates $\geq k$ converging \texttt{inferred\_categories}
+fragments about one subject, letting it infer a sensitive category it was never
+authorized for; we score inference gain $1-2^{-k}$ and require $k\geq2$ so a single
+incidental hint does not fire.
+\end{enumerate}
+
+\section{The A2A-MT benchmark}
+No multi-tenant agent-privacy benchmark exists---AgentLeak and Sum-Leaks are
+single-tenant (the vault belongs to one system; the boundary is system$\rightarrow$output).
+A2A-MT supplies labeled multi-tenant A2A interactions whose boundary is
+\emph{between} agents. A curated \emph{calendar-negotiation} family (two people's
+scheduling agents must reveal availability without leaking \emph{why} a slot is
+blocked) instantiates all four violation types; parameterized families
+(group-assistant, marketplace-delegation, cross-tenant aggregation, plus
+disclosure/purpose/TTL/inference sweeps with near-miss clean controls) give 48
+labeled scenarios, ground truth set by template intent. An LLM fills each Part
+with realistic text matching its label (labels remain the ground truth), exported
+as a shareable artifact.
+
+\section{Evaluation}
+\textbf{E1---Detection.} Over all 48 A2A-MT scenarios, $P/R/F1 = 1.0$
+(TP$=18$, FP$=0$, TN$=30$, FN$=0$) with full per-type coverage (disclosure,
+purpose, TTL, inference), and no over-firing on single-hint clean controls.
+
+\textbf{E2---Center-blindness.} Zero raw \texttt{Part} content reaches the center
+on every scenario; the only content-derived value is a one-way hash.
+
+\textbf{E3---Realistic content.} Re-auditing the LLM-generated export (non-templated
+text) holds $P/R/F1 = 1.0$, $0$ raw leaks: the detectors key on labels, not
+wording. Generating realistic content also exposed two correctness issues that
+hand-written tests hid (TTL fragility to paraphrasing, fixed by
+\texttt{provenance\_id}; an invariant false-positive on prose tokens coinciding
+with label/schema tokens, fixed by excluding them)---a benefit of scaling.
+
+\textbf{E4---Adaptive evasion.} An adversary that knows the inference detector is
+tested across evasions (Table~\ref{tab:evasion}). The design resists attacks on
+\emph{wording and routing}; it is evaded only by a dishonest \emph{local} labeler
+(suppressing tags or forging subject ids)---the trust assumption removed by
+forced-embed attestation and canonical owner-issued subject ids. Sub-threshold
+leakage evades only by leaking strictly less.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lc}
+\toprule
+Evasion strategy & Result \\
+\midrule
+Paraphrase each fragment & resisted (tag-based, not text) \\
+Split across recipient's agents & resisted (grouped by principal) \\
+Partial under-tag ($\geq2$ tagged) & resisted \\
+Sub-threshold (leak 1 fragment) & evades, but leaks less \\
+Under-tag ($1$ of $3$) & evades $\rightarrow$ needs attestation \\
+Subject-id forgery & evades $\rightarrow$ needs canonical ids \\
+\bottomrule
+\end{tabular}
+\caption{Adaptive evasion vs.\ the inference detector.}
+\label{tab:evasion}
+\end{table}
+
+\textbf{E5---Metadata desensitization + DP.} Beyond hiding content, we harden the
+metadata: identity-bearing fields are pseudonymized with a per-audit shared salt
+(cross-tenant comparisons hold in pseudonym space; the center learns no real
+identity) and \texttt{sensitivity} is DP-noised, while categories are kept
+structurally. Pseudonymization is lossless ($P/R/F1=1.0$); with DP,
+$F1 = 0.99/0.97/0.96$ at $\varepsilon = 3/1/0.5$, recall falling only for
+disclosure decisions whose sensitivity noises across the floor, with zero raw
+content at every $\varepsilon$.
+
+\textbf{E6---The engine, validated externally (single-tenant).} The multi-tenant
+auditor reuses a federated engine we validate on the external \textbf{AgentLeak}
+benchmark. Driving AgentLeak's own 600 multi-agent scenarios through an LLM to
+produce real inter-agent traces and labeling leakage by AgentLeak's rule, the
+auditor detects \textbf{100\% of internal-channel leaks at 0.972 precision with
+zero raw vault content reaching the center} ($82.5\%$ internal-channel leak rate,
+matching AgentLeak). On a labeled 33-scenario set the engine holds $P/R/F1=1.0$,
+and under the full six-layer desensitizer plus DP it holds $F1\approx0.97$ at
+$\varepsilon\in[0.5,3]$ with zero raw leakage---the privacy--utility result the
+multi-tenant typing builds on.
+
+\section{Discussion}
+\textbf{Why center-blind detection is possible.} Compositional and inference
+risks are visible in the \emph{metadata graph}---principals, categories,
+inferred-category tags, provenance---which the local side emits without revealing
+content. \textbf{The single-tenant projection is the product.} Setting every owning
+principal equal yields the in-container case: one organization's multi-agent app,
+where the same detectors flag a sensitive datum crossing to an agent or external
+tool it should not, still without shipping content anywhere.
+\textbf{Limitations.} The inference detector is threshold-based over
+locally-emitted tags; a content-aware tagger and a formal inference-gain bound are
+future work, and an adaptive peer that both paraphrases and fragments below
+threshold is the open hard case.
+
+\section{Related work}
+AgentLeak~\cite{agentleak} and Sum-Leaks~\cite{sumleaks} measure / mitigate
+\emph{single-tenant} compositional leakage; we lift the setting to multi-tenant
+and supply a deployable detector. Privacy-theory work for agents~\cite{dpagents}
+analyzes when local privacy fails to compose but gives no operational auditor.
+Protocol-security analyses~\cite{protosec,protoexploit} flag A2A's lack of
+governance primitives---the gap we fill inside its extension mechanism.
+Centralized observability tools sit in the path and must ingest raw content; our
+center-blind design provides the one property they structurally lack.
+
+\begin{thebibliography}{9}
+\small
+\bibitem{agentleak} AgentLeak: Benchmarking Privacy Leakage in Multi-Agent LLM
+Systems. arXiv:2602.11510.
+\bibitem{sumleaks} Patil et al. The Sum Leaks More Than Its Parts.
+arXiv:2509.14284.
+\bibitem{dpagents} Differential Privacy in Generative AI Agents.
+arXiv:2603.17902; Information-theoretic limits of local privacy composition,
+arXiv:2603.05520.
+\bibitem{protosec} Security Analysis of Agentic AI Communication Protocols.
+arXiv:2511.03841.
+\bibitem{protoexploit} From Prompt Injections to Protocol Exploits.
+arXiv:2506.23260.
+\bibitem{a2a} Agent2Agent (A2A) Protocol Specification, v1.0. a2a-protocol.org,
+Linux Foundation.
+\end{thebibliography}
+
+\end{document}

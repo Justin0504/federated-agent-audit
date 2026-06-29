@@ -20,3 +20,9 @@ agentleak_traces*.jsonl
 
 # A2A-MT generated suite artifact (LLM content) — regenerable
 a2a_mt_suite*.jsonl
+
+# LaTeX build artifacts
+paper/submission/*.pdf
+paper/submission/*.aux
+paper/submission/*.log
+paper/submission/*.out
