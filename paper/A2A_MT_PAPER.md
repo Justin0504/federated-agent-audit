@@ -306,16 +306,19 @@ real LLM agents behave (`benchmarks/a2a_mt/a2a_measurement.py`): 12 realistic
 multi-agent workflows across 7 domains (healthcare, finance, HR, legal, support,
 scheduling, education), each holding a sensitive record, where a coordinator agent
 (real gpt-4o-mini) is asked to delegate the task to an *external* specialist —
-**no engineered leaks**. Findings: the agent included the subject's **sensitive
-identifiers** (SSN, MRN, account/card numbers, diagnoses) in the cross-boundary
-hand-off in **9/12 (75%)** of workflows (`cross_tenant_disclosure`), and **every**
-hand-off to the different-purpose external party was a purpose violation (12/12,
+**no engineered leaks** — run 5× each (60 trials, temperature 0.7). Findings: the
+agent included the subject's **sensitive identifiers** (SSN, MRN, account/card
+numbers, diagnoses) in the cross-boundary hand-off in **45/60 = 75% of trials
+(95% Wilson CI [63%, 84%])** (`cross_tenant_disclosure`), and **every** hand-off
+to the different-purpose external party was a purpose violation (60/60,
 structural). The center-blind auditor flagged all of them with **zero raw content
-reaching the center**. This is the deployment-measurement counterpart to AgentLeak
-on the multi-tenant setting: left to their own judgment, current agents routinely
-over-share a subject's identifiers across organizational boundaries, and the
-auditor catches it without seeing the data. (Single-run, gpt-4o-mini; the
-disclosure rate varies run to run, the over-sharing trend does not.)
+reaching the center**. Over-sharing concentrates in the structured-identifier
+domains — finance, healthcare, and legal disclosed in **100%** of trials, HR and
+support ≈ 50%, education 0%. This is the deployment-measurement counterpart to
+AgentLeak on the multi-tenant setting: left to their own judgment, current agents
+routinely over-share a subject's identifiers across organizational boundaries —
+most where it is most sensitive — and the auditor catches it without seeing the
+data.
 
 ## 7. Discussion
 
