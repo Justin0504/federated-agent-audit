@@ -9,12 +9,25 @@ content — the auditor may read them while never seeing the raw Part text.
 
 from __future__ import annotations
 
+import hashlib
 from typing import Optional
 
 from pydantic import BaseModel, Field
 
 # Reserved Part.metadata key (and Message.extensions URI) for the privacy type.
 PRIVACY_EXTENSION_KEY = "a2a.privacy/v1"
+
+
+def canonical_subject(identity: str, salt: str = "") -> str:
+    """Deterministically derive a subject id from a canonical identity.
+
+    An attested labeler derives ``data_subject`` this way so two messages about
+    the same person map to the same id (they group, so inference is detected) and
+    an adversary cannot *alias* a subject to dodge grouping without abandoning the
+    canonical derivation --- which, in a forced-embed build, it cannot do without
+    breaking attestation. ``salt`` scopes ids to a deployment.
+    """
+    return "subject:" + hashlib.sha256(f"{salt}:{identity}".encode()).hexdigest()[:16]
 
 
 class PrivacyLabel(BaseModel):

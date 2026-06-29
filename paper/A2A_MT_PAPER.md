@@ -226,7 +226,21 @@ owner-issued subject ids are designed to remove. Sub-threshold leakage evades
 only by leaking strictly less, a privacy/utility cost borne by the attacker. This
 maps the design's guarantees honestly: it is robust against an adversarial
 *sender's wording and routing*, and reduces the residual attack surface to *local
-labeler integrity*, which the integrity layer attests.
+labeler integrity*.
+
+**E5 — Closing the residual surface (forced-embed attestation).** We implement
+the defense, not just name it (`benchmarks/a2a_mt/a2a_attested_eval.py`). The
+auditor and tagger ship as a build-pinned component whose key is held only by the
+unmodified binary; the center accepts a report only from a trusted build
+fingerprint (HMAC backend, TEE-upgradable). Under-tagging and subject-id forgery
+both require modifying the labeler, so the adversary's report is signed by an
+untrusted build and is **rejected** (`untrusted_or_modified_build`); tampering
+after attestation is caught by an edges-hash mismatch (`report_tampered`); and
+canonical owner-derived subject ids (`canonical_subject`) make aliasing
+impossible without abandoning the attested derivation. The honest pinned build is
+accepted and its inference detected. The E4 evasions are thus converted from
+*silent success* into *detected non-compliance*, leaving only key compromise (the
+TEE regime) as residual.
 
 **E6 — Metadata desensitization + DP.** The center already sees no content; we
 additionally harden the *metadata*. Identity-bearing label fields (subject,

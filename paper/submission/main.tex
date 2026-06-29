@@ -184,7 +184,15 @@ tested across evasions (Table~\ref{tab:evasion}). The design resists attacks on
 \emph{wording and routing}; it is evaded only by a dishonest \emph{local} labeler
 (suppressing tags or forging subject ids)---the trust assumption removed by
 forced-embed attestation and canonical owner-issued subject ids. Sub-threshold
-leakage evades only by leaking strictly less.
+leakage evades only by leaking strictly less. We \emph{implement} this defense:
+the auditor+tagger ship as a build-pinned component whose key is held only by the
+unmodified binary, and the center accepts a report only from a trusted build
+fingerprint. Under-tagging and forgery require modifying the labeler, so the
+report is signed by an untrusted build and is \textbf{rejected}; tampering is
+caught by an edges-hash mismatch; canonical owner-derived subject ids
+(\texttt{canonical\_subject}) make aliasing impossible without abandoning the
+attested derivation. The evasions become detected non-compliance, leaving only
+key compromise (the TEE regime) as residual.
 
 \begin{table}[t]\centering\small
 \begin{tabular}{lc}

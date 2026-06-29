@@ -18,11 +18,13 @@ See ``research/A2A_MULTITENANT_PRIVACY.md`` for the design.
 
 from __future__ import annotations
 
+from .attest import A2AAttestation, A2AAttestor, A2AVerdict, A2AVerifier
 from .auditor import A2AAuditor, AuditResult, Violation
 from .privacy import (
     PRIVACY_EXTENSION_KEY,
     AgentClearance,
     PrivacyLabel,
+    canonical_subject,
     extract_label,
     label_part,
 )
@@ -34,6 +36,7 @@ __all__ = [
     "PRIVACY_EXTENSION_KEY",
     "AgentClearance",
     "PrivacyLabel",
+    "canonical_subject",
     "extract_label",
     "label_part",
     "Message",
@@ -43,4 +46,8 @@ __all__ = [
     "Violation",
     "AuditSession",
     "PrivacyTagger",
+    "A2AAttestation",
+    "A2AAttestor",
+    "A2AVerdict",
+    "A2AVerifier",
 ]

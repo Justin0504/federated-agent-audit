@@ -308,6 +308,43 @@ def test_adaptive_evasion_resistance():
     assert not detected(subject_alias())
 
 
+# ── forced-embed attestation closes the E4 evasions ─────────────────
+
+
+def test_attestation_accepts_trusted_rejects_modified():
+    from federated_agent_audit.a2a import A2AAttestor, A2AVerifier
+    fp, key = "build:v1", b"trusted-key"
+    verifier = A2AVerifier(trusted_builds={fp: key})
+    lbl = PrivacyLabel(data_subject="subject:x", owning_principal="tenant:a",
+                       sensitivity=4, category=["health"], allowed_recipients=["tenant:a"])
+    r = A2AAuditor().audit([_msg("note", lbl, tp="tenant:bob")])
+    # honest pinned build → accepted
+    assert A2AVerifier({fp: key}).verify(r, A2AAttestor("a", fp, key).attest(r)).ok
+    # modified build (under-tag/forgery require this) → rejected
+    bad = A2AAttestor("a", "build:tampered", b"attacker").attest(r)
+    v = verifier.verify(r, bad)
+    assert not v.ok and "untrusted_or_modified_build" in v.reasons
+
+
+def test_attestation_detects_report_tampering():
+    from federated_agent_audit.a2a import A2AAttestor, A2AVerifier
+    fp, key = "build:v1", b"trusted-key"
+    lbl = PrivacyLabel(data_subject="subject:x", owning_principal="tenant:a",
+                       sensitivity=4, category=["health"], allowed_recipients=["tenant:a"])
+    r = A2AAuditor().audit([_msg("a", lbl, tp="t1"), _msg("b", lbl, tp="t2")])
+    att = A2AAttestor("a", fp, key).attest(r)
+    r.center_view.pop()  # tamper after attesting
+    v = A2AVerifier({fp: key}).verify(r, att)
+    assert not v.ok and "report_tampered" in v.reasons
+
+
+def test_canonical_subject_dedups_aliases():
+    from federated_agent_audit.a2a import canonical_subject
+    # the attested build derives ids canonically → same person → same id (groups)
+    assert canonical_subject("alice") == canonical_subject("alice")
+    assert canonical_subject("alice") != canonical_subject("bob")
+
+
 # ── benchmark regression gate ───────────────────────────────────────
 
 
