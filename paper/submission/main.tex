@@ -275,6 +275,20 @@ and under the full six-layer desensitizer plus DP it holds $F1\approx0.97$ at
 $\varepsilon\in[0.5,3]$ with zero raw leakage---the privacy--utility result the
 multi-tenant typing builds on.
 
+\textbf{E7---Real-LLM measurement study.} Beyond the labeled benchmark, we
+measure how real agents behave (\texttt{a2a\_measurement.py}): 12 realistic
+multi-agent workflows across 7 domains, each holding a sensitive record, where a
+coordinator (real gpt-4o-mini) is asked to delegate to an \emph{external}
+specialist---no engineered leaks. The agent included the subject's sensitive
+identifiers (SSN, MRN, account/card numbers, diagnoses) in the cross-boundary
+hand-off in \textbf{9/12 (75\%)} of workflows, and every hand-off to the
+different-purpose external party was a purpose violation (12/12, structural). The
+center-blind auditor flagged all of them with \textbf{zero raw content reaching
+the center}. This is the deployment-measurement counterpart to AgentLeak on the
+multi-tenant setting: left to their own judgment, current agents routinely
+over-share a subject's identifiers across organizational boundaries, and the
+auditor catches it without seeing the data.
+
 \section{Discussion}
 \textbf{Why center-blind detection is possible.} Compositional and inference
 risks are visible in the \emph{metadata graph}---principals, categories,

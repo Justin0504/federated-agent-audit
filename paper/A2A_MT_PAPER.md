@@ -301,6 +301,22 @@ only text plus policy intent — the production drop-in. Tagger recall is exactl
 the residual attack surface E4 named (an adversarial sender can under-tag), which
 attestation of the tagger is designed to close.
 
+**E8 — Real-LLM measurement study.** Beyond the labeled benchmark, we measure how
+real LLM agents behave (`benchmarks/a2a_mt/a2a_measurement.py`): 12 realistic
+multi-agent workflows across 7 domains (healthcare, finance, HR, legal, support,
+scheduling, education), each holding a sensitive record, where a coordinator agent
+(real gpt-4o-mini) is asked to delegate the task to an *external* specialist —
+**no engineered leaks**. Findings: the agent included the subject's **sensitive
+identifiers** (SSN, MRN, account/card numbers, diagnoses) in the cross-boundary
+hand-off in **9/12 (75%)** of workflows (`cross_tenant_disclosure`), and **every**
+hand-off to the different-purpose external party was a purpose violation (12/12,
+structural). The center-blind auditor flagged all of them with **zero raw content
+reaching the center**. This is the deployment-measurement counterpart to AgentLeak
+on the multi-tenant setting: left to their own judgment, current agents routinely
+over-share a subject's identifiers across organizational boundaries, and the
+auditor catches it without seeing the data. (Single-run, gpt-4o-mini; the
+disclosure rate varies run to run, the over-sharing trend does not.)
+
 ## 7. Discussion
 
 ### 7.1 Why center-blind detection is possible here
