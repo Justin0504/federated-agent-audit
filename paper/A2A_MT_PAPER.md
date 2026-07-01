@@ -353,6 +353,24 @@ the architecture reports is real. This is the honest ceiling the self-authored
 benchmark hides; the self-authored 1.0 measures the *detectors given correct
 labels*, and E9 measures the *end-to-end pipeline on open-world content*.
 
+**E10 — Validating inference against *real* LLM inference.** Our inference
+detector fires at k\* = 2 converging hints — but is that where real inferability
+begins? We have an independent LLM play the recipient and try to infer the
+subject's withheld sensitive attribute from the K benign fragments it received,
+across K = 1, 2, 3 (`benchmarks/a2a_mt/a2a_inference_validate.py`). Two honest
+findings. **The threat is real, not hypothetical:** the independent LLM infers the
+withheld attribute (cancer treatment, financial distress, pregnancy) in **3/4
+cases from just 2 benign scheduling fragments**, and in 2/4 from a *single* strong
+hint. **Our detector is a conservative, no-false-alarm lower bound:** every
+disagreement is an *under*-fire (the attacker infers where we stay silent, on
+subtler cases our tagger doesn't cover) — we never fire where the attacker cannot
+infer. This confirms composition-based detection tracks real inferability, and
+shows our fixed k\* = 2 with uniform per-fragment evidence is *conservative*: real
+inference sometimes needs only one high-specificity hint, which the Bayesian model
+(§4.6) already accommodates via a per-fragment likelihood ratio λ — wiring λ to
+the tagger's hint specificity is the natural way to catch single strong hints
+without over-firing on weak ones.
+
 ## 7. Discussion
 
 ### 7.1 Why center-blind detection is possible here

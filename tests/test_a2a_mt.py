@@ -406,6 +406,16 @@ def test_baseline_dlp_blind_to_inference():
     assert dlp(authorized) is True and ours(authorized) is False
 
 
+def test_inference_validate_detector_side():
+    """The detector side of the inference-validation harness: it fires on >=2
+    tagger-recognized converging hints and stays silent on one (offline)."""
+    from a2a_inference_validate import CASES, our_detector_fires
+    # the cancer case: two hints ('oncology center' + 'appointment') → fires at k=2
+    health = next(pool for a, c, pool in CASES if "cancer" in a)
+    assert our_detector_fires(health[:2]) is True
+    assert our_detector_fires(health[:1]) is False
+
+
 # ── formal inference-gain model ─────────────────────────────────────
 
 

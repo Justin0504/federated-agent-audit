@@ -316,6 +316,19 @@ orthogonal, improvable component---not the auditor: every violation the
 architecture reports is real. The self-authored 1.0 measures the detectors given
 correct labels; E9 measures the end-to-end pipeline on open-world content.
 
+\textbf{E9---Validating inference against real LLM inference.} Our detector fires
+at $k^{*}=2$ hints---but is that where real inferability begins? We have an
+independent LLM play the recipient and infer the subject's withheld attribute from
+the $K$ benign fragments it received ($K=1,2,3$). \emph{The threat is real:} the
+LLM infers the withheld attribute (cancer treatment, financial distress,
+pregnancy) in \textbf{3/4 cases from just 2 benign fragments}, and 2/4 from a
+single strong hint. \emph{Our detector is a conservative, no-false-alarm lower
+bound:} every disagreement is an under-fire (the attacker infers where we stay
+silent); we never fire where it cannot infer. So $k^{*}=2$ with uniform evidence
+is conservative---real inference sometimes needs one high-specificity hint, which
+the Bayesian model~(\S4.6) accommodates via a per-fragment $\lambda$; wiring
+$\lambda$ to hint specificity catches single strong hints without over-firing.
+
 \section{Discussion}
 \textbf{Why center-blind detection is possible.} Compositional and inference
 risks are visible in the \emph{metadata graph}---principals, categories,
