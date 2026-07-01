@@ -300,6 +300,19 @@ left to their own judgment, current agents routinely over-share a subject's
 identifiers across organizational boundaries, and the auditor catches it without
 seeing the data.
 
+\textbf{E8---Held-out, LLM-authored benchmark.} Our 48-scenario benchmark scores
+1.0, but we wrote both the detectors and the scenarios. To de-bias it, an LLM
+(\emph{not} the detector author) generates diverse scenarios with its own intended
+labels and we score our auditor against them. On $\sim$18 held-out scenarios,
+\textbf{precision stays 1.0 (no false positives) but recall drops to 0.29
+(lexical) / 0.43 (LLM tagger)}---far below the self-authored 1.0. The misses are
+dominated by (i) taxonomy scope (the author generates preference/location/
+academic leaks; our detector targets health/finance/legal, a configurable set)
+and (ii) the author stating inferences explicitly rather than compositionally.
+Precision holding at 1.0 shows the detectors do not over-fire; recall is bounded
+by category coverage, not the architecture. This is the honest ceiling the
+self-authored benchmark hides.
+
 \section{Discussion}
 \textbf{Why center-blind detection is possible.} Compositional and inference
 risks are visible in the \emph{metadata graph}---principals, categories,

@@ -84,24 +84,26 @@ def run(scenario_id: str) -> dict:
     return _execute(scn["title"], scn["blurb"], scn["clearances"], scn["hops"])
 
 
-def run_custom(payload: dict) -> dict:
+def run_custom(payload: dict, tagger=None) -> dict:
     """Audit a user-supplied trace. ``payload`` = {clearances: {agent:[principal,
     [purposes]]}, hops: [{from_agent,to_agent,from_principal,to_principal,text,
-    data_subject,owning_principal,purpose,allowed_recipients,ttl_hops?}]}."""
+    data_subject,owning_principal,purpose,allowed_recipients,ttl_hops?}]}.
+    ``tagger`` overrides the default lexical PrivacyTagger (e.g. an LLM-backed one)."""
     try:
         clearances = {a: (v[0], list(v[1])) for a, v in payload.get("clearances", {}).items()}
         hops = []
         for h in payload.get("hops", []):
             policy = {k: h[k] for k in ("data_subject", "owning_principal", "purpose",
                                         "allowed_recipients", "ttl_hops", "provenance_id")
-                      if k in h}
+                      if k in h and h[k] is not None}
             hops.append((h["from_agent"], h["to_agent"], h["from_principal"],
                          h["to_principal"], h.get("text", ""), policy))
         if not hops:
             return {"error": "no hops provided"}
     except (KeyError, TypeError, IndexError) as e:
         return {"error": f"malformed trace: {e}"}
-    return _execute("Custom trace", "Your own multi-agent interaction.", clearances, hops)
+    return _execute("Custom trace", "Your own multi-agent interaction.", clearances,
+                    hops, tagger=tagger)
 
 
 _LIVE_RECORD = ("Ticket: card declined at checkout. Customer Dana Lee, "
@@ -152,8 +154,8 @@ def run_live() -> dict:
     return out
 
 
-def _execute(title: str, blurb: str, clearances: dict, hops: list) -> dict:
-    audit = AuditSession()
+def _execute(title: str, blurb: str, clearances: dict, hops: list, tagger=None) -> dict:
+    audit = AuditSession(tagger=tagger) if tagger else AuditSession()
     for agent, (principal, purposes) in clearances.items():
         audit.declare(agent, principal=principal, purposes=purposes)
     for frm, to, fp, tp, text, policy in hops:

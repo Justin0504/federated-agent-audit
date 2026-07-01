@@ -331,6 +331,24 @@ routinely over-share a subject's identifiers across organizational boundaries �
 most where it is most sensitive — and the auditor catches it without seeing the
 data.
 
+**E9 — Held-out, LLM-authored benchmark (breaking the self-authored 1.0).** Our
+48-scenario benchmark scores 1.0, but we wrote both the detectors and the
+scenarios — that number is calibrated to the system. To de-bias it we have an LLM
+(*not* the detector author) *generate* diverse scenarios with its own intended
+labels, then score our auditor against them
+(`benchmarks/a2a_mt/a2a_heldout_gen.py`). On ~18 held-out scenarios, **precision
+stays 1.0 (no false positives — our firings are reliable), but recall drops to
+0.29 (lexical) / 0.43 (LLM tagger)** — far below the self-authored 1.0. The gap is
+honest and informative: the misses are dominated by (i) **taxonomy scope** — the
+author-LLM generates leaks across *preference, location, academic, behavioral*
+categories, while our detector currently targets *health/finance/legal* (a
+configurable set, straightforwardly extensible), and (ii) the author-LLM often
+*states* an inference explicitly ("I suspect X frequents downtown") rather than
+requiring composition. Precision holding at 1.0 shows the detectors do not
+over-fire; recall is bounded by category coverage and tagger recall, not by the
+architecture. This is the honest ceiling the self-authored benchmark hides, and
+it names the concrete next step (broaden the sensitive-category taxonomy).
+
 ## 7. Discussion
 
 ### 7.1 Why center-blind detection is possible here
