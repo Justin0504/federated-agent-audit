@@ -336,18 +336,22 @@ data.
 scenarios — that number is calibrated to the system. To de-bias it we have an LLM
 (*not* the detector author) *generate* diverse scenarios with its own intended
 labels, then score our auditor against them
-(`benchmarks/a2a_mt/a2a_heldout_gen.py`). On ~18 held-out scenarios, **precision
-stays 1.0 (no false positives — our firings are reliable), but recall drops to
-0.29 (lexical) / 0.43 (LLM tagger)** — far below the self-authored 1.0. The gap is
-honest and informative: the misses are dominated by (i) **taxonomy scope** — the
-author-LLM generates leaks across *preference, location, academic, behavioral*
-categories, while our detector currently targets *health/finance/legal* (a
-configurable set, straightforwardly extensible), and (ii) the author-LLM often
-*states* an inference explicitly ("I suspect X frequents downtown") rather than
-requiring composition. Precision holding at 1.0 shows the detectors do not
-over-fire; recall is bounded by category coverage and tagger recall, not by the
-architecture. This is the honest ceiling the self-authored benchmark hides, and
-it names the concrete next step (broaden the sensitive-category taxonomy).
+(`benchmarks/a2a_mt/a2a_heldout_gen.py`). The result is sobering and honest:
+across held-out runs (≈ 20 scenarios each), **precision is 1.0 — the architecture
+never over-fires — but recall is only ≈ 0.31 (lexical) / 0.38 (LLM tagger)**, far
+below the self-authored 1.0. Two things separate the *architecture* from the
+*coverage*: (a) the misses are dominated by the tagger/taxonomy — after we broaden
+the sensitive-category set from health/finance/legal to ten classes
+(+location, employment, education, behavioral, credentials, biometric,
+demographic; a single configurable source of truth), recall rises but coverage of
+open-ended sensitive content remains the bottleneck; (b) the author-LLM also
+*states* inferences explicitly ("I suspect X frequents downtown") rather than
+composing them, and labels some borderline cases (e.g. a child's GPA to a parent)
+as leaks. Crucially, **recall here is bounded by the tagger — an orthogonal,
+improvable component — not by the auditor**: precision 1.0 means every violation
+the architecture reports is real. This is the honest ceiling the self-authored
+benchmark hides; the self-authored 1.0 measures the *detectors given correct
+labels*, and E9 measures the *end-to-end pipeline on open-world content*.
 
 ## 7. Discussion
 

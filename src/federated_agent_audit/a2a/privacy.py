@@ -17,6 +17,15 @@ from pydantic import BaseModel, Field
 # Reserved Part.metadata key (and Message.extensions URI) for the privacy type.
 PRIVACY_EXTENSION_KEY = "a2a.privacy/v1"
 
+# The sensitive categories the auditor treats as privacy-bearing (a single,
+# configurable source of truth shared by the tagger and the inference detector).
+# Broadened beyond health/finance/legal after the held-out benchmark surfaced
+# leaks in these classes; deployments can extend this set for their domain.
+SENSITIVE_CATEGORIES = frozenset({
+    "health", "finance", "legal", "location", "biometric", "credentials",
+    "employment", "education", "behavioral", "demographic",
+})
+
 
 def canonical_subject(identity: str, salt: str = "") -> str:
     """Deterministically derive a subject id from a canonical identity.

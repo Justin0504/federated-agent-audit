@@ -29,14 +29,14 @@ from pydantic import BaseModel, Field
 
 from ..dp_mechanism import discrete_laplace
 from .inference import GAIN_THRESHOLD, inference_gain, posterior
-from .privacy import AgentClearance, PrivacyLabel, extract_label
+from .privacy import SENSITIVE_CATEGORIES, AgentClearance, PrivacyLabel, extract_label
 from .types import Message
 
 # Sensitivity at or above which a cross-tenant disclosure is a violation.
 DISCLOSURE_SENSITIVITY_FLOOR = 3
 
-# Sensitive categories whose *inferred* accumulation across edges is a leak.
-SENSITIVE_CATEGORIES = {"health", "finance", "legal"}
+# Sensitive categories whose *inferred* accumulation across edges is a leak
+# (imported from privacy.py — the single configurable source of truth).
 
 # How many converging inference fragments (about one subject, to one principal)
 # make a confident cross-tenant inference. One incidental hint is tolerated.

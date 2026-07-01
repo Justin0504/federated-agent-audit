@@ -19,15 +19,27 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 
+from .privacy import SENSITIVE_CATEGORIES
+
 # Explicit terms — the content *states* this category.
 _EXPLICIT = {
     "health": {"diagnosis", "diagnosed", "prescription", "prescribed", "symptom",
                "medication", "chemotherapy", "biopsy", "mri", "blood test",
-               "mental health", "therapy session", "hiv"},
+               "mental health", "therapy session", "hiv", "cholesterol"},
     "finance": {"salary", "balance", "account number", "credit score", "income",
-                "net worth", "debt", "bankruptcy", "wire transfer"},
+                "net worth", "debt", "bankruptcy", "wire transfer", "tax deduction",
+                "tax return", "deductions"},
     "legal": {"lawsuit", "indictment", "settlement", "deposition",
               "restraining order", "custody", "immigration status"},
+    "location": {"home address", "gps", "coordinates", "whereabouts", "geolocation"},
+    "employment": {"fired", "terminated", "laid off", "performance improvement",
+                   "performance review", "demoted", "misconduct"},
+    "education": {"gpa", "grades", "transcript", "iep", "expelled", "suspended",
+                  "failing", "test scores", "sat score"},
+    "credentials": {"password", "api key", "secret key", "access token", "private key"},
+    "biometric": {"fingerprint", "facial recognition", "dna", "retina", "biometric"},
+    "demographic": {"race", "ethnicity", "religion", "sexual orientation",
+                    "disability", "pregnant", "immigration"},
 }
 
 # Hint terms — the content *gestures toward* a sensitive category without stating
@@ -36,8 +48,15 @@ _HINT = {
     "health": {"oncology", "clinic", "hospital", "appointment", "specialist",
                "infusion", "dialysis", "rehab", "pharmacy", "ward", "icu",
                "cancer", "cancer center", "treatment center", "doctor", "therapist"},
-    "finance": {"bank", "loan", "mortgage", "creditor", "collections", "lender"},
+    "finance": {"bank", "loan", "mortgage", "creditor", "creditors", "collections",
+                "lender", "refinance", "overdue"},
     "legal": {"attorney", "lawyer", "court", "case number", "hearing", "tribunal"},
+    "location": {"downtown", "neighborhood", "frequents", "lives near", "commute",
+                 "near the", "district"},
+    "behavioral": {"prefers", "interested in", "tends to", "browsing", "viewing",
+                   "watch history", "purchase history", "habits", "likely to"},
+    "education": {"school", "university", "campus", "tutor", "classroom"},
+    "employment": {"workplace", "employer", "manager", "hr department"},
 }
 
 # PII patterns raise sensitivity regardless of category.
@@ -65,12 +84,15 @@ def llm_tagger(model: str = "gpt-4o-mini", client=None) -> Callable[[str], dict]
         "You tag an agent message for privacy, locally. Return ONLY JSON: "
         '{"category":[...],"inferred_categories":[...],"sensitivity":<0-5>}.\n'
         "Decide by whether the SENSITIVE FACT is STATED or merely IMPLIED:\n"
+        "Sensitive domains: health, finance, legal, location, employment, "
+        "education, behavioral (preferences/habits), credentials, biometric, "
+        "demographic (race/religion/orientation/disability/immigration).\n"
         "- category: the message STATES a sensitive value/fact (a diagnosis, a "
-        "balance/SSN/charge, a lawsuit), use health/finance/legal; or the benign "
-        "topic, use schedule.\n"
+        "balance/SSN, a lawsuit, a GPA, a home address, a firing) -> the domain; "
+        "or the benign topic -> schedule.\n"
         "- inferred_categories: the message does NOT state a sensitive fact, but a "
         "place/activity/context lets one INFER a sensitive domain. Put that domain "
-        "(health/finance/legal) here, NOT in category.\n"
+        "here, NOT in category.\n"
         "Examples:\n"
         "'diagnosed with depression' -> category health.\n"
         "'appointment at the oncology center' -> category [schedule], inferred [health].\n"
@@ -146,7 +168,7 @@ class PrivacyTagger:
 
         pii = any(p.search(text) for p in _PII)
         sens = 0
-        if category & {"health", "finance", "legal"} or inferred:
+        if (category & SENSITIVE_CATEGORIES) or inferred:
             sens = 4
         if pii:
             sens = 5

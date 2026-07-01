@@ -303,15 +303,18 @@ seeing the data.
 \textbf{E8---Held-out, LLM-authored benchmark.} Our 48-scenario benchmark scores
 1.0, but we wrote both the detectors and the scenarios. To de-bias it, an LLM
 (\emph{not} the detector author) generates diverse scenarios with its own intended
-labels and we score our auditor against them. On $\sim$18 held-out scenarios,
-\textbf{precision stays 1.0 (no false positives) but recall drops to 0.29
-(lexical) / 0.43 (LLM tagger)}---far below the self-authored 1.0. The misses are
-dominated by (i) taxonomy scope (the author generates preference/location/
-academic leaks; our detector targets health/finance/legal, a configurable set)
-and (ii) the author stating inferences explicitly rather than compositionally.
-Precision holding at 1.0 shows the detectors do not over-fire; recall is bounded
-by category coverage, not the architecture. This is the honest ceiling the
-self-authored benchmark hides.
+labels and we score our auditor against them. Across held-out runs ($\approx$20
+scenarios each), \textbf{precision is 1.0 (the architecture never over-fires) but
+recall is only $\approx$0.31 (lexical) / 0.38 (LLM tagger)}---far below the
+self-authored 1.0. The misses are dominated by tagger/taxonomy coverage: we
+broaden the sensitive set from health/finance/legal to ten configurable classes
+(+location, employment, education, behavioral, credentials, biometric,
+demographic), which raises recall, but open-world sensitive content remains the
+bottleneck; the author also states inferences explicitly and labels some
+borderline cases as leaks. Crucially, recall here is bounded by the tagger---an
+orthogonal, improvable component---not the auditor: every violation the
+architecture reports is real. The self-authored 1.0 measures the detectors given
+correct labels; E9 measures the end-to-end pipeline on open-world content.
 
 \section{Discussion}
 \textbf{Why center-blind detection is possible.} Compositional and inference
