@@ -1,11 +1,16 @@
 \documentclass[11pt]{article}
 \usepackage[margin=1in]{geometry}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc}
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{enumitem}
 \hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{assumption}{Assumption}
 
 \title{\textbf{Privacy Typing for Multi-Tenant Agent Interaction:\\
 A Federated, Center-Blind Auditor and an A2A Extension}}
@@ -87,6 +92,29 @@ Setting every principal equal collapses the system to the \textbf{in-container}
 case---one organization auditing its own multi-agent app---so the research result
 and a practical product share one implementation.
 
+\begin{figure}[t]\centering
+\begin{tikzpicture}[font=\small,
+  agent/.style={draw,rounded corners,align=center,minimum height=9mm,fill=blue!5},
+  center/.style={draw,rounded corners,align=center,minimum height=14mm,fill=orange!8},
+  ed/.style={-{Latex},thick}]
+\node[agent] (a1) {Agent (Tenant $P$)\\\scriptsize local tagger + auditor};
+\node[agent,below=5mm of a1] (a2) {Agent (Tenant $Q$)\\\scriptsize local tagger + auditor};
+\node[center,right=34mm of $(a1)!0.5!(a2)$] (c)
+  {Center-blind auditor\\\scriptsize disclosure $\cdot$ purpose\\\scriptsize ttl $\cdot$ inference};
+\node[right=7mm of c,align=center] (v) {violations\\\scriptsize (metadata only)};
+\draw[ed] (a1) -- node[above,sloped,font=\scriptsize]{hash $+$ labels} (c);
+\draw[ed] (a2) -- node[below,sloped,font=\scriptsize]{hash $+$ labels} (c);
+\draw[ed] (c) -- (v);
+\draw[dashed] ($(a1.north east)+(3mm,3mm)$) -- ($(a2.south east)+(3mm,-3mm)$)
+  node[midway,rotate=90,above=1mm,gray,font=\scriptsize]{content stays at the edge};
+\end{tikzpicture}
+\caption{Federated, center-blind architecture. Each agent audits locally and
+emits only desensitized edges (a one-way content hash plus \ext{} labels); the
+center detects cross-tenant violations over the metadata graph, never seeing raw
+content (Lemma~\ref{lem:blind}).}
+\label{fig:arch}
+\end{figure}
+
 \section{Background and the governance gap}
 An A2A interaction is a sequence of \texttt{Message}s between agents; each carries
 \texttt{Part}s (text/data/file) and free-form \texttt{metadata}. The model has no
@@ -136,7 +164,27 @@ The auditor desensitizes each labeled \texttt{Part} into a center-view edge
 carrying a one-way content hash, the principals, and the label---no raw text. It
 asserts this invariant on its own output: a content token may appear in the center
 view only if it is a declared label value or a schema field name; any other token
-is a leak. Four detectors run over this graph:
+is a leak.
+
+\begin{lemma}[Bounded content leakage]\label{lem:blind}
+Let a message $M$ (with content entropy $H(M)$) produce center-view
+$V=(H(M),\ell)$, where $H$ is a hash modeled as a random oracle and
+$\ell\in\mathcal{L}$ is the categorical label (category, sensitivity, taint tags,
+opaque principal/subject ids). Then the center's information about $M$ satisfies
+$I(M;V)\le \log_2|\mathcal{L}|$, a constant independent of $|M|$. Hence for
+$H(M)\gg\log_2|\mathcal{L}|$ the center cannot reconstruct $M$.
+\end{lemma}
+\begin{proof}
+$I(M;V)=I(M;H(M))+I(M;\ell\mid H(M))$. Under the random-oracle model $H(M)$ is a
+uniformly random value revealing nothing of $M$ beyond equality tests, so
+$I(M;H(M))=0$. The second term is at most $H(\ell)\le\log_2|\mathcal{L}|$. With
+$|\mathcal{L}|$ the product of the (small) label domains --- e.g.\ a handful of
+categories $\times$ six sensitivity levels --- this is $O(\log)$ bits per Part,
+independent of $|M|$; reconstructing $M$ requires $H(M)$ bits, so it is infeasible.
+\end{proof}
+This is the formal content of ``center-blind'': the auditor operates on a metadata
+graph carrying $O(\log)$ bits per message, not a transcript. Four detectors run
+over this graph:
 \begin{enumerate}[leftmargin=1.4em]
 \item \textbf{Cross-tenant disclosure}: sensitive data ($\geq\tau$) reaches a
 principal that neither owns it nor is an allowed recipient.
@@ -151,18 +199,42 @@ authorized for; we ground this in the bound below.
 \end{enumerate}
 
 \paragraph{A formal inference-gain bound.} We model what a recipient infers about
-a subject's sensitive attribute $A$ from $k$ converging fragments. Treating each
-as conditionally-independent evidence with likelihood ratio
-$\lambda=P(\text{frag}\mid A)/P(\text{frag}\mid\neg A)$, the posterior odds
-multiply, $O_k=O_0\lambda^{k}$ with $O_0=p_0/(1-p_0)$, so the posterior is
-$P(A\mid k)=O_k/(1+O_k)$ and the inference gain is $g(k)=P(A\mid k)-p_0$. The
-detector fires when $g(k)\ge\delta$.
-\textit{Proposition.} It fires iff
-$k\ge k^{*}=\lceil\log_\lambda(O_\delta/O_0)\rceil$ with
-$O_\delta=(p_0+\delta)/(1-p_0-\delta)$. For defaults $(p_0,\lambda,\delta)=
-(0.1,3,0.3)$, $k^{*}=2$: one hint never fires, two converging fragments do
-(posterior $0.50$, gain $0.40$). This replaces the heuristic $1-2^{-k}$ with a
-calibrated quantity and a closed-form bound; deployments tune $(p_0,\lambda,\delta)$.
+a subject's sensitive attribute $A\in\{0,1\}$ from $k$ converging fragments
+$f_1,\dots,f_k$, with prior $p_0=P(A{=}1)$ and odds $O_0=p_0/(1-p_0)$.
+
+\begin{assumption}[Conditional independence]\label{as:ci}
+Given $A$, the fragments are independent, each with likelihood ratio
+$\lambda_i=\tfrac{P(f_i\mid A{=}1)}{P(f_i\mid A{=}0)}\ge1$; write $\lambda$ for a
+common lower bound $\lambda_i\ge\lambda>1$.
+\end{assumption}
+
+\begin{proposition}\label{prop:k}
+Under Assumption~\ref{as:ci} the posterior odds are $O_k=O_0\prod_i\lambda_i$, the
+posterior is $P(A\mid f_{1:k})=O_k/(1+O_k)$, and the inference gain
+$g(k)=P(A\mid f_{1:k})-p_0$ is strictly increasing in $k$. With uniform $\lambda$,
+the detector (fires iff $g(k)\ge\delta$) fires exactly for
+$k\ge k^{*}=\big\lceil\log_\lambda(O_\delta/O_0)\big\rceil$, where
+$O_\delta=(p_0+\delta)/(1-p_0-\delta)$.
+\end{proposition}
+\begin{proof}
+By Bayes in odds form, $O_k=O_0\prod_i\lambda_i$; since each $\lambda_i>1$, $O_k$
+is strictly increasing in $k$, and $x\mapsto x/(1+x)$ is strictly increasing, so
+$g$ is strictly increasing. With uniform $\lambda$, $g(k)\ge\delta \iff
+P(A\mid f_{1:k})\ge p_0+\delta \iff O_k\ge O_\delta \iff O_0\lambda^{k}\ge O_\delta
+\iff k\ge\log_\lambda(O_\delta/O_0)$; integrality gives the ceiling.
+\end{proof}
+For defaults $(p_0,\lambda,\delta)=(0.1,3,0.3)$, $k^{*}=2$: one hint never fires,
+two converging fragments do (posterior $0.50$, gain $0.40$), replacing the
+heuristic $1-2^{-k}$ with a calibrated quantity and a closed-form bound;
+deployments tune $(p_0,\lambda,\delta)$ and may set $\lambda_i$ from the tagger's
+hint specificity (so one high-$\lambda$ fragment can suffice, per~\S6/E9).
+\emph{On the assumption:} real fragments are correlated, so
+Assumption~\ref{as:ci} is an approximation --- positively-correlated (redundant)
+hints make the true joint ratio smaller than $\prod\lambda_i$, so the model can
+over-credit evidence; empirically (E9) the detector nonetheless \emph{under}-fires
+relative to a real LLM recipient, because tagger coverage, not the bound, is the
+binding constraint. The bound is thus a calibrated design tool, not a tight
+guarantee.
 
 \section{The A2A-MT benchmark}
 No multi-tenant agent-privacy benchmark exists---AgentLeak and Sum-Leaks are
@@ -343,30 +415,91 @@ future work, and an adaptive peer that both paraphrases and fragments below
 threshold is the open hard case.
 
 \section{Related work}
-AgentLeak~\cite{agentleak} and Sum-Leaks~\cite{sumleaks} measure / mitigate
-\emph{single-tenant} compositional leakage; we lift the setting to multi-tenant
-and supply a deployable detector. Privacy-theory work for agents~\cite{dpagents}
-analyzes when local privacy fails to compose but gives no operational auditor.
-Protocol-security analyses~\cite{protosec,protoexploit} flag A2A's lack of
-governance primitives---the gap we fill inside its extension mechanism.
-Centralized observability tools sit in the path and must ingest raw content; our
-center-blind design provides the one property they structurally lack.
 
-\begin{thebibliography}{9}
+\noindent\textbf{Privacy leakage in LLM-agent systems.} AgentLeak~\cite{agentleak}
+and Sum-Leaks~\cite{sumleaks} measure and mitigate \emph{single-tenant}
+compositional leakage; privacy-theory work for agents~\cite{dpagents,itlimits}
+analyzes when local privacy fails to compose. LLMs also memorize and regurgitate
+training data~\cite{carlini21,carlini23}. We lift the setting to \emph{multi-tenant}
+and supply a deployable, center-blind detector rather than a measurement or a
+theory.
+
+\noindent\textbf{Agent communication protocols.} A2A~\cite{a2a}, MCP~\cite{mcp},
+and related standards define agent interoperability but no data governance;
+comparative security analyses~\cite{protosec,protoexploit} flag exactly this gap,
+which we fill inside A2A's extension mechanism.
+
+\noindent\textbf{Information-flow control and taint tracking.} Our detectors are a
+lightweight, semantic information-flow analysis: the lattice model~\cite{denning76}
+and language-based IFC~\cite{sabelfeld03} formalize where data may flow, and
+dynamic taint tracking~\cite{taintdroid} enforces it at runtime. We adapt these to
+opaque LLM agents over metadata (not program variables), adding purpose and
+cross-tenant semantics and \emph{compositional inference}, which classical IFC
+does not model. Purpose- and recipient-limitation follow the norm of contextual
+integrity~\cite{ci}.
+
+\noindent\textbf{Data-loss prevention.} DLP / PII scanners (e.g.\
+Presidio~\cite{presidio}) match sensitive patterns in content; they see raw data,
+have no policy/purpose semantics, and are blind to no-PII inference (E6b). We are
+center-blind and compositional.
+
+\noindent\textbf{Anonymization and differential privacy.} $k$-anonymity~\cite{ksweeney}
+and $\ell$-diversity~\cite{ldiv} motivate our structural domain generalization;
+differential privacy~\cite{dwork06,dworkroth} and local DP~\cite{rappor} underlie
+our metadata hardening (E5). Unlike these, our object is \emph{detection} of a
+composed leak, not release of a sanitized dataset.
+
+\noindent\textbf{Federated and secure computation.} The federated split follows
+federated learning's keep-data-local principle~\cite{fedavg}; stronger guarantees
+are available via secure computation~\cite{yao} and trusted execution, which our
+attestation layer (E4) plugs into. We target a deployable software baseline with a
+TEE upgrade path.
+
+\noindent\textbf{Observability.} LangSmith and Langfuse~\cite{langfuse} trace
+agent runs but must ingest raw prompts/outputs---the disqualifier for regulated /
+cross-tenant deployments and the one property our design structurally avoids.
+
+\begin{thebibliography}{99}
 \small
 \bibitem{agentleak} AgentLeak: Benchmarking Privacy Leakage in Multi-Agent LLM
 Systems. arXiv:2602.11510.
-\bibitem{sumleaks} Patil et al. The Sum Leaks More Than Its Parts.
-arXiv:2509.14284.
-\bibitem{dpagents} Differential Privacy in Generative AI Agents.
-arXiv:2603.17902; Information-theoretic limits of local privacy composition,
+\bibitem{sumleaks} Patil et al. The Sum Leaks More Than Its Parts. arXiv:2509.14284.
+\bibitem{dpagents} Differential Privacy in Generative AI Agents. arXiv:2603.17902.
+\bibitem{itlimits} Information-theoretic limits of local privacy composition.
 arXiv:2603.05520.
-\bibitem{protosec} Security Analysis of Agentic AI Communication Protocols.
-arXiv:2511.03841.
-\bibitem{protoexploit} From Prompt Injections to Protocol Exploits.
-arXiv:2506.23260.
+\bibitem{carlini21} N.\ Carlini et al. Extracting Training Data from Large Language
+Models. USENIX Security, 2021.
+\bibitem{carlini23} N.\ Carlini et al. Quantifying Memorization Across Neural
+Language Models. ICLR, 2023.
 \bibitem{a2a} Agent2Agent (A2A) Protocol Specification, v1.0. a2a-protocol.org,
-Linux Foundation.
+Linux Foundation, 2026.
+\bibitem{mcp} Model Context Protocol Specification. Anthropic, 2024.
+\bibitem{protosec} Security Analysis of Agentic AI Communication Protocols: A
+Comparative Evaluation. arXiv:2511.03841.
+\bibitem{protoexploit} From Prompt Injections to Protocol Exploits. arXiv:2506.23260.
+\bibitem{denning76} D.\ Denning. A Lattice Model of Secure Information Flow. CACM,
+1976.
+\bibitem{sabelfeld03} A.\ Sabelfeld, A.\ Myers. Language-Based Information-Flow
+Security. IEEE JSAC, 2003.
+\bibitem{taintdroid} W.\ Enck et al. TaintDroid: An Information-Flow Tracking
+System for Realtime Privacy Monitoring on Smartphones. OSDI, 2010.
+\bibitem{ci} H.\ Nissenbaum. Privacy as Contextual Integrity. Washington Law
+Review, 2004.
+\bibitem{presidio} Microsoft Presidio: Data Protection and De-identification SDK.
+\bibitem{ksweeney} L.\ Sweeney. $k$-Anonymity: A Model for Protecting Privacy.
+IJUFKS, 2002.
+\bibitem{ldiv} A.\ Machanavajjhala et al. $\ell$-Diversity: Privacy Beyond
+$k$-Anonymity. ICDE, 2006.
+\bibitem{dwork06} C.\ Dwork et al. Calibrating Noise to Sensitivity in Private
+Data Analysis. TCC, 2006.
+\bibitem{dworkroth} C.\ Dwork, A.\ Roth. The Algorithmic Foundations of
+Differential Privacy. 2014.
+\bibitem{rappor} \'U.\ Erlingsson et al. RAPPOR: Randomized Aggregatable
+Privacy-Preserving Ordinal Response. CCS, 2014.
+\bibitem{fedavg} B.\ McMahan et al. Communication-Efficient Learning of Deep
+Networks from Decentralized Data. AISTATS, 2017.
+\bibitem{yao} A.\ Yao. Protocols for Secure Computations. FOCS, 1982.
+\bibitem{langfuse} LangSmith and Langfuse: LLM Application Observability Platforms.
 \end{thebibliography}
 
 \end{document}
