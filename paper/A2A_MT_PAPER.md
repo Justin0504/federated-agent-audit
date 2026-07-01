@@ -358,10 +358,13 @@ detector fires at k\* = 2 converging hints — but is that where real inferabili
 begins? We have an independent LLM play the recipient and try to infer the
 subject's withheld sensitive attribute from the K benign fragments it received,
 across K = 1, 2, 3 (`benchmarks/a2a_mt/a2a_inference_validate.py`). Two honest
-findings. **The threat is real, not hypothetical:** the independent LLM infers the
-withheld attribute (cancer treatment, financial distress, pregnancy) in **3/4
-cases from just 2 benign scheduling fragments**, and in 2/4 from a *single* strong
-hint. **Our detector is a conservative, no-false-alarm lower bound:** every
+findings. **The threat is real, not hypothetical, and scales with model
+capability:** the independent LLM infers the withheld attribute (cancer treatment,
+financial distress, pregnancy, job search) from just 2 benign scheduling fragments
+in **3/4 cases with gpt-4o-mini and 4/4 with gpt-4o** (and 2/4 from a *single*
+strong hint) — a stronger recipient infers more, so the compositional threat
+grows, not shrinks, as agents improve. **Our detector is a conservative,
+no-false-alarm lower bound:** every
 disagreement is an *under*-fire (the attacker infers where we stay silent, on
 subtler cases our tagger doesn't cover) — we never fire where the attacker cannot
 infer. This confirms composition-based detection tracks real inferability, and
