@@ -274,20 +274,27 @@ with **zero raw content at every ε** (`benchmarks/a2a_mt/a2a_dp_eval.py`). The
 auditor thus protects both content (architecturally) and metadata identities
 (cryptographically/DP) while keeping detection essentially intact.
 
-**E6b — Privacy–utility frontier (baselines).** We compare against the
-observability alternatives on detection F1 vs. the raw content the central party
-must ingest (`benchmarks/a2a_mt/a2a_baselines.py`):
+**E6b — Comparison against real baselines.** Against the two detectors a
+practitioner would actually reach for (`benchmarks/a2a_mt/a2a_baseline_compare.py`,
+8 realistic scenarios spanning PII disclosure, no-PII inference, and authorized/
+benign sharing):
 
-| Approach | F1 | content→center (chars) | identities |
+| Detector | F1 | inference recall | content→center |
 |---|---|---|---|
-| Centralized-full (sees all content) | 1.00 | 1{,}380 | yes |
-| Output-only observability | 0.67 | 947 | yes (final hop) |
-| **Ours (federated, center-blind)** | **1.00** | **0** | none (pseudonymized) |
+| DLP / PII scanner (sees content) | 0.67 | 0% | 439 ch |
+| LLM-judge, policy-aware (reads all) | 0.57 | 0% | 439 ch |
+| Ours — lexical tagger (blind) | 0.89 | 50% | **0** |
+| **Ours — LLM tagger (blind)** | **1.00** | **100%** | **0** |
 
-Ours matches the centralized observer's detection while exposing *zero* content
-and no real identities---Pareto-dominant on privacy. Output-only is cheap but
-blind to the internal-channel and compositional leaks (F1 0.67), the very class
-the literature shows dominates~\cite{agentleak}.
+Two findings. **Structurally (model-independent):** both baselines must ingest
+content; ours ingests none — the disqualifier for regulated/cross-tenant
+deployments holds regardless of the baseline's accuracy. **On accuracy:** the DLP
+scanner is blind to no-PII inference (0% recall — there is no PII to match) and
+over-flags authorized cross-boundary sharing (no policy semantics); a single-shot
+policy-aware LLM-judge (gpt-4o-mini) is unreliable on compositional inference
+across separate messages (0% here, F1 0.57). Ours reaches full detection at zero
+content, and the LLM tagger backend lifts the honest lexical floor (0.89) to 1.0.
+(Illustrative scale; the point is the differentiation, not a large-*N* claim.)
 
 **E7 — The local tagger (closing "assume the hard part").** The inference
 detector accumulates `inferred_categories`; in a real deployment these must be

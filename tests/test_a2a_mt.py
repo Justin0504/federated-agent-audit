@@ -392,6 +392,20 @@ def test_demo_scenarios_and_dashboard():
             os.environ["OPENAI_API_KEY"] = saved
 
 
+# ── real baselines (DLP / LLM-judge) ────────────────────────────────
+
+
+def test_baseline_dlp_blind_to_inference():
+    from a2a_baseline_compare import SCENARIOS, dlp, ours
+    # ours catches the no-PII inference scenarios; the DLP/PII scanner cannot
+    for s in SCENARIOS:
+        if s[2] == "cross_tenant_inference":
+            assert dlp(s) is False                       # DLP: no PII to match
+    # and DLP over-flags authorized cross-boundary sharing (no policy semantics)
+    authorized = next(s for s in SCENARIOS if s[0] == "clean_authorized")
+    assert dlp(authorized) is True and ours(authorized) is False
+
+
 # ── formal inference-gain model ─────────────────────────────────────
 
 

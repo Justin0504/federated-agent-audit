@@ -233,23 +233,29 @@ $F1 = 0.99/0.97/0.96$ at $\varepsilon = 3/1/0.5$, recall falling only for
 disclosure decisions whose sensitivity noises across the floor, with zero raw
 content at every $\varepsilon$.
 
-\textbf{E6b---Privacy--utility frontier.} Against the observability alternatives
-(Table~\ref{tab:frontier}), ours matches the centralized observer's detection
-while exposing \emph{zero} content and no real identities---Pareto-dominant on
-privacy. Output-only observability is cheap but blind to the internal-channel and
-compositional leaks ($F1=0.67$) that dominate the threat~\cite{agentleak}.
+\textbf{E6b---Comparison against real baselines.} Against the two detectors a
+practitioner would actually reach for (Table~\ref{tab:frontier}, 8 realistic
+scenarios spanning PII disclosure, no-PII inference, and authorized sharing):
+\emph{structurally}, both baselines must ingest content while ours ingests none
+--- the disqualifier for regulated/cross-tenant deployments, independent of
+accuracy. \emph{On accuracy}, the DLP scanner is blind to no-PII inference (0\%
+recall) and over-flags authorized cross-boundary sharing; a single-shot
+policy-aware LLM-judge is unreliable on compositional inference across messages
+(0\%, $F1=0.57$). Ours reaches full detection at zero content, the LLM tagger
+lifting the honest lexical floor $0.89\to1.0$.
 
 \begin{table}[t]\centering\small
 \begin{tabular}{lccc}
 \toprule
-Approach & F1 & content$\to$center & identities \\
+Detector & F1 & inference rec. & content$\to$center \\
 \midrule
-Centralized-full (sees content) & 1.00 & 1{,}380 ch & yes \\
-Output-only observability & 0.67 & 947 ch & yes \\
-\textbf{Ours (federated, center-blind)} & \textbf{1.00} & \textbf{0} & none \\
+DLP / PII scanner (sees content) & 0.67 & 0\% & 439 ch \\
+LLM-judge, policy-aware (reads all) & 0.57 & 0\% & 439 ch \\
+Ours --- lexical tagger (blind) & 0.89 & 50\% & \textbf{0} \\
+\textbf{Ours --- LLM tagger (blind)} & \textbf{1.00} & \textbf{100\%} & \textbf{0} \\
 \bottomrule
 \end{tabular}
-\caption{Privacy--utility frontier on A2A-MT.}
+\caption{Ours vs.\ real baselines on realistic scenarios.}
 \label{tab:frontier}
 \end{table}
 
