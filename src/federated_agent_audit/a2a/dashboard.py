@@ -87,6 +87,13 @@ textarea:focus{outline:0;border-color:var(--accent-dim)}
 .badge{display:inline-flex;align-items:center;gap:8px;margin:12px 15px 15px;padding:9px 13px;border-radius:9px;
  background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ok);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent);
  font-family:var(--mono);font-size:12px}
+.cmp{display:flex;gap:12px;flex-wrap:wrap;padding:14px 15px}
+.dcard{flex:1;min-width:190px;border:1px solid var(--line);border-radius:11px;padding:13px;background:var(--surface2)}
+.dcard.win{border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
+.dname{font-weight:600;font-size:13px;margin-bottom:9px;letter-spacing:-0.01em}
+.drow{display:flex;align-items:center;gap:6px;font-size:12.5px;margin:4px 0}
+.drow.ok{color:var(--ok)} .drow.warn{color:var(--danger)} .drow.miss{color:var(--faint)}
+.dnote{color:var(--faint);font-size:11.5px;margin-top:8px}
 svg.i{width:14px;height:14px;flex:none}
 @media(max-width:820px){.grid{grid-template-columns:1fr}}
 </style></head><body>
@@ -122,6 +129,9 @@ svg.i{width:14px;height:14px;flex:none}
     <div class="panel" style="margin-top:14px"><div class="sect">violations</div><div id="viol"></div><div id="badge"></div></div>
    </div>
   </div>
+  <div class="panel" id="cmp" style="margin-top:14px;display:none">
+   <div class="sect">how detectors compare · same trace</div><div class="cmp" id="cmpbody"></div>
+  </div>
  </div>
 </div>
 <script>
@@ -130,6 +140,8 @@ const E=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=nul
 const S=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e};
 const LOCK='<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 const CHK='<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>';
+const EYE='<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+const X='<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>';
 const T=document.documentElement;
 document.getElementById('theme').onclick=()=>T.dataset.t=T.dataset.t==='light'?'':'light';
 const EX={clearances:{ads:["vendor:adtech",["marketing"]]},hops:[{from_agent:"app",to_agent:"ads",
@@ -160,8 +172,17 @@ function drawGraph(hops){const svg=document.getElementById('svg');svg.innerHTML=
  order.forEach(p=>{const x=pos[p],w=Math.max(80,p.length*7+22),g=S('g',{class:'node'});
   g.appendChild(S('rect',{x:x-w/2,y:y-14,width:w,height:28,rx:8}));
   const t=S('text',{x:x,y:y+4,'text-anchor':'middle'});t.textContent=p;g.appendChild(t);svg.appendChild(g)})}
-async function run(id){render(await(await fetch('api/v1/a2a/demo/run/'+id)).json())}
+async function run(id){render(await(await fetch('api/v1/a2a/demo/run/'+id)).json());compare(id)}
+async function compare(id){const p=document.getElementById('cmp'),b=document.getElementById('cmpbody');
+ try{const d=await(await fetch('api/v1/a2a/demo/compare/'+id)).json();if(d.error){p.style.display='none';return}
+  b.innerHTML=d.detectors.map(x=>`<div class="dcard ${(!x.sees_content&&x.caught)?'win':''}">
+   <div class="dname">${x.name}</div>
+   <div class="drow ${x.caught?'ok':'miss'}">${x.caught?CHK+' caught':X+' missed'}</div>
+   <div class="drow ${x.sees_content?'warn':'ok'}">${x.sees_content?EYE+' reads content':LOCK+' never reads content'}</div>
+   <div class="dnote">${x.note}</div></div>`).join('');
+  p.style.display='block'}catch(e){p.style.display='none'}}
 function render(d){document.getElementById('out').style.display='block';
+ document.getElementById('cmp').style.display='none';
  document.getElementById('title').textContent=d.title;document.getElementById('blurb').textContent=d.blurb;
  drawGraph(d.hops);const hops=document.getElementById('hops');hops.innerHTML='';
  d.hops.forEach((h,i)=>{const c=E('div','card');c.style.animationDelay=(i*.1)+'s';

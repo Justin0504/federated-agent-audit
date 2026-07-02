@@ -406,6 +406,14 @@ def test_demo_scenarios_and_dashboard():
         assert vtype in [v["type"] for v in d["violations"]], sid
         assert d["raw_leaks"] == 0                            # center-blind always
 
+    # baseline contrast: on the inference scenario, ours catches center-blind
+    # while the DLP scanner misses (no PII) yet reads content
+    cmp = c.get("/api/v1/a2a/demo/compare/calendar_inference").json()
+    ours = next(x for x in cmp["detectors"] if "Ours" in x["name"])
+    dlp = next(x for x in cmp["detectors"] if "DLP" in x["name"])
+    assert ours["caught"] and not ours["sees_content"]
+    assert not dlp["caught"] and dlp["sees_content"]
+
     # bring-your-own trace: tagger derives labels, auditor catches the leak
     payload = {"clearances": {"ads": ["vendor:adtech", ["marketing"]]},
                "hops": [{"from_agent": "app", "to_agent": "ads",

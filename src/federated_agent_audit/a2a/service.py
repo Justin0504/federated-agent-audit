@@ -62,6 +62,10 @@ def create_app(trusted_builds: dict | None = None,
     def demo_run(scenario_id: str):
         return _demo.run(scenario_id)
 
+    @app.get("/api/v1/a2a/demo/compare/{scenario_id}")
+    def demo_compare(scenario_id: str):
+        return _demo.compare(scenario_id)
+
     @app.post("/api/v1/a2a/demo/audit")
     def demo_audit(payload: dict):
         return _demo.run_custom(payload)

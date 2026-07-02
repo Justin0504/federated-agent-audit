@@ -105,6 +105,57 @@ def run(scenario_id: str) -> dict:
     return _execute(scn["title"], scn["blurb"], scn["clearances"], scn["hops"])
 
 
+def compare(scenario_id: str) -> dict:
+    """Run the scenario through ours vs. the real baselines (DLP, LLM-judge) and
+    return a side-by-side: who caught it, and who had to read the content."""
+    import os
+
+    from .tagger import _PII
+    scn = SCENARIOS.get(scenario_id)
+    if scn is None:
+        return {"error": "unknown scenario"}
+    hops = scn["hops"]
+    content = sum(len(h[4]) for h in hops)
+    ours = run(scenario_id)
+    ours_caught = bool(ours["violations"])
+    is_inference = any(v["type"] == "cross_tenant_inference" for v in ours["violations"])
+
+    # DLP: flags PII crossing a tenant boundary; sees content; no policy/inference.
+    dlp_caught = any(fp != tp and any(p.search(text) for p in _PII)
+                     for _f, _t, fp, tp, text, _pol in hops)
+    dlp_note = ("catches PII disclosure" if dlp_caught
+                else "blind — no PII to match")
+
+    detectors = [
+        {"name": "Ours — center-blind", "caught": ours_caught,
+         "sees_content": False, "note": "metadata only; content hashed"},
+        {"name": "DLP / PII scanner", "caught": dlp_caught,
+         "sees_content": True, "note": dlp_note},
+    ]
+    if os.environ.get("OPENAI_API_KEY"):
+        try:
+            from openai import OpenAI
+            convo = "\n".join(
+                f"{fp} -> {tp}: {text!r} [owner={pol['owning_principal']}, "
+                f"allowed={pol.get('allowed_recipients', [])}]"
+                for _f, _t, fp, tp, text, pol in hops)
+            r = OpenAI().chat.completions.create(
+                model="gpt-4o-mini", temperature=0, max_tokens=3,
+                messages=[{"role": "system", "content":
+                           "Privacy auditor. A violation is sensitive data (stated OR "
+                           "inferable from combined hints) reaching a principal not the "
+                           "owner and not in allowed. Reply ONLY YES or NO."},
+                          {"role": "user", "content": convo}])
+            judge = "yes" in (r.choices[0].message.content or "").lower()
+            detectors.append({"name": "LLM-judge (reads all)", "caught": judge,
+                              "sees_content": True, "note": "reads every message"})
+        except Exception:  # noqa: BLE001
+            pass
+
+    return {"detectors": detectors, "is_inference": is_inference,
+            "content_chars": content}
+
+
 def run_custom(payload: dict, tagger=None) -> dict:
     """Audit a user-supplied trace. ``payload`` = {clearances: {agent:[principal,
     [purposes]]}, hops: [{from_agent,to_agent,from_principal,to_principal,text,
