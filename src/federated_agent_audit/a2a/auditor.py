@@ -28,7 +28,12 @@ from collections import defaultdict
 from pydantic import BaseModel, Field
 
 from ..dp_mechanism import discrete_laplace
-from .inference import GAIN_THRESHOLD, inference_gain, posterior
+from .inference import (
+    GAIN_THRESHOLD,
+    LIKELIHOOD_RATIO,
+    PRIOR,
+    gain_from_lambdas,
+)
 from .privacy import SENSITIVE_CATEGORIES, AgentClearance, PrivacyLabel, extract_label
 from .types import Message
 
@@ -266,22 +271,27 @@ class A2AAuditor:
                         e.to_principal in e.label.allowed_recipients:
                     authorized.update(e.label.category)
 
-            # count distinct fragments (by content hash) per inferred category
-            frags: dict[str, set[str]] = defaultdict(set)
+            # per inferred category, collect one likelihood ratio per distinct
+            # fragment (deduped by content hash); a fragment's λ defaults to the
+            # uniform ratio unless the tagger supplied a stronger/weaker one.
+            frags: dict[str, dict[str, float]] = defaultdict(dict)
             for e in grp:
                 for cat in e.label.inferred_categories:
-                    frags[cat].add(e.content_hash)
+                    lam = e.label.inference_lambda.get(cat, LIKELIHOOD_RATIO)
+                    # keep the max λ seen for this exact fragment
+                    frags[cat][e.content_hash] = max(frags[cat].get(e.content_hash, 0), lam)
 
-            for cat, hashes in frags.items():
+            for cat, byhash in frags.items():
                 if cat not in SENSITIVE_CATEGORIES:
                     continue
                 if cat in authorized:
                     continue  # S already let Q know this category explicitly
-                k = len(hashes)
+                lambdas = list(byhash.values())
+                k = len(lambdas)
                 # Fire when the recipient's provable Bayesian belief gain over the
-                # prior crosses the policy threshold (closed-form k* = 2 for the
-                # defaults); a single incidental hint stays below it.
-                gain = inference_gain(k)
+                # prior crosses the policy threshold. With uniform λ this is the
+                # closed-form k* = 2; a single high-specificity hint can suffice.
+                gain = gain_from_lambdas(lambdas)
                 if gain < GAIN_THRESHOLD:
                     continue
                 out.append(Violation(
@@ -290,9 +300,9 @@ class A2AAuditor:
                     data_subject=subject, owning_principal=grp[0].label.owning_principal,
                     recipient_principal=principal,
                     detail=(f"'{principal}' can infer '{cat}' about '{subject}' "
-                            f"from {k} converging fragments: posterior "
-                            f"P({cat})={posterior(k):.2f}, gain={gain:.2f}"),
-                    severity=min(1.0, posterior(k)),
+                            f"from {k} converging fragment(s): "
+                            f"posterior gain={gain:.2f}"),
+                    severity=min(1.0, gain + PRIOR),
                 ))
         return out
 

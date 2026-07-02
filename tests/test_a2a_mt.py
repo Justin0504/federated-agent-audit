@@ -139,6 +139,24 @@ def test_inference_not_fired_on_single_hint():
     assert "cross_tenant_inference" not in r.types()
 
 
+def test_inference_single_strong_hint_fires_via_lambda():
+    from federated_agent_audit.a2a import AuditSession
+    # a single high-specificity hint (oncology center → λ=9) fires alone;
+    # a single weak hint does not — per-fragment likelihood weighting.
+    strong = AuditSession()
+    strong.observe("a", "b", "Can only meet near the oncology center.",
+                   from_principal="tenant:alice", to_principal="tenant:bob",
+                   data_subject="subject:alice", owning_principal="tenant:alice",
+                   purpose=["scheduling"], allowed_recipients=["tenant:bob"])
+    assert "cross_tenant_inference" in strong.run().types()
+    weak = AuditSession()
+    weak.observe("a", "b", "meeting at the clinic",
+                 from_principal="tenant:alice", to_principal="tenant:bob",
+                 data_subject="subject:alice", owning_principal="tenant:alice",
+                 purpose=["scheduling"], allowed_recipients=["tenant:bob"])
+    assert "cross_tenant_inference" not in weak.run().types()
+
+
 def test_inference_skipped_when_category_authorized():
     # Alice explicitly shares health with Bob (declared category health, allowed) →
     # Bob inferring health is not a new leak.

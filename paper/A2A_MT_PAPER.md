@@ -369,10 +369,12 @@ disagreement is an *under*-fire (the attacker infers where we stay silent, on
 subtler cases our tagger doesn't cover) — we never fire where the attacker cannot
 infer. This confirms composition-based detection tracks real inferability, and
 shows our fixed k\* = 2 with uniform per-fragment evidence is *conservative*: real
-inference sometimes needs only one high-specificity hint, which the Bayesian model
-(§4.6) already accommodates via a per-fragment likelihood ratio λ — wiring λ to
-the tagger's hint specificity is the natural way to catch single strong hints
-without over-firing on weak ones.
+inference sometimes needs only one high-specificity hint. We therefore **wire the
+Bayesian per-fragment λ to the tagger's hint specificity** (`inference_lambda`): a
+strong hint ("oncology center", λ = 9) now fires on its own while a weak one
+("clinic", λ = 3) still requires two — provably preserving the k\* = 2 threshold
+when λ is uniform (the labeled benchmark is unchanged), and catching single strong
+hints without over-firing on weak ones.
 
 ## 7. Discussion
 

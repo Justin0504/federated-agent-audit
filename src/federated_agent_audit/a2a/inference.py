@@ -43,6 +43,20 @@ def inference_gain(k: int, prior: float = PRIOR, lr: float = LIKELIHOOD_RATIO) -
     return posterior(k, prior, lr) - prior
 
 
+def gain_from_lambdas(lambdas, prior: float = PRIOR) -> float:
+    """Inference gain from a set of per-fragment likelihood ratios (odds multiply).
+
+    Generalizes ``inference_gain`` to non-uniform evidence: a single
+    high-specificity hint (large λ) can cross the threshold alone, while several
+    weak hints must accumulate. With every λ equal to the default it reproduces
+    ``inference_gain(k)`` exactly, so calibrated thresholds are preserved.
+    """
+    odds = prior / (1 - prior)
+    for lam in lambdas:
+        odds *= lam
+    return odds / (1 + odds) - prior
+
+
 def fragments_to_fire(prior: float = PRIOR, lr: float = LIKELIHOOD_RATIO,
                       delta: float = GAIN_THRESHOLD) -> int:
     """k* — the smallest number of converging fragments that crosses the gain

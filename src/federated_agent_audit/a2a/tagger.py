@@ -70,6 +70,16 @@ _PII = [
 _NEUTRAL = {"schedule": {"meet", "meeting", "available", "free", "busy", "tuesday",
                          "calendar", "reschedule", "slot", "standup", "pm", "am"}}
 
+# High-specificity hint terms whose single mention strongly implies the category
+# (λ = 9 → one such fragment can fire on its own); other hints keep the default λ.
+_STRONG_HINTS = {
+    "health": {"oncology", "chemotherapy", "cancer center", "dialysis", "infusion",
+               "icu", "treatment center"},
+    "finance": {"creditors", "collections", "bankruptcy", "foreclosure"},
+    "legal": {"deportation", "restraining order", "indictment"},
+}
+_STRONG_LAMBDA = 9.0
+
 
 def llm_tagger(model: str = "gpt-4o-mini", client=None) -> Callable[[str], dict]:
     """A higher-recall tagger backend backed by an LLM (runs locally on content).
@@ -174,6 +184,9 @@ class PrivacyTagger:
             sens = 5
         elif category and not (category & {"health", "finance", "legal"}):
             sens = max(sens, 1)
+        # a strong hint gets λ = 9 (fires alone); others default
+        lam = {cat: _STRONG_LAMBDA for cat, terms in _STRONG_HINTS.items()
+               if cat in inferred and self._has(low, terms)}
         return {"category": sorted(category),
                 "inferred_categories": sorted(inferred),
-                "sensitivity": sens}
+                "sensitivity": sens, "inference_lambda": lam}

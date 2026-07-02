@@ -57,6 +57,10 @@ class PrivacyLabel(BaseModel):
     # signal the cross-tenant inference detector accumulates. E.g. a "schedule"
     # Part mentioning an oncology center carries inferred_categories=["health"].
     inferred_categories: list[str] = Field(default_factory=list)
+    # Optional per-category likelihood ratio λ for this fragment's inference
+    # evidence (a strong hint like "oncology center" > a weak one like "clinic").
+    # Empty → the detector uses the default λ, reproducing uniform accumulation.
+    inference_lambda: dict[str, float] = Field(default_factory=dict)
     purpose: list[str] = Field(default_factory=list)         # permitted uses
     allowed_recipients: list[str] = Field(default_factory=list)  # principals
     ttl_hops: int = Field(default=1, ge=0)   # max onward hops before it must stop

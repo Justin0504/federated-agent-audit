@@ -89,6 +89,7 @@ class AuditSession:
             data_subject=data_subject, owning_principal=owning_principal,
             sensitivity=tags["sensitivity"], category=tags["category"],
             inferred_categories=tags["inferred_categories"],
+            inference_lambda=tags.get("inference_lambda", {}),
             purpose=list(purpose or []),
             allowed_recipients=list(allowed_recipients or []),
             ttl_hops=ttl_hops, provenance_id=provenance_id)
