@@ -434,14 +434,18 @@ tractable at all.
 
 ## References
 
-[1] *AgentLeak: Benchmarking Privacy Leakage in Multi-Agent LLM Systems.*
-arXiv:2602.11510.
-[2] Patil et al. *The Sum Leaks More Than Its Parts.* arXiv:2509.14284.
-[3] *Differential Privacy in Generative AI Agents* (arXiv:2603.17902);
-*Information-theoretic limits of local privacy composition* (arXiv:2603.05520).
-[4] *Security Analysis of Agentic AI Communication Protocols: A Comparative
-Evaluation.* arXiv:2511.03841.
-[5] *From Prompt Injections to Protocol Exploits: Threats in LLM-Powered AI Agent
-Workflows.* arXiv:2506.23260.
-[6] *Agent2Agent (A2A) Protocol Specification*, v1.0. a2a-protocol.org, Linux
+[1] F. El Yagoubi, G. Badu-Marfo, R. Al Mallah. *AgentLeak: A Benchmark for
+Internal-Channel Privacy Leakage in Multi-Agent LLM Systems.* arXiv:2602.11510, 2026.
+[2] V. Patil, E. Stengel-Eskin, M. Bansal. *The Sum Leaks More Than Its Parts:
+Compositional Privacy Risks and Mitigations in Multi-Agent Collaboration.*
+arXiv:2509.14284, 2025.
+[3] Y.-T. Yang, Q. Zhu. *Differential Privacy in Generative AI Agents: Analysis
+and Optimal Tradeoffs.* arXiv:2603.17902, 2026.
+[4] S. Asif, M. Mohammadi Amiri. *Information-Theoretic Privacy Control for
+Sequential Multi-Agent LLM Systems.* arXiv:2603.05520, 2026.
+[5] Y. Louck, A. Stulman, A. Dvir. *Security Analysis of Agentic AI Communication
+Protocols: A Comparative Evaluation.* arXiv:2511.03841, 2025.
+[6] M. A. Ferrag et al. *From Prompt Injections to Protocol Exploits: Threats in
+LLM-Powered AI Agent Workflows.* arXiv:2506.23260, 2025.
+[7] *Agent2Agent (A2A) Protocol Specification*, v1.0. a2a-protocol.org, Linux
 Foundation.
