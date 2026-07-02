@@ -1,0 +1,13 @@
+# A2A privacy dashboard + audit service — one-container deploy.
+#   docker build -f deploy/Dockerfile.demo -t sentinel .
+#   docker run -p 8099:8099 sentinel                       # → http://localhost:8099
+#   docker run -p 8099:8099 -e OPENAI_API_KEY=sk-... sentinel   # enables "run live"
+FROM python:3.11-slim
+WORKDIR /app
+COPY pyproject.toml ./
+COPY src/ src/
+COPY examples/ examples/
+RUN pip install --no-cache-dir ".[transport]"
+ENV HOST=0.0.0.0 PORT=8099
+EXPOSE 8099
+CMD ["python", "examples/a2a_serve.py"]

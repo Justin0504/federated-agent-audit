@@ -1,0 +1,23 @@
+# Fly.io config for the A2A privacy dashboard.  Deploy:
+#   fly launch --no-deploy --copy-config --name <your-app>   # or edit `app` below
+#   fly secrets set OPENAI_API_KEY=sk-...     # optional: enables "run live"
+#   fly deploy
+app = "sentinel-a2a"
+
+[build]
+  dockerfile = "deploy/Dockerfile.demo"
+
+[env]
+  HOST = "0.0.0.0"
+  PORT = "8099"
+
+[http_service]
+  internal_port = 8099
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
