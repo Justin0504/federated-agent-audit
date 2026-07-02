@@ -109,7 +109,26 @@ The service rejects reports from untrusted/modified builds, re-runs the detector
 authoritatively (not trusting the agent's own claims), and records only
 desensitized governance metadata.
 
-## 6. Single-tenant? Same API.
+## 6. Live in a real environment: Telegram
+
+A Telegram group is a real multi-tenant agent system — each member's assistant
+posts on their behalf. The bot watches the group as the internal channel, tags
+each message locally, and posts a center-blind alert when one member's assistant
+discloses another's sensitive data, or when benign posts accumulate enough to
+infer a condition.
+
+```bash
+export TELEGRAM_BOT_TOKEN=...     # from @BotFather; add the bot to a group
+python -m federated_agent_audit.a2a.telegram_bot
+```
+
+Then in the group: if someone posts *"@bob was just diagnosed with diabetes"* the
+bot replies with a cross-member-disclosure alert; a run of one member's benign
+scheduling hints ("busy Tuesdays at the clinic", "near the oncology center")
+triggers an inference alert — all flagged from metadata, the message never read by
+the auditor. (`GroupAuditor` is the testable core; see `a2a/telegram_bot.py`.)
+
+## 7. Single-tenant? Same API.
 
 For one organization's app, set every `*_principal` to your org and use
 `allowed_recipients` / `purpose` to express which internal agents and tools may

@@ -308,6 +308,25 @@ def test_adaptive_evasion_resistance():
     assert not detected(subject_alias())
 
 
+# ── Telegram group integration ──────────────────────────────────────
+
+
+def test_telegram_group_auditor():
+    from federated_agent_audit.a2a.telegram_bot import GroupAuditor
+    g = GroupAuditor()
+    # one member discloses another member's sensitive data → cross-member disclosure
+    v1 = g.observe("alice", "Heads up, @bob was just diagnosed with diabetes.")
+    assert any(v["type"] == "cross_tenant_disclosure" and v["subject"] == "tg:bob"
+               for v in v1)
+    # benign self-hints accumulate → cross-tenant inference about the poster
+    g.observe("alice", "Busy every Tuesday at the clinic for a while.")
+    v3 = g.observe("alice", "Avoid mornings — I'm near the oncology center.")
+    assert any(v["type"] == "cross_tenant_inference" and v["subject"] == "tg:alice"
+               for v in v3)
+    # benign chatter → nothing, and no repeated alerts
+    assert g.observe("carol", "lunch at noon works") == []
+
+
 # ── deployable audit service ────────────────────────────────────────
 
 
