@@ -117,6 +117,11 @@ each message locally, and posts a center-blind alert when one member's assistant
 discloses another's sensitive data, or when benign posts accumulate enough to
 infer a condition.
 
+See it right now, no token needed:
+```bash
+python examples/telegram_simulate.py   # a scripted group chat + the bot's alerts
+```
+Go live in a real group:
 ```bash
 export TELEGRAM_BOT_TOKEN=...     # from @BotFather; add the bot to a group
 python -m federated_agent_audit.a2a.telegram_bot
