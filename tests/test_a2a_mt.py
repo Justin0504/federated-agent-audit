@@ -414,6 +414,19 @@ def test_demo_scenarios_and_dashboard():
     assert ours["caught"] and not ours["sees_content"]
     assert not dlp["caught"] and dlp["sees_content"]
 
+    # baseline contrast on a BYO trace (no PII inference) → same wedge
+    cc = c.post("/api/v1/a2a/demo/compare_custom", json={
+        "clearances": {"bob": ["tenant:bob", ["scheduling"]]},
+        "hops": [{"from_agent": "a", "to_agent": "bob", "from_principal": "tenant:alice",
+                  "to_principal": "tenant:bob",
+                  "text": "busy every tuesday at the oncology center",
+                  "data_subject": "s", "owning_principal": "tenant:alice",
+                  "purpose": ["scheduling"], "allowed_recipients": ["tenant:bob"]}]}).json()
+    o = next(x for x in cc["detectors"] if "Ours" in x["name"])
+    dl = next(x for x in cc["detectors"] if "DLP" in x["name"])
+    assert o["caught"] and not o["sees_content"]
+    assert not dl["caught"] and dl["sees_content"]
+
     # bring-your-own trace: tagger derives labels, auditor catches the leak
     payload = {"clearances": {"ads": ["vendor:adtech", ["marketing"]]},
                "hops": [{"from_agent": "app", "to_agent": "ads",

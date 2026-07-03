@@ -105,38 +105,30 @@ def run(scenario_id: str) -> dict:
     return _execute(scn["title"], scn["blurb"], scn["clearances"], scn["hops"])
 
 
-def compare(scenario_id: str) -> dict:
-    """Run the scenario through ours vs. the real baselines (DLP, LLM-judge) and
-    return a side-by-side: who caught it, and who had to read the content."""
+def _compare_hops(hops: list, ours_violations: list) -> dict:
+    """Ours vs. the real baselines (DLP, LLM-judge) over hop tuples
+    ``(from, to, from_principal, to_principal, text, policy)``."""
     import os
 
     from .tagger import _PII
-    scn = SCENARIOS.get(scenario_id)
-    if scn is None:
-        return {"error": "unknown scenario"}
-    hops = scn["hops"]
     content = sum(len(h[4]) for h in hops)
-    ours = run(scenario_id)
-    ours_caught = bool(ours["violations"])
-    is_inference = any(v["type"] == "cross_tenant_inference" for v in ours["violations"])
+    ours_caught = bool(ours_violations)
+    is_inference = any(v["type"] == "cross_tenant_inference" for v in ours_violations)
 
     # DLP: flags PII crossing a tenant boundary; sees content; no policy/inference.
     dlp_caught = any(fp != tp and any(p.search(text) for p in _PII)
                      for _f, _t, fp, tp, text, _pol in hops)
-    dlp_note = ("catches PII disclosure" if dlp_caught
-                else "blind — no PII to match")
-
     detectors = [
         {"name": "Ours — center-blind", "caught": ours_caught,
          "sees_content": False, "note": "metadata only; content hashed"},
-        {"name": "DLP / PII scanner", "caught": dlp_caught,
-         "sees_content": True, "note": dlp_note},
+        {"name": "DLP / PII scanner", "caught": dlp_caught, "sees_content": True,
+         "note": "catches PII disclosure" if dlp_caught else "blind — no PII to match"},
     ]
     if os.environ.get("OPENAI_API_KEY"):
         try:
             from openai import OpenAI
             convo = "\n".join(
-                f"{fp} -> {tp}: {text!r} [owner={pol['owning_principal']}, "
+                f"{fp} -> {tp}: {text!r} [owner={pol.get('owning_principal', '')}, "
                 f"allowed={pol.get('allowed_recipients', [])}]"
                 for _f, _t, fp, tp, text, pol in hops)
             r = OpenAI().chat.completions.create(
@@ -151,9 +143,28 @@ def compare(scenario_id: str) -> dict:
                               "sees_content": True, "note": "reads every message"})
         except Exception:  # noqa: BLE001
             pass
-
     return {"detectors": detectors, "is_inference": is_inference,
             "content_chars": content}
+
+
+def compare(scenario_id: str) -> dict:
+    scn = SCENARIOS.get(scenario_id)
+    if scn is None:
+        return {"error": "unknown scenario"}
+    return _compare_hops(scn["hops"], run(scenario_id)["violations"])
+
+
+def compare_custom(payload: dict) -> dict:
+    """Baseline comparison on a user-supplied trace (BYO / live path)."""
+    try:
+        hops = [(h["from_agent"], h["to_agent"], h["from_principal"],
+                 h["to_principal"], h.get("text", ""), h)
+                for h in payload.get("hops", [])]
+    except (KeyError, TypeError) as e:
+        return {"error": f"malformed trace: {e}"}
+    if not hops:
+        return {"error": "no hops provided"}
+    return _compare_hops(hops, run_custom(payload).get("violations", []))
 
 
 def run_custom(payload: dict, tagger=None) -> dict:
@@ -223,6 +234,7 @@ def run_live() -> dict:
     out = _execute("Live — real LLM agents", "intake and triage are real "
                    "gpt-4o-mini calls; the auditor labels and checks their actual "
                    "output. Zero content leaves the process.", clearances, hops)
+    out["compare"] = _compare_hops(hops, out["violations"])
     return out
 
 

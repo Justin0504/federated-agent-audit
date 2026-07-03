@@ -66,6 +66,10 @@ def create_app(trusted_builds: dict | None = None,
     def demo_compare(scenario_id: str):
         return _demo.compare(scenario_id)
 
+    @app.post("/api/v1/a2a/demo/compare_custom")
+    def demo_compare_custom(payload: dict):
+        return _demo.compare_custom(payload)
+
     @app.post("/api/v1/a2a/demo/audit")
     def demo_audit(payload: dict):
         return _demo.run_custom(payload)

@@ -94,12 +94,23 @@ textarea:focus{outline:0;border-color:var(--accent-dim)}
 .drow{display:flex;align-items:center;gap:6px;font-size:12.5px;margin:4px 0}
 .drow.ok{color:var(--ok)} .drow.warn{color:var(--danger)} .drow.miss{color:var(--faint)}
 .dnote{color:var(--faint);font-size:11.5px;margin-top:8px}
+.count{font-family:var(--mono);font-size:11px;color:var(--ink2);background:var(--surface);
+ border:1px solid var(--line);border-radius:16px;padding:3px 9px}
+.count b{color:var(--danger)}
+.feed .fitem{display:flex;align-items:center;gap:10px;padding:9px 15px;border-bottom:1px solid var(--line);
+ font-family:var(--mono);font-size:12px;opacity:0;animation:in .3s forwards}
+.feed .fitem:last-child{border-bottom:0}
+.ftime{color:var(--faint);flex:none;width:66px}
+.ftype{color:var(--danger)}.fsub{color:var(--ink2)}.fscn{color:var(--faint);margin-left:auto}
 svg.i{width:14px;height:14px;flex:none}
 @media(max-width:820px){.grid{grid-template-columns:1fr}}
 </style></head><body>
 <header><div class="wrap hd">
  <div class="brand"><span class="dot"></span>Sentinel <small>a2a.privacy/v1</small></div>
+ <div style="display:flex;align-items:center;gap:10px">
+ <span class="count" id="count" style="display:none">detections <b id="cnum">0</b></span>
  <button class="iconbtn" id="theme"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6 6l1.5 1.5M16.5 16.5 18 18M18 6l-1.5 1.5M7.5 16.5 6 18"/><circle cx="12" cy="12" r="4"/></svg>theme</button>
+ </div>
 </div></header>
 <div class="wrap">
  <div class="hero">
@@ -117,6 +128,9 @@ svg.i{width:14px;height:14px;flex:none}
    <div style="margin-top:9px;display:flex;gap:9px;align-items:center">
     <button class="act" id="runc">run audit</button><span class="err" id="cerr"></span></div>
   </div>
+ </div>
+ <div class="panel feed" id="feed" style="display:none;margin-top:8px">
+  <div class="sect">detections this session</div><div id="feedbody"></div>
  </div>
  <div id="out">
   <div class="title"><h2 id="title"></h2></div>
@@ -152,7 +166,7 @@ document.getElementById('byo').onclick=()=>{const p=document.getElementById('byo
 document.getElementById('runc').onclick=async()=>{const err=document.getElementById('cerr');err.textContent='';
  let b;try{b=JSON.parse(document.getElementById('ta').value)}catch(e){err.textContent='invalid JSON';return}
  const d=await(await fetch('api/v1/a2a/demo/audit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})).json();
- if(d.error){err.textContent=d.error;return}render(d);document.getElementById('out').scrollIntoView({behavior:'smooth'})};
+ if(d.error){err.textContent=d.error;return}render(d);compareCustom(b);document.getElementById('out').scrollIntoView({behavior:'smooth'})};
 document.getElementById('live').onclick=async()=>{const b=document.getElementById('live'),err=document.getElementById('lerr');err.textContent='';
  const o=b.innerHTML;b.innerHTML='running…';b.disabled=true;
  try{const d=await(await fetch('api/v1/a2a/demo/live')).json();if(d.error)err.textContent=d.error;else{render(d);document.getElementById('out').scrollIntoView({behavior:'smooth'})}}
@@ -173,14 +187,17 @@ function drawGraph(hops){const svg=document.getElementById('svg');svg.innerHTML=
   g.appendChild(S('rect',{x:x-w/2,y:y-14,width:w,height:28,rx:8}));
   const t=S('text',{x:x,y:y+4,'text-anchor':'middle'});t.textContent=p;g.appendChild(t);svg.appendChild(g)})}
 async function run(id){render(await(await fetch('api/v1/a2a/demo/run/'+id)).json());compare(id)}
-async function compare(id){const p=document.getElementById('cmp'),b=document.getElementById('cmpbody');
- try{const d=await(await fetch('api/v1/a2a/demo/compare/'+id)).json();if(d.error){p.style.display='none';return}
-  b.innerHTML=d.detectors.map(x=>`<div class="dcard ${(!x.sees_content&&x.caught)?'win':''}">
-   <div class="dname">${x.name}</div>
-   <div class="drow ${x.caught?'ok':'miss'}">${x.caught?CHK+' caught':X+' missed'}</div>
-   <div class="drow ${x.sees_content?'warn':'ok'}">${x.sees_content?EYE+' reads content':LOCK+' never reads content'}</div>
-   <div class="dnote">${x.note}</div></div>`).join('');
-  p.style.display='block'}catch(e){p.style.display='none'}}
+function renderCmp(d){const p=document.getElementById('cmp'),b=document.getElementById('cmpbody');
+ if(!d||d.error||!d.detectors){p.style.display='none';return}
+ b.innerHTML=d.detectors.map(x=>`<div class="dcard ${(!x.sees_content&&x.caught)?'win':''}">
+  <div class="dname">${x.name}</div>
+  <div class="drow ${x.caught?'ok':'miss'}">${x.caught?CHK+' caught':X+' missed'}</div>
+  <div class="drow ${x.sees_content?'warn':'ok'}">${x.sees_content?EYE+' reads content':LOCK+' never reads content'}</div>
+  <div class="dnote">${x.note}</div></div>`).join('');
+ p.style.display='block'}
+async function compare(id){try{renderCmp(await(await fetch('api/v1/a2a/demo/compare/'+id)).json())}catch(e){}}
+async function compareCustom(body){try{renderCmp(await(await fetch('api/v1/a2a/demo/compare_custom',
+ {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json())}catch(e){}}
 function render(d){document.getElementById('out').style.display='block';
  document.getElementById('cmp').style.display='none';
  document.getElementById('title').textContent=d.title;document.getElementById('blurb').textContent=d.blurb;
@@ -198,6 +215,18 @@ function render(d){document.getElementById('out').style.display='block';
  if(d.violations.length)d.violations.forEach((x,i)=>{const c=E('div','card viol');c.style.animationDelay=(.4+i*.1)+'s';
   c.innerHTML=`<div class="t">${x.type}</div><div class="d">${x.detail}</div>`;v.appendChild(c)});
  else v.innerHTML='<div class="none">no violation</div>';
- document.getElementById('badge').innerHTML=`<div class="badge">${CHK} ${d.raw_leaks} content bytes reached the center</div>`}
+ document.getElementById('badge').innerHTML=`<div class="badge">${CHK} ${d.raw_leaks} content bytes reached the center</div>`;
+ pushFeed(d);if(d.compare)renderCmp(d.compare)}
+const FEED=[];
+function pushFeed(d){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ const scn=(d.title||'').split('—')[0].trim();
+ d.violations.forEach(v=>FEED.unshift({t,type:v.type,sub:(v.detail.match(/'([^']+)'/)||[])[1]||'',scn}));
+ if(!FEED.length)return;
+ document.getElementById('count').style.display='inline-block';
+ document.getElementById('cnum').textContent=FEED.length;
+ document.getElementById('feed').style.display='block';
+ document.getElementById('feedbody').innerHTML=FEED.slice(0,12).map(f=>
+  `<div class="fitem"><span class="ftime">${f.t}</span><span class="ftype">${f.type}</span>
+   <span class="fsub">${f.sub}</span><span class="fscn">${f.scn}</span></div>`).join('')}
 load();
 </script></body></html>"""
