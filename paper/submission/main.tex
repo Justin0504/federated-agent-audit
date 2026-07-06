@@ -55,15 +55,14 @@ capabilities and delegate work across organizational boundaries. As this fabric
 forms, a question with no answer today becomes urgent: \emph{when my agent hands
 data to your agent, what did it just share, and was it allowed to?}
 
-Three forces make this acute. First, \textbf{leakage is on the internal channel}:
-measurement finds inter-agent messages leak far more than final outputs, and that
-current frameworks offer no way to monitor internal communication~\cite{agentleak}.
-Second, \textbf{the risk is compositional}: a violation can emerge from benign
-messages even when each agent obeys its own policy~\cite{sumleaks}. Third, and
-unique to cross-organization settings, \textbf{the parties distrust each other}:
-the \emph{other} agent is the adversary, and no party will route raw content
-through a central observer---exactly what centralized observability (LangSmith,
-Langfuse) requires.
+Three things make this hard at once. The leakage is where it is least watched:
+inter-agent messages leak far more than final outputs, yet no current framework
+monitors the internal channel~\cite{agentleak}. It is also compositional, arising
+from messages that are each individually benign even when every agent obeys its
+own policy~\cite{sumleaks}. And across organizations the parties do not trust one
+another: the other agent is the adversary, and no one will route raw content
+through a central observer, which is precisely what centralized observability
+(LangSmith, Langfuse) requires.
 
 The protocols do not help. We verified against the A2A v1.0 specification that its
 data model (\texttt{AgentCard}, \texttt{Task}, \texttt{Message}, \texttt{Part})
@@ -340,7 +339,7 @@ text) holds $P/R/F1 = 1.0$, $0$ raw leaks: the detectors key on labels, not
 wording. Generating realistic content also exposed two correctness issues that
 hand-written tests hid (TTL fragility to paraphrasing, fixed by
 \texttt{provenance\_id}; an invariant false-positive on prose tokens coinciding
-with label/schema tokens, fixed by excluding them)---a benefit of scaling.
+with label/schema tokens, fixed by excluding them), a benefit of scaling.
 
 \subsection{Adaptive evasion, and closing the gap}
 An adversary that knows the inference detector is
@@ -389,8 +388,8 @@ content at every $\varepsilon$.
 Against the two detectors a
 practitioner would actually reach for (Table~\ref{tab:frontier}, 8 realistic
 scenarios spanning PII disclosure, no-PII inference, and authorized sharing):
-\emph{structurally}, both baselines must ingest content while ours ingests none
---- the disqualifier for regulated/cross-tenant deployments, independent of
+\emph{structurally}, both baselines must ingest content while ours ingests none, the disqualifier
+for regulated/cross-tenant deployments, independent of
 accuracy. \emph{On accuracy}, the DLP scanner is blind to no-PII inference (0\%
 recall) and over-flags authorized cross-boundary sharing; a single-shot
 policy-aware LLM-judge is unreliable on compositional inference across messages
@@ -435,15 +434,15 @@ auditor detects \textbf{100\% of internal-channel leaks at 0.972 precision with
 zero raw vault content reaching the center} ($82.5\%$ internal-channel leak rate,
 matching AgentLeak). On a labeled 33-scenario set the engine holds $P/R/F1=1.0$,
 and under the full six-layer desensitizer plus DP it holds $F1\approx0.97$ at
-$\varepsilon\in[0.5,3]$ with zero raw leakage---the privacy--utility result the
+$\varepsilon\in[0.5,3]$ with zero raw leakage, the privacy--utility result the
 multi-tenant typing builds on.
 
 \subsection{Agents in the wild}
-Beyond the labeled benchmark, we
+Away from any labeled benchmark, we
 measure how real agents behave: 12 realistic
 multi-agent workflows across 7 domains, each holding a sensitive record, where a
 coordinator (real gpt-4o-mini) is asked to delegate to an \emph{external}
-specialist---no engineered leaks---run 5$\times$ each (60 trials). The agent
+specialist, with no engineered leaks, run 5$\times$ each (60 trials). The agent
 included the subject's sensitive identifiers (SSN, MRN, account/card numbers,
 diagnoses) in the cross-boundary hand-off in \textbf{45/60 = 75\% of trials (95\%
 Wilson CI [63\%, 84\%])}, and every hand-off to the different-purpose external
@@ -462,31 +461,31 @@ Our 48-scenario benchmark scores
 (\emph{not} the detector author) generates diverse scenarios with its own intended
 labels and we score our auditor against them. Across held-out runs ($\approx$20
 scenarios each), \textbf{precision is 1.0 (the architecture never over-fires) but
-recall is only $\approx$0.31 (lexical) / 0.38 (LLM tagger)}---far below the
+recall is only $\approx$0.31 (lexical) / 0.38 (LLM tagger)}, far below the
 self-authored 1.0. The misses are dominated by tagger/taxonomy coverage: we
 broaden the sensitive set from health/finance/legal to ten configurable classes
 (+location, employment, education, behavioral, credentials, biometric,
 demographic), which raises recall, but open-world sensitive content remains the
 bottleneck; the author also states inferences explicitly and labels some
-borderline cases as leaks. Crucially, recall here is bounded by the tagger---an
-orthogonal, improvable component---not the auditor: every violation the
+borderline cases as leaks. Recall here is bounded by the tagger, an orthogonal
+and improvable component, not the auditor: every violation the
 architecture reports is real. The self-authored 1.0 measures the detectors given
 correct labels; the held-out setting measures the end-to-end pipeline on
 open-world content.
 
 \subsection{Is the inference threat real?}
 Our detector fires
-at $k^{*}=2$ hints---but is that where real inferability begins? We have an
+at $k^{*}=2$ hints, but is that where real inferability begins? We have an
 independent LLM play the recipient and infer the subject's withheld attribute from
 the $K$ benign fragments it received ($K=1,2,3$). \emph{The threat is real and scales
 with capability:} the LLM infers the withheld attribute (cancer, financial
 distress, pregnancy, job search) from just 2 benign fragments in \textbf{3/4 cases
-(gpt-4o-mini) and 4/4 (gpt-4o)} --- a stronger recipient infers more, so the
+(gpt-4o-mini) and 4/4 (gpt-4o)}: a stronger recipient infers more, so the
 compositional threat grows as agents improve. \emph{Our detector is a
 conservative, no-false-alarm lower bound:} every disagreement is an under-fire (the
 attacker infers where we stay silent); we never fire where it cannot infer. Hence
-detection must flag the metadata pattern, not try to out-infer the adversary. So $k^{*}=2$ with uniform evidence
-is conservative---real inference sometimes needs one high-specificity hint, which
+detection must flag the metadata pattern, not try to out-infer the adversary. The
+threshold $k^{*}=2$ with uniform evidence is conservative: real inference sometimes needs one high-specificity hint, which
 the Bayesian model of \S
 ef{sec:auditor} accommodates via a per-fragment
 $\lambda$; wiring
@@ -494,7 +493,7 @@ $\lambda$ to hint specificity catches single strong hints without over-firing.
 
 \section{Discussion}
 Center-blind detection works because the risks it targets are visible in the
-metadata graph---principals, categories, inferred-category tags, provenance---all
+metadata graph (principals, categories, inferred-category tags, provenance), all
 of which the local side can emit without revealing content. The same observation
 explains why the system is at once a research result and a product: set every
 owning principal equal and the multi-tenant model collapses to the in-container
@@ -553,7 +552,7 @@ attestation layer (E4) plugs into. We target a deployable software baseline with
 TEE upgrade path.
 
 \noindent\textbf{Observability.} LangSmith and Langfuse~\cite{langfuse} trace
-agent runs but must ingest raw prompts/outputs---the disqualifier for regulated /
+agent runs but must ingest raw prompts/outputs, the disqualifier for regulated /
 cross-tenant deployments and the one property our design structurally avoids.
 
 \begin{thebibliography}{99}
