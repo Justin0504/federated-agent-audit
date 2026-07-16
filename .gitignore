@@ -26,3 +26,8 @@ paper/submission/*.pdf
 paper/submission/*.aux
 paper/submission/*.log
 paper/submission/*.out
+paper/submission/*.bbl
+paper/submission/*.blg
+paper/submission/*.synctex.gz
+paper/submission/*.zip
+paper/submission/main_anon.*
