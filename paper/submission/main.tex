@@ -24,7 +24,6 @@ A Federated, Center-Blind Auditor and an A2A Extension}}
 \fi
 \date{}
 
-\newcommand{\sys}{\textsc{FedAgentAudit}}
 \newcommand{\ext}{\texttt{a2a.privacy/v1}}
 
 \begin{document}
@@ -327,7 +326,7 @@ labeled scenarios, ground truth set by template intent. An LLM fills each Part
 with realistic text matching its label (labels remain the ground truth), exported
 as a shareable artifact.
 
-\section{Evaluation}
+\section{Evaluation}\label{sec:eval}
 We ask whether the auditor detects multi-tenant leaks accurately and
 without seeing content; how it fares against the tools a practitioner would
 actually deploy; whether the result survives once we stop grading our own work;
@@ -543,19 +542,19 @@ integrity~\cite{ci}.
 
 \noindent\textbf{Data-loss prevention.} DLP / PII scanners (e.g.\
 Presidio~\cite{presidio}) match sensitive patterns in content; they see raw data,
-have no policy/purpose semantics, and are blind to no-PII inference (E6b). We are
+have no policy/purpose semantics, and are blind to no-PII inference (\S\ref{sec:eval}). We are
 center-blind and compositional.
 
 \noindent\textbf{Anonymization and differential privacy.} $k$-anonymity~\cite{ksweeney}
 and $\ell$-diversity~\cite{ldiv} motivate our structural domain generalization;
 differential privacy~\cite{dwork06,dworkroth} and local DP~\cite{rappor} underlie
-our metadata hardening (E5). Unlike these, our object is \emph{detection} of a
+our metadata hardening (\S\ref{sec:eval}). Unlike these, our object is \emph{detection} of a
 composed leak, not release of a sanitized dataset.
 
 \noindent\textbf{Federated and secure computation.} The federated split follows
 federated learning's keep-data-local principle~\cite{fedavg}; stronger guarantees
 are available via secure computation~\cite{yao} and trusted execution, which our
-attestation layer (E4) plugs into. We target a deployable software baseline with a
+attestation layer (\S\ref{sec:eval}) plugs into. We target a deployable software baseline with a
 TEE upgrade path.
 
 \noindent\textbf{Observability.} LangSmith and Langfuse~\cite{langfuse} trace
