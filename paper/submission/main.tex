@@ -87,7 +87,7 @@ the data subject, owning principal, and agent principal, and detect cross-tenant
 disclosure, purpose, hop/TTL, and \emph{cross-tenant inference} from desensitized
 metadata the center cannot invert---the privacy-preserving counterpart to
 centralized observability.
-\item \textbf{\textsc{A2A-MT}}, the first multi-tenant agent-privacy benchmark
+\item \textbf{A2A-MT}, the first multi-tenant agent-privacy benchmark
 (parameterized families, realistic LLM-generated content), plus validation of the
 underlying engine on the external AgentLeak benchmark.
 \end{enumerate}
@@ -492,8 +492,7 @@ conservative, no-false-alarm lower bound:} every disagreement is an under-fire (
 attacker infers where we stay silent); we never fire where it cannot infer. Hence
 detection must flag the metadata pattern, not try to out-infer the adversary. The
 threshold $k^{*}=2$ with uniform evidence is conservative: real inference sometimes needs one high-specificity hint, which
-the Bayesian model of \S
-ef{sec:auditor} accommodates via a per-fragment
+the Bayesian model of \S\ref{sec:auditor} accommodates via a per-fragment
 $\lambda$; wiring
 $\lambda$ to hint specificity catches single strong hints without over-firing.
 
@@ -558,8 +557,9 @@ attestation layer (\S\ref{sec:eval}) plugs into. We target a deployable software
 TEE upgrade path.
 
 \noindent\textbf{Observability.} LangSmith and Langfuse~\cite{langfuse} trace
-agent runs but must ingest raw prompts/outputs, the disqualifier for regulated /
-cross-tenant deployments and the one property our design structurally avoids.
+agent runs but must ingest raw prompts and outputs, the disqualifier for
+regulated, cross-tenant deployments and the one property our design structurally
+avoids.
 
 \bibliographystyle{plain}
 \bibliography{references}
