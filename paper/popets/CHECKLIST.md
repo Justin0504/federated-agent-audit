@@ -16,7 +16,7 @@ mandatory sections present.** Page limit is 12 (main body) — we have wide marg
 - [x] Main body ≤ 12 pp (currently ~6 pp incl. refs — room to grow, see §F).
 - [x] Mandatory `ethics`, `openscience`, `ai` environments present, exact titles,
       placed between the body and the references.
-- [ ] **First-page scope statement.** PoPETs desk-rejects work that doesn't state,
+- [x] **First-page scope statement.** PoPETs desk-rejects work that doesn't state,
       *on page 1*, its relevance to real-world privacy applications. Our intro and
       abstract already emphasize real cross-org agent deployments, AgentLeak's 600
       real scenarios, and the deployable in-container product — **re-read page 1
