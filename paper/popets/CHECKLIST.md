@@ -5,7 +5,7 @@ Target issue: **PoPETs 2027.2 — paper deadline 2026-08-31 (firm)**, notificati
 `popets.sty` (already set up in this directory — do **not** modify the template
 files: `acmart.cls`, `popets.sty`, `ACM-Reference-Format.bst`).
 
-Build: `make` (→ `main.pdf`). Current state: **6 pp main body + refs, compiles
+Build: `make` (→ `main.pdf`). Current state: **7 pp main body + refs, compiles
 clean, zero overfull, all refs/citations resolve, author anonymized, all three
 mandatory sections present.** Page limit is 12 (main body) — we have wide margin.
 
@@ -13,15 +13,13 @@ mandatory sections present.** Page limit is 12 (main body) — we have wide marg
 - [x] Uses the official PoPETs 2027 template, `[sigconf,anonymous,review]`.
 - [x] No format manipulation (no `\vspace` hacks, no font swaps, CC-BY block kept).
 - [x] Sections numbered (standard `\section`/`\subsection`).
-- [x] Main body ≤ 12 pp (currently ~6 pp incl. refs — room to grow, see §F).
+- [x] Main body ≤ 12 pp (currently ~7 pp incl. refs — room to grow, see §F).
 - [x] Mandatory `ethics`, `openscience`, `ai` environments present, exact titles,
       placed between the body and the references.
-- [x] **First-page scope statement.** PoPETs desk-rejects work that doesn't state,
-      *on page 1*, its relevance to real-world privacy applications. Our intro and
-      abstract already emphasize real cross-org agent deployments, AgentLeak's 600
-      real scenarios, and the deployable in-container product — **re-read page 1
-      and confirm one sentence makes the real-world-privacy tie explicit.** (Low
-      risk, but verify.)
+- [x] **First-page scope statement.** DONE: the intro now has an explicit paragraph
+      (regulated-domain deployments; a named harm — over-shared SSN/diagnosis/
+      account number under HIPAA/GDPR; deployable-safeguard framing tied to the 75%
+      in-the-wild result). Verified present on page 1 of the compiled PDF.
 
 ## B. Anonymization (double-blind) — DONE except the repo link
 - [x] Author block replaced with "Anonymous Author(s)" (via `anonymous` option).
