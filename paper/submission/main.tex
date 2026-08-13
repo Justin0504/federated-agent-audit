@@ -61,6 +61,16 @@ capabilities and delegate work across organizational boundaries. As this fabric
 forms, a question with no answer today becomes urgent: \emph{when my agent hands
 data to your agent, what did it just share, and was it allowed to?}
 
+This is already a live privacy problem, not a hypothetical one. Production agents
+in regulated settings---healthcare schedulers, financial assistants, HR
+copilots---increasingly delegate to third-party agents, and a single over-shared
+identifier (an SSN, a diagnosis, an account number) crossing that organizational
+boundary is a concrete privacy harm under regimes such as HIPAA and GDPR. Our aim
+is a deployable safeguard for exactly these real cross-organizational agent
+interactions: the system we build runs today, sees no raw content, and---as our
+in-the-wild study shows (\S\ref{sec:eval})---catches current agents over-sharing
+regulated identifiers in 75\% of realistic hand-offs.
+
 Three things make this hard at once. The leakage is where it is least watched:
 inter-agent messages leak far more than final outputs, yet no current framework
 monitors the internal channel~\cite{agentleak}. It is also compositional, arising
