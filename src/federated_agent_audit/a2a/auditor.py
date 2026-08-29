@@ -322,6 +322,7 @@ class A2AAuditor:
         allowed = set(_SCHEMA_TOKENS)
         for e in edges:
             allowed |= _label_tokens(e.label)
+            allowed |= _routing_tokens(e)
         leaks = 0
         for e in edges:
             text = self._text_for_edge(messages, e)
@@ -363,6 +364,19 @@ def _label_tokens(label) -> set[str]:
     vals = (list(label.category) + list(label.inferred_categories)
             + list(label.purpose) + list(label.allowed_recipients)
             + [label.data_subject, label.owning_principal])
+    toks: set[str] = set()
+    for v in vals:
+        toks.update(re.findall(r"[A-Za-z0-9_./@-]+", str(v)))
+    return toks
+
+
+def _routing_tokens(edge) -> set[str]:
+    """An edge's own structural routing identifiers (agent names, principals,
+    message id). These are center-view metadata by design, not the data subject's
+    content, so a content word coinciding with one reveals nothing the routing did
+    not already declare -- same exemption as label values."""
+    vals = [edge.from_agent, edge.to_agent, edge.from_principal,
+            edge.to_principal, edge.message_id]
     toks: set[str] = set()
     for v in vals:
         toks.update(re.findall(r"[A-Za-z0-9_./@-]+", str(v)))

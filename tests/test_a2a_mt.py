@@ -192,6 +192,22 @@ def test_no_raw_content_in_center_view():
     assert "CANARY_SECRET_TOKEN_XYZ" not in blob
 
 
+def test_agent_role_names_in_content_are_not_leaks():
+    """A message whose text mentions the agents' own routing identifiers (agent
+    names / principals) must not count as raw-content leakage: those are center-view
+    routing metadata, not the data subject's content. Regression for a false positive
+    that fired when a real LLM wrote 'As the coordinator, have the specialist ...'."""
+    audit = AuditSession()
+    audit.declare("specialist", principal="tenant:external", purposes=["external_task"])
+    audit.send("coordinator", "specialist",
+               "As the coordinator, please have the specialist at tenant:external "
+               "handle the org:clinic case.",
+               from_principal="org:clinic", to_principal="tenant:external",
+               data_subject="subject:case", owning_principal="org:clinic",
+               purpose=["care"], allowed_recipients=["org:clinic"])
+    assert audit.run().raw_leaks == 0
+
+
 # ── AuditSession ergonomic drop-in ──────────────────────────────────
 
 
@@ -469,7 +485,7 @@ def test_inference_validate_detector_side():
     tagger-recognized converging hints and stays silent on one (offline)."""
     from a2a_inference_validate import CASES, our_detector_fires
     # the cancer case: two hints ('oncology center' + 'appointment') → fires at k=2
-    health = next(pool for a, c, pool in CASES if "cancer" in a)
+    health = next(pool for a, c, pool, _kw in CASES if "cancer" in a)
     assert our_detector_fires(health[:2]) is True
     assert our_detector_fires(health[:1]) is False
 
