@@ -28,6 +28,25 @@ capability-scaling story (`inference grows with model capability`) real evidence
 - Open weights can also be served yourself: set `VLLM_BASE_URL` (+ optional
   `VLLM_API_KEY`) to point the `local` provider at a vLLM server on Delta / Jetstream2.
 
+### Open-weight sweep on a GPU box (Jetstream2)
+
+`run_on_jetstream.sh` automates the open-weight axis end-to-end on a GPU instance:
+it sweeps a single-family capability ladder (Qwen2.5 **7B → 14B → 32B → 72B-AWQ**,
+all ungated, all fit one A100 80GB), launching vLLM per model and running both
+experiments against the `local` provider. Run it **on** the GPU box (the models are
+served locally; no API keys needed there):
+
+```bash
+# on JS2 (exouser@149.165.159.79):
+bash benchmarks/a2a_mt/run_on_jetstream.sh setup   # one-time: venv + vllm + pkg
+PY=./.venv/bin/python bash benchmarks/a2a_mt/run_on_jetstream.sh run
+# results in ./mm_results/{inference,measurement}_<model>.out
+```
+
+Edit the `MODELS=(...)` array at the top to add sizes or a cross-family model
+(Llama needs an HF token + accepted license). The closed-frontier rows (gpt-4o,
+claude) are produced separately from a networked host that holds those API keys.
+
 ## Run
 
 ```bash

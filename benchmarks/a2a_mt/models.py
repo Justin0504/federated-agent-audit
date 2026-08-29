@@ -57,6 +57,13 @@ REGISTRY = [
     Model("qwen-2.5-72b",  "together",  "Qwen/Qwen2.5-72B-Instruct-Turbo",         2, "Alibaba 72B (open)"),
     Model("llama-3.1-8b",  "together",  "meta-llama/Llama-3.1-8B-Instruct-Turbo",  0, "Meta 8B (open)"),
     Model("qwen-2.5-7b",   "together",  "Qwen/Qwen2.5-7B-Instruct-Turbo",          0, "Alibaba 7B (open)"),
+    # A locally-served open-weight model (e.g. vLLM on Jetstream2). The served HF id
+    # and tier come from env so a driver can sweep sizes by relaunching per model:
+    #   VLLM_BASE_URL=http://localhost:8000/v1 VLLM_MODEL=Qwen/Qwen2.5-32B-Instruct \
+    #   VLLM_TIER=2 python ... --models local
+    Model("local", "local", os.environ.get("VLLM_MODEL", "local-model"),
+          int(os.environ.get("VLLM_TIER", "1") or "1"),
+          os.environ.get("VLLM_MODEL", "local vLLM")),
 ]
 BY_ID = {m.id: m for m in REGISTRY}
 DEFAULT_ROSTER = [m.id for m in REGISTRY]
