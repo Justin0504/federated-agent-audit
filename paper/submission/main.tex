@@ -142,16 +142,63 @@ deployed agents, and audit it with a \emph{federated} architecture: each agent
 desensitizes locally; a central auditor reasons over a graph of metadata it can
 never invert to content.
 
-\section{Threat model}
-Three roles a single identifier must not conflate: the \textbf{data subject} (whom
-a Part is about), the \textbf{owning principal} (who controls the data and the
-originating agent), and the \textbf{agent principal} (an agent's AgentCard
-identity). We assume: (a) \emph{peers are adversarial-curious}---a receiving agent
-of a different tenant may try to learn more than authorized, verbatim or by
-inference; (b) \emph{the auditor is center-blind}---it detects from desensitized
-metadata and never sees raw \texttt{Part} content, and no tenant reveals content
-to it or to peers; (c) \emph{A2A transport is given}---we annotate and audit, not
-replace.
+\section{Threat model}\label{sec:threat}
+\paragraph{Principals.} A single identifier must not conflate three roles: the
+\textbf{data subject} (whom a Part is about), the \textbf{owning principal} (who
+controls the datum and the originating agent), and the \textbf{agent principal} (an
+agent's AgentCard identity). Governance is defined over principals, not agents: a
+datum owned by $P$ may reach an agent of $Q$ only if $Q$ is an allowed recipient for
+$P$'s stated purpose.
+
+\paragraph{Adversary.} We consider a receiving or forwarding agent of a different
+tenant with three capabilities: (A1) it reads every Part routed to it and may
+\emph{infer} beyond what is stated; (A2) it may \emph{paraphrase, split, or re-route}
+what it forwards; and (A3) a \emph{dishonest sender} may mislabel its own Parts
+(suppress tags or forge a subject id), since labels are produced locally. The
+adversary controls neither the A2A transport nor other tenants' processes.
+
+\paragraph{Trust assumptions (software baseline).} (T1) \emph{center-blind}: the
+auditor detects from desensitized metadata and never sees raw \texttt{Part} content,
+and no tenant reveals content to it or to peers; (T2) \emph{honest-but-curious peers}
+for the disclosure, purpose, and TTL detectors---agents route truthfully but try to
+learn more than authorized; (T3) \emph{A2A transport is given}---we annotate and
+audit, not replace. Under T1--T3 the design defeats A1 and A2 (wording and routing
+attacks) by construction, because the detectors key on labels and principals, not on
+text (\S\ref{sec:eval}); A3 is the residual the baseline does not close.
+
+\paragraph{Closing A3 with forced-embed attestation.} We remove the honest-labeler
+assumption with a downloaded, build-pinned component. The labeler and auditor ship as
+a fixed build $B$ whose signing key $k_B$ is confined to $B$; a report is
+$R=(\mathcal{E},\sigma)$ with $\sigma=\mathrm{Sign}_{k_B}(H(\mathcal{E}))$ over the
+center-view edge set $\mathcal{E}$, and the center accepts $R$ only if it verifies
+under $B$'s published fingerprint.
+
+\begin{proposition}[Attestation soundness]\label{prop:attest}
+If the signature scheme is \textup{EUF-CMA}-secure and $k_B$ is confined to $B$, then
+every report the center accepts equals $B$'s output on the sender's actual inputs,
+except with negligible probability. Hence a modified labeler that suppresses a tag or
+forges a subject id yields a report signed by an untrusted build (wrong fingerprint)
+and is rejected, and content tampering changes $H(\mathcal{E})$ and fails
+verification. The residual adversary is confined to (i) exfiltrating $k_B$ from
+$B$---the case a hardware root of trust (TEE) closes---and (ii) \emph{sub-threshold}
+leakage: disclosing strictly less than the detection threshold, which no
+metadata-only auditor can observe because nothing crosses to observe.
+\end{proposition}
+\begin{proof}[Proof sketch]
+Acceptance requires a valid $\sigma$ under $B$'s fingerprint. Producing one for an
+$\mathcal{E}$ that $B$ did not emit requires forging a signature (contradicting
+EUF-CMA) or obtaining $k_B$ (excluded unless $B$ is broken). Under-tagging and forgery
+both require running a labeler other than $B$, whose reports carry no valid $\sigma$;
+tampering after signing changes $H(\mathcal{E})$. What remains is not a detection gap
+but an information gap: a sender that never emits the datum, or emits fewer than
+$k^{*}$ converging fragments (Prop.~\ref{prop:k}), leaves nothing the center could key
+on. Canonical owner-derived subject ids (\texttt{canonical\_subject}) make aliasing
+impossible without abandoning the attested derivation, collapsing A3's forgery variant
+into case~(i).
+\end{proof}
+
+\noindent This is the guarantee the evasion study (\S\ref{sec:eval},
+Table~\ref{tab:evasion}) exercises empirically.
 
 \section{The \ext{} extension}
 The three roles of the threat model become fields the protocol can carry. Each
@@ -371,7 +418,8 @@ report is signed by an untrusted build and is \textbf{rejected}; tampering is
 caught by an edges-hash mismatch; canonical owner-derived subject ids
 (\texttt{canonical\_subject}) make aliasing impossible without abandoning the
 attested derivation. The evasions become detected non-compliance, leaving only
-key compromise (the TEE regime) as residual.
+key compromise (the TEE regime) as residual---the guarantee stated formally in
+Prop.~\ref{prop:attest} (\S\ref{sec:threat}).
 
 \begin{table}[t]\centering\small
 \begin{tabular}{lc}
