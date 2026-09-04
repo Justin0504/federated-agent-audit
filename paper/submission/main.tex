@@ -538,17 +538,21 @@ correct labels; the held-out setting measures the end-to-end pipeline on
 open-world content.
 
 \subsection{Is the inference threat real?}
-Our detector fires
-at $k^{*}=2$ hints, but is that where real inferability begins? We have an
-independent LLM play the recipient and infer the subject's withheld attribute from
-the $K$ benign fragments it received ($K=1,2,3$). \emph{The threat is real and scales
-with capability:} the LLM infers the withheld attribute (cancer, financial
-distress, pregnancy, job search) from just 2 benign fragments in \textbf{3/4 cases
-(gpt-4o-mini) and 4/4 (gpt-4o)}: a stronger recipient infers more, so the
-compositional threat grows as agents improve. \emph{Our detector is a
-conservative, no-false-alarm lower bound:} every disagreement is an under-fire (the
-attacker infers where we stay silent); we never fire where it cannot infer. Hence
-detection must flag the metadata pattern, not try to out-infer the adversary. The
+Our detector fires at $k^{*}=2$ hints, but is that where real inferability begins? We
+have an independent LLM play the recipient and infer the subject's withheld attribute
+from the $K$ benign fragments it received ($K=1,2,3$), scaled to \textbf{16 sensitive
+attributes} across health, finance, employment, legal, and behavioral domains
+($5$ trials each). \emph{The threat is real, and for a frontier recipient it begins
+below our threshold:} Claude Opus~4.8 infers the withheld attribute from two benign
+fragments in \textbf{100\% (16/16)} of attributes and from a \emph{single} fragment in
+\textbf{81\% (13/16)}. Weaker recipients need more evidence---an earlier study found
+gpt-4o-mini and gpt-4o inferring from two fragments in 3/4 and 4/4 of a smaller
+set---so the compositional threat grows as agents improve (per-model results across an
+open-weight size ladder are released with the artifact). \emph{This makes our detector
+a conservative, no-false-alarm lower bound:} it stays silent at $K=1$, yet a strong
+recipient already infers there; every disagreement is an under-fire, and we never fire
+where the recipient cannot infer. Hence detection must flag the metadata pattern, not
+try to out-infer the adversary. The
 threshold $k^{*}=2$ with uniform evidence is conservative: real inference sometimes needs one high-specificity hint, which
 the Bayesian model of \S\ref{sec:auditor} accommodates via a per-fragment
 $\lambda$; wiring
