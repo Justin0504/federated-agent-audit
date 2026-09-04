@@ -31,3 +31,14 @@ paper/submission/*.blg
 paper/submission/*.synctex.gz
 paper/submission/*.zip
 paper/submission/main_anon.*
+
+# paper build artifacts (generated)
+paper/**/main.pdf
+paper/**/*.aux
+paper/**/*.bbl
+paper/**/*.blg
+paper/**/*.out
+paper/**/*.xdv
+paper/**/*.log
+paper/**/comment.cut
+paper/**/arxiv_submission.zip

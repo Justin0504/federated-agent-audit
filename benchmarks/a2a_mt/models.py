@@ -57,6 +57,12 @@ REGISTRY = [
     Model("qwen-2.5-72b",  "together",  "Qwen/Qwen2.5-72B-Instruct-Turbo",         2, "Alibaba 72B (open)"),
     Model("llama-3.1-8b",  "together",  "meta-llama/Llama-3.1-8B-Instruct-Turbo",  0, "Meta 8B (open)"),
     Model("qwen-2.5-7b",   "together",  "Qwen/Qwen2.5-7B-Instruct-Turbo",          0, "Alibaba 7B (open)"),
+    # Vultr-served open-weight models (cross-family), reachable over 443:
+    Model("deepseek-v4",   "vultr", "deepseek-v4-flash-0731",                      3, "DeepSeek-V4 (open)"),
+    Model("glm-5.2",       "vultr", "zai-org/GLM-5.2-FP8",                         3, "Zhipu GLM-5.2 (open)"),
+    Model("minimax-m3",    "vultr", "minimax-m3",                                  3, "MiniMax-M3 (open)"),
+    Model("qwen3-27b",     "vultr", "qwen3.8-27b",                                 2, "Qwen3 27B (open)"),
+    Model("nemotron-30b",  "vultr", "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-BF16", 2, "NVIDIA Nemotron 30B (open)"),
     # A locally-served open-weight model (e.g. vLLM on Jetstream2). The served HF id
     # and tier come from env so a driver can sweep sizes by relaunching per model:
     #   VLLM_BASE_URL=http://localhost:8000/v1 VLLM_MODEL=Qwen/Qwen2.5-32B-Instruct \
