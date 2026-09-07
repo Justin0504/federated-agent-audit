@@ -42,3 +42,6 @@ paper/**/*.xdv
 paper/**/*.log
 paper/**/comment.cut
 paper/**/arxiv_submission.zip
+
+# local multi-model run outputs (regenerable; numbers recorded in RESULTS.md)
+mm_results/

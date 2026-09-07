@@ -73,7 +73,8 @@ boundary is a concrete privacy harm under regimes such as HIPAA and GDPR. Our ai
 is a deployable safeguard for exactly these real cross-organizational agent
 interactions: the system we build runs today, sees no raw content, and---as our
 in-the-wild study shows (\S\ref{sec:eval})---catches current agents over-sharing
-regulated identifiers in 75\% of realistic hand-offs.
+regulated identifiers in 46--82\% of realistic hand-offs across four open-weight and
+frontier models.
 
 Three things make this hard at once. The leakage is where it is least watched:
 inter-agent messages leak far more than final outputs, yet no current framework
@@ -501,22 +502,38 @@ $\varepsilon\in[0.5,3]$ with zero raw leakage, the privacy--utility result the
 multi-tenant typing builds on.
 
 \subsection{Agents in the wild}
-Away from any labeled benchmark, we
-measure how real agents behave: 12 realistic
+Away from any labeled benchmark, we measure how real agents behave: 24 realistic
 multi-agent workflows across 7 domains, each holding a sensitive record, where a
-coordinator (real gpt-4o-mini) is asked to delegate to an \emph{external}
-specialist, with no engineered leaks, run 5$\times$ each (60 trials). The agent
-included the subject's sensitive identifiers (SSN, MRN, account/card numbers,
-diagnoses) in the cross-boundary hand-off in \textbf{45/60 = 75\% of trials (95\%
-Wilson CI [63\%, 84\%])}, and every hand-off to the different-purpose external
-party was a purpose violation (60/60, structural). The center-blind auditor
-flagged all with \textbf{zero raw content reaching the center}. Over-sharing
-concentrates where it is most sensitive: finance, healthcare, and legal disclosed
-in \textbf{100\%} of trials, HR/support $\approx$50\%, education 0\%. This is the
-deployment-measurement counterpart to AgentLeak on the multi-tenant setting:
-left to their own judgment, current agents routinely over-share a subject's
-identifiers across organizational boundaries, and the auditor catches it without
-seeing the data.
+coordinator agent is asked to delegate to an \emph{external} specialist with no
+engineered leaks, run 5$\times$ each (120 trials) for \emph{each} of four recipient
+models spanning open-weight (Qwen2.5-7B/14B, Llama-3.1-8B) and frontier
+(Claude~Opus~4.8). Over-sharing is prevalent across every model and, revealingly,
+\emph{falls with capability but never disappears}: the open models leak the subject's
+sensitive identifiers (SSN, MRN, account/card numbers, diagnoses) in \textbf{78--82\%}
+of trials, the aligned frontier model in \textbf{46\%} (Table~\ref{tab:wild}). Every
+cross-purpose hand-off is a purpose violation by construction, and the center-blind
+auditor flagged all of them with \textbf{zero raw content reaching the center on every
+model}. This is the deployment-measurement counterpart to AgentLeak on the
+multi-tenant setting: left to their own judgment, current agents---weak and strong
+alike---routinely over-share a subject's identifiers across organizational boundaries,
+and the auditor catches it without seeing the data.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{llcc}
+\toprule
+Recipient model & tier & disclosure & raw$\to$center \\
+\midrule
+Qwen2.5-7B   & small (open) & 82\% (99/120) & \textbf{0} \\
+Llama-3.1-8B & small (open) & 81\% (97/120) & \textbf{0} \\
+Qwen2.5-14B  & mid (open)   & 78\% (94/120) & \textbf{0} \\
+\textbf{Claude Opus~4.8} & frontier & \textbf{46\% (55/120)} & \textbf{0} \\
+\bottomrule
+\end{tabular}
+\caption{Cross-boundary over-sharing by recipient model (24 workflows $\times$ 5 runs
+$=120$ trials each, same set). Over-sharing falls with capability/alignment but stays
+high; the auditor catches all at zero content egress.}
+\label{tab:wild}
+\end{table}
 
 \subsection{An author-independent benchmark}
 Our 48-scenario benchmark scores
@@ -544,10 +561,11 @@ attributes} across health, finance, employment, legal, and behavioral domains
 ($5$ trials each). \emph{The threat is real, and for a frontier recipient it begins
 below our threshold:} Claude Opus~4.8 infers the withheld attribute from two benign
 fragments in \textbf{100\% (16/16)} of attributes and from a \emph{single} fragment in
-\textbf{81\% (13/16)}. Weaker recipients need more evidence---an earlier study found
-gpt-4o-mini and gpt-4o inferring from two fragments in 3/4 and 4/4 of a smaller
-set---so the compositional threat grows as agents improve (per-model results across an
-open-weight size ladder are released with the artifact). \emph{This makes our detector
+\textbf{81\% (13/16)}. Weaker recipients need more evidence: on the same 16-attribute
+set, open-weight recipients infer at $K{=}2$ in 56--69\% (Qwen2.5-7B, Llama-3.1-8B)
+and 81\% (Qwen2.5-14B) of attributes, versus 100\% for the frontier model---inference
+at the detection threshold rises with capability, so the compositional threat grows as
+agents improve. \emph{This makes our detector
 a conservative, no-false-alarm lower bound:} it stays silent at $K=1$, yet a strong
 recipient already infers there; every disagreement is an under-fire, and we never fire
 where the recipient cannot infer. Hence detection must flag the metadata pattern, not
@@ -653,8 +671,9 @@ AI-based tools were used both as part of our research methodology and in prepari
 this manuscript. \emph{Methodology (described in the paper):} the local tagger
 optionally uses an LLM backend (gpt-4o-mini) to derive privacy tags
 (\S\ref{sec:eval}); the A2A-MT benchmark and the author-independent held-out set are
-populated and authored by LLMs; and the threat-validation experiments use LLMs
-(gpt-4o-mini, gpt-4o, and Claude Opus~4.8) as the inferring recipient. \emph{Writing:}
+populated and authored by LLMs; and the threat-validation and in-the-wild experiments
+use LLMs as the inferring recipient / coordinator (open-weight Qwen2.5-7B/14B and
+Llama-3.1-8B, and frontier Claude Opus~4.8). \emph{Writing:}
 the authors used generative AI-based tools to revise text, improve flow, and assist
 with pre-submission review. We have manually verified and take full responsibility
 for the accuracy, originality, and integrity of all content---including every
