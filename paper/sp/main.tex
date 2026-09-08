@@ -584,6 +584,40 @@ owning principal equal and the multi-tenant model collapses to the in-container
 case, where the identical detectors flag a sensitive datum crossing to an agent or
 tool it should not reach, still without shipping content anywhere.
 
+\begin{figure}[t]\centering
+\begin{tikzpicture}[font=\footnotesize,x=24mm,y=0.30mm]
+\draw[-{Latex}] (0.62,0) -- (3.55,0);
+\draw[-{Latex}] (0.7,-4) -- (0.7,116) node[above,font=\scriptsize]{\%};
+\foreach \y in {0,50,100} \draw (0.65,\y)--(0.7,\y) node[left,font=\scriptsize]{\y};
+\foreach \x/\l in {1/{small\\7--8B},2/{mid\\14B},3/{frontier\\Opus 4.8}}
+  \node[align=center,font=\scriptsize,below=2pt] at (\x,0) {\l};
+\draw[very thick,red!70!black] (1,81.5)--(2,78)--(3,46);
+\foreach \x/\y in {1/81.5,2/78,3/46} \fill[red!70!black] (\x,\y) circle(1.7pt);
+\draw[very thick,blue!60] (1,62.5)--(2,81)--(3,100);
+\foreach \x/\y in {1/62.5,2/81,3/100} \fill[blue!60] (\x,\y) circle(1.7pt);
+\draw[very thick,red!70!black] (1.05,33)--(1.32,33);
+\node[right,font=\scriptsize] at (1.32,33){over-sharing (explicit)};
+\draw[very thick,blue!60] (1.05,18)--(1.32,18);
+\node[right,font=\scriptsize] at (1.32,18){inference @ $k^{*}{=}2$ (implicit)};
+\end{tikzpicture}
+\caption{Two opposing trends across recipient capability (tier means; per-model values
+in Table~\ref{tab:wild} and \S\ref{sec:eval}). As recipients get stronger,
+\emph{explicit} over-sharing falls while \emph{implicit} inference rises---neither end
+is safe to trust, and the center-blind auditor catches both at zero content egress.}
+\label{fig:trends}
+\end{figure}
+
+Our multi-model study exposes two opposing trends that together make the case for
+metadata-level detection (Figure~\ref{fig:trends}). As recipient capability rises,
+\emph{explicit} over-sharing falls---weaker models paste a subject's identifiers into a
+hand-off outright ($\approx$80\%), the aligned frontier model far less often
+(46\%)---while \emph{implicit} inference rises: the frontier recipient reconstructs a
+withheld attribute from two benign fragments where a small model cannot. A defender who
+trusted the model to behave would be wrong at both ends. The auditor does not: it flags
+the metadata pattern---an explicit sensitive tag crossing a boundary, or converging
+inferred-category fragments---and catches both, with zero content egress across the
+whole capability range.
+
 The honest limits lie in coverage and in trust. Recall is bounded not by the
 auditor but by the tagger that feeds it: on author-independent scenarios precision
 stays perfect while recall trails, because open-world sensitive content outruns
