@@ -118,29 +118,55 @@ case---one organization auditing its own multi-agent app---so the research resul
 and a practical product share one implementation (Figure~\ref{fig:arch}).
 
 \begin{figure*}[t]\centering
-\begin{tikzpicture}[font=\footnotesize,
-  agent/.style={draw,rounded corners,align=center,fill=blue!4,inner sep=5pt,minimum width=33mm},
-  center/.style={draw,rounded corners,align=left,fill=orange!7,inner sep=6pt,text width=37mm},
+\begin{tikzpicture}[font=\footnotesize,>=Latex,
+  pill/.style={draw,rounded corners=2pt,inner sep=2.6pt,font=\scriptsize},
+  card/.style={draw,rounded corners,fill=blue!3,inner sep=2.6mm},
+  crumb/.style={draw,rounded corners=2pt,fill=orange!10,inner sep=2.6pt,font=\scriptsize},
   ar/.style={-{Latex},semithick}]
-\node[agent] (a1) {\textbf{tenant $P$ agent}\\[2pt]
-  \scriptsize content $\rightarrow$ tag $\rightarrow$ hash};
-\node[agent,below=7mm of a1] (a2) {\textbf{tenant $Q$ agent}\\[2pt]
-  \scriptsize content $\rightarrow$ tag $\rightarrow$ hash};
-\node[center,right=42mm of $(a1)!0.5!(a2)$] (c) {\textbf{center-blind auditor}\\[3pt]
-  \scriptsize disclosure \ $\cdot$ \ purpose\\ \scriptsize ttl \ $\cdot$ \ inference};
-\node[right=8mm of c,align=center] (v) {violations\\[1pt]\scriptsize (metadata only)};
-\draw[ar] (a1.east) -- (c.west);
-\draw[ar] (a2.east) -- (c.west);
-\draw[ar] (c) -- (v);
-\coordinate (b) at ($(a1.east)!0.42!(c.west)$);
-\draw[dashed,gray] ($(b)+(0,15mm)$) -- ($(b)+(0,-15mm)$);
-\node[gray,font=\scriptsize] at ($(b)+(0,18mm)$) {trust boundary};
-\node[font=\scriptsize] at ($(a1.east)!0.62!(c.west)+(0,2.5mm)$) {desensitized edges};
+% --- in-agent pipelines (content -> tag -> hash) for tenants P and Q ---
+\node[pill,fill=red!14] (pc) {content};
+\node[pill,fill=blue!10,right=3mm of pc] (pt) {tag};
+\node[pill,fill=green!14,right=3mm of pt] (ph) {hash};
+\node[above=3.2mm of pt,anchor=south,font=\scriptsize] (ptl) {\textbf{tenant $P$ agent}};
+\node[pill,fill=red!14,below=13mm of pc] (qc) {content};
+\node[pill,fill=blue!10,right=3mm of qc] (qt) {tag};
+\node[pill,fill=green!14,right=3mm of qt] (qh) {hash};
+\node[above=3.2mm of qt,anchor=south,font=\scriptsize] (qtl) {\textbf{tenant $Q$ agent}};
+% cards drawn behind the pills so their fill does not paint over them
+\begin{scope}[on background layer]
+\node[card,fit=(pc)(ph)(ptl)] (P) {};
+\node[card,fit=(qc)(qh)(qtl)] (Q) {};
+\end{scope}
+\draw[ar] (pc)--(pt); \draw[ar] (pt)--(ph);
+\draw[ar] (qc)--(qt); \draw[ar] (qt)--(qh);
+% --- center-blind auditor ---
+\node[draw,rounded corners,fill=green!6,inner sep=2.8mm,text width=36mm,
+  right=46mm of $(P.east)!0.5!(Q.east)$,anchor=west] (C)
+  {\textbf{center-blind auditor}\\[2pt]
+   \scriptsize $\bullet$~cross-tenant disclosure\\
+   \scriptsize $\bullet$~purpose limitation\\
+   \scriptsize $\bullet$~hop / TTL\\
+   \scriptsize $\bullet$~cross-tenant inference};
+\node[draw,rounded corners,fill=red!7,inner sep=3pt,align=center,font=\scriptsize,
+  right=8mm of C] (V) {\textbf{violations}\\(metadata only)};
+% --- desensitized edges (what crosses): hash + labels, no content ---
+\node[crumb,right=13mm of P.east,anchor=west] (eP) {$\langle$hash, labels$\rangle$};
+\node[crumb,right=13mm of Q.east,anchor=west] (eQ) {$\langle$hash, labels$\rangle$};
+\draw[ar] (P.east)--(eP); \draw[ar] (eP.east)--(C.west);
+\draw[ar] (Q.east)--(eQ); \draw[ar] (eQ.east)--(C.west);
+\draw[ar] (C.east)--(V.west);
+% --- trust boundary (full-height dashed line, content stays left) ---
+\coordinate (bx) at ($(P.east)+(6.5mm,0)$);
+\draw[dashed,gray!75,thick] ([yshift=7mm]P.north-|bx) -- ([yshift=-7mm]Q.south-|bx);
+\node[gray!75,font=\scriptsize,anchor=south] at ([yshift=7mm]P.north-|bx) {trust boundary};
+\node[gray,font=\scriptsize,anchor=north] at ([yshift=-7mm]Q.south-|bx) {content stays left};
 \end{tikzpicture}
-\caption{Federated, center-blind architecture. Inside each agent the raw content
-is tagged and hashed locally; only desensitized edges (a one-way hash plus \ext{}
-labels) cross the trust boundary. The center detects cross-tenant violations over
-this metadata graph, never seeing raw content (Lemma~\ref{lem:blind}).}
+\caption{Federated, center-blind architecture. Inside each agent the raw
+\textcolor{red!60!black}{content} is \textcolor{blue!60!black}{tagged} and
+\textcolor{green!45!black}{hashed} locally; only desensitized edges
+($\langle$one-way hash, \ext{} labels$\rangle$)---never content---cross the trust
+boundary. The center runs four detectors over this metadata graph and cannot invert
+it to content (Lemma~\ref{lem:blind}).}
 \label{fig:arch}
 \end{figure*}
 
