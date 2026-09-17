@@ -118,55 +118,77 @@ case---one organization auditing its own multi-agent app---so the research resul
 and a practical product share one implementation (Figure~\ref{fig:arch}).
 
 \begin{figure*}[t]\centering
-\begin{tikzpicture}[font=\footnotesize,>=Latex,
-  pill/.style={draw,rounded corners=2pt,inner sep=2.6pt,font=\scriptsize},
-  card/.style={draw,rounded corners,fill=blue!3,inner sep=2.6mm},
-  crumb/.style={draw,rounded corners=2pt,fill=orange!10,inner sep=2.6pt,font=\scriptsize},
-  ar/.style={-{Latex},semithick}]
-% --- in-agent pipelines (content -> tag -> hash) for tenants P and Q ---
-\node[pill,fill=red!14] (pc) {content};
-\node[pill,fill=blue!10,right=3mm of pc] (pt) {tag};
-\node[pill,fill=green!14,right=3mm of pt] (ph) {hash};
-\node[above=3.2mm of pt,anchor=south,font=\scriptsize] (ptl) {\textbf{tenant $P$ agent}};
-\node[pill,fill=red!14,below=13mm of pc] (qc) {content};
-\node[pill,fill=blue!10,right=3mm of qc] (qt) {tag};
-\node[pill,fill=green!14,right=3mm of qt] (qh) {hash};
-\node[above=3.2mm of qt,anchor=south,font=\scriptsize] (qtl) {\textbf{tenant $Q$ agent}};
-% cards drawn behind the pills so their fill does not paint over them
-\begin{scope}[on background layer]
-\node[card,fit=(pc)(ph)(ptl)] (P) {};
-\node[card,fit=(qc)(qh)(qtl)] (Q) {};
-\end{scope}
-\draw[ar] (pc)--(pt); \draw[ar] (pt)--(ph);
-\draw[ar] (qc)--(qt); \draw[ar] (qt)--(qh);
-% --- center-blind auditor ---
-\node[draw,rounded corners,fill=green!6,inner sep=2.8mm,text width=36mm,
-  right=46mm of $(P.east)!0.5!(Q.east)$,anchor=west] (C)
-  {\textbf{center-blind auditor}\\[2pt]
-   \scriptsize $\bullet$~cross-tenant disclosure\\
-   \scriptsize $\bullet$~purpose limitation\\
-   \scriptsize $\bullet$~hop / TTL\\
-   \scriptsize $\bullet$~cross-tenant inference};
-\node[draw,rounded corners,fill=red!7,inner sep=3pt,align=center,font=\scriptsize,
-  right=8mm of C] (V) {\textbf{violations}\\(metadata only)};
-% --- desensitized edges (what crosses): hash + labels, no content ---
-\node[crumb,right=13mm of P.east,anchor=west] (eP) {$\langle$hash, labels$\rangle$};
-\node[crumb,right=13mm of Q.east,anchor=west] (eQ) {$\langle$hash, labels$\rangle$};
-\draw[ar] (P.east)--(eP); \draw[ar] (eP.east)--(C.west);
-\draw[ar] (Q.east)--(eQ); \draw[ar] (eQ.east)--(C.west);
-\draw[ar] (C.east)--(V.west);
-% --- trust boundary (full-height dashed line, content stays left) ---
-\coordinate (bx) at ($(P.east)+(6.5mm,0)$);
-\draw[dashed,gray!75,thick] ([yshift=7mm]P.north-|bx) -- ([yshift=-7mm]Q.south-|bx);
-\node[gray!75,font=\scriptsize,anchor=south] at ([yshift=7mm]P.north-|bx) {trust boundary};
-\node[gray,font=\scriptsize,anchor=north] at ([yshift=-7mm]Q.south-|bx) {content stays left};
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm,y=1mm,font=\footnotesize,>=Latex,
+  zone/.style={rounded corners=2mm,draw=#1!40,fill=#1!5,line width=0.5pt},
+  badge/.style={circle,fill=#1!65!black,text=white,inner sep=0pt,font=\bfseries\tiny,minimum size=3.6mm},
+  pil/.style={draw=#1!55!black,fill=#1!12,rounded corners=1.1mm,inner sep=2pt,font=\scriptsize},
+  chip/.style={draw=orange!65!black,fill=orange!12,rounded corners=1.1mm,inner sep=2pt,font=\scriptsize},
+  ar/.style={-{Latex},semithick},
+  ttl/.style={font=\scriptsize\bfseries},
+  ic/.style={line width=0.34pt}]
+\tikzset{
+  ic doc/.pic={\draw[ic,fill=white](-1.3,-1.7)rectangle(1.3,1.7);
+    \draw[ic](-0.8,1.0)--(0.8,1.0)(-0.8,0.3)--(0.8,0.3)(-0.8,-0.4)--(0.3,-0.4);},
+  ic tag/.pic={\draw[ic,fill=white](-1.5,-1.1)--(0.5,-1.1)--(1.5,0)--(0.5,1.1)--(-1.5,1.1)--cycle;
+    \fill(0.55,0)circle(0.2);},
+  ic lock/.pic={\draw[ic,fill=white](-1.25,-1.6)rectangle(1.25,0.3);
+    \draw[ic](-0.7,0.3)arc(180:0:0.7);\fill(0,-0.6)circle(0.2);},
+  ic alert/.pic={\draw[ic,fill=white](0,1.6)--(1.5,-1.2)--(-1.5,-1.2)--cycle;
+    \draw[ic](0,0.9)--(0,-0.2);\fill(0,-0.7)circle(0.16);}}
+% ============ (1) local, at each agent ============
+\node[zone=blue,fit={(0,-28)(58,10)},inner sep=0] {};
+\node[badge=blue] at (4,7.5) {1};
+\node[anchor=west,ttl] at (7,7.5) {Local --- at each agent};
+\foreach \y in {-1,-16}{
+  \pic at (24,{\y+4}) {ic doc};  \node[pil=red]   at (24,\y) {content};
+  \pic at (37,{\y+4}) {ic tag};  \node[pil=blue]  at (37,\y) {tag};
+  \pic at (50,{\y+4}) {ic lock}; \node[pil=green] at (50,\y) {hash};
+  \draw[ar] (29.2,\y)--(33.4,\y); \draw[ar] (40.6,\y)--(45.4,\y);}
+\node[anchor=west,font=\scriptsize,align=left] at (2.5,-1)  {tenant $P$\\agent};
+\node[anchor=west,font=\scriptsize,align=left] at (2.5,-16) {tenant $Q$\\agent};
+\node[anchor=north,font=\scriptsize,gray!75!black] at (29,-22.5)
+  {raw content never leaves the agent};
+% ============ trust boundary ============
+\draw[dashed,gray!70,line width=0.7pt] (63,12)--(63,-29);
+\node[anchor=south,font=\scriptsize,gray!70!black] at (63,12) {trust boundary};
+% ============ (2) what crosses ============
+\node[badge=orange] at (66,7.5) {2};
+\node[anchor=west,ttl] at (69,7.5) {Only metadata crosses};
+\node[chip] (eP) at (86,-1)  {$\langle$\,hash, \ext{} labels\,$\rangle$};
+\node[chip] (eQ) at (86,-16) {$\langle$\,hash, \ext{} labels\,$\rangle$};
+\draw[ar] (54.6,-1)--(eP.west); \draw[ar] (54.6,-16)--(eQ.west);
+\node[anchor=north,font=\scriptsize,gray!75!black] at (86,-22.5) {0 content bytes};
+% ============ (3) center-blind auditor ============
+\node[zone=green,fit={(108,-28)(154,10)},inner sep=0] {};
+\node[badge=green] at (112,7.5) {3};
+\node[anchor=west,ttl] at (115,7.5) {Center-blind auditor};
+\foreach \y/\d in {1/{cross-tenant disclosure}, -4.5/{purpose limitation},
+                   -10/{hop / TTL}, -15.5/{cross-tenant inference}}{
+  \fill[green!55!black] (112,\y) circle (0.7);
+  \node[anchor=west,font=\scriptsize] at (114,\y) {\d};}
+\node[anchor=north,font=\scriptsize,gray!75!black] at (131,-22.5) {reasons over the metadata graph};
+\draw[ar] (eP.east)--(107,-3); \draw[ar] (eQ.east)--(107,-7);
+% ============ (4) violations ============
+\node[zone=red,fit={(160,-10)(178,4)},inner sep=0] {};
+\node[badge=red] at (163.5,1.5) {4};
+\node[anchor=west,font=\scriptsize\bfseries] at (166,1.5) {violations};
+\pic at (169,-5.5) {ic alert};
+\draw[ar] (154.5,-3)--(159.5,-3);
+% ============ guarantee strip ============
+\node[rounded corners=1.4mm,fill=gray!8,draw=gray!35,inner sep=1.5mm,font=\scriptsize,
+  anchor=north] at (89,-31)
+  {the center learns $I(M;V)\le\log_2|\mathcal{L}|$ --- $O(\log)$ bits per message, so it
+   cannot invert the graph to content (Lemma~\ref{lem:blind})};
 \end{tikzpicture}
-\caption{Federated, center-blind architecture. Inside each agent the raw
+}
+\caption{The federated, center-blind pipeline. \textbf{(1)} Inside each agent the raw
 \textcolor{red!60!black}{content} is \textcolor{blue!60!black}{tagged} and
-\textcolor{green!45!black}{hashed} locally; only desensitized edges
-($\langle$one-way hash, \ext{} labels$\rangle$)---never content---cross the trust
-boundary. The center runs four detectors over this metadata graph and cannot invert
-it to content (Lemma~\ref{lem:blind}).}
+\textcolor{green!45!black}{hashed} in process. \textbf{(2)} Only a desensitized
+edge---a one-way hash plus \ext{} labels, zero content bytes---crosses the trust
+boundary. \textbf{(3)} The center runs four detectors over the resulting metadata
+graph and \textbf{(4)} emits violations. It never sees content, and provably cannot
+recover it (Lemma~\ref{lem:blind}).}
 \label{fig:arch}
 \end{figure*}
 
@@ -283,27 +305,68 @@ categories $\times$ six sensitivity levels --- this is $O(\log)$ bits per Part,
 independent of $|M|$; reconstructing $M$ requires $H(M)$ bits, so it is infeasible.
 \end{proof}
 \begin{figure*}[t]\centering
-\begin{tikzpicture}[font=\footnotesize,
-  raw/.style={draw,rounded corners,align=left,fill=blue!4,inner sep=6pt,text width=45mm},
-  edge/.style={draw,rounded corners,align=left,fill=orange!7,inner sep=6pt,text width=42mm},
-  ar/.style={-{Latex},thick}]
-\node[raw] (r) {\textbf{At the agent} (tenant $P$)\\[2pt]
-  \emph{Part.text}: ``busy Tue---meet near the oncology center''\\[3pt]
-  \emph{label}: subject $s$, owner $P$, purpose [sched], allow [$Q$]};
-\node[edge,right=30mm of r] (e) {\textbf{What the center receives}\\[3pt]
-  \texttt{hash a3f9c1..}\\ category [schedule]\\ \textbf{inferred [health]}\\
-  $P\!\rightarrow\!Q$, \ sens 4};
-\draw[ar] (r) -- node[above,align=center,font=\scriptsize]
-  {tagger derives tags,\\ content hashed} (e);
-\coordinate (m) at ($(r.east)!0.5!(e.west)$);
-\draw[dashed,gray] ($(m)+(0,13mm)$) -- ($(m)+(0,-13mm)$)
-  node[below,gray,font=\scriptsize,align=center]{trust\\ boundary};
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm,y=1mm,font=\footnotesize,>=Latex,
+  zone/.style={rounded corners=2mm,draw=#1!40,fill=#1!5,line width=0.5pt},
+  badge/.style={circle,fill=#1!65!black,text=white,inner sep=0pt,font=\bfseries\tiny,minimum size=3.6mm},
+  ttl/.style={font=\scriptsize\bfseries},
+  bub/.style={draw=blue!45!black,fill=blue!8,rounded corners=1.4mm,inner sep=1.7mm,
+              text width=44mm,align=left,font=\scriptsize},
+  edg/.style={draw=gray!55,fill=white,rounded corners=1.4mm,inner sep=1.7mm,
+              text width=52mm,align=left,font=\scriptsize},
+  ar/.style={-{Latex},semithick}]
+% ============ (a) at the sending agent ============
+\node[zone=blue,fit={(0,-30)(54,10)},inner sep=0] {};
+\node[badge=blue] at (4,7.5) {a};
+\node[anchor=west,ttl] at (7,7.5) {At alice's agent (tenant $P$)};
+\node[bub] (m1) at (27,0)
+  {``Standing appointment every Tuesday afternoon for the next 8 weeks.''};
+\node[bub] (m2) at (27,-15)
+  {``Can only meet somewhere near the oncology center.''};
+\node[anchor=north,font=\scriptsize,gray!75!black,align=center] at (27,-24)
+  {label: subject\,$s$ $\cdot$ owner\,alice $\cdot$ purpose\,[scheduling] $\cdot$ allow\,[bob]};
+% ============ boundary ============
+\draw[dashed,gray!70,line width=0.7pt] (59,12)--(59,-32);
+\node[anchor=south,font=\scriptsize,gray!70!black] at (59,12) {trust boundary};
+% ============ (b) what the center receives ============
+\node[zone=orange,fit={(64,-30)(128,10)},inner sep=0] {};
+\node[badge=orange] at (68,7.5) {b};
+\node[anchor=west,ttl] at (71,7.5) {What the center actually receives};
+\node[edg] (e1) at (96,0)
+  {\texttt{hash 303a15068941cca9}\\[1.5pt]
+   category [schedule]\, \colorbox{red!16}{inferred [health]}\, sens 4};
+\node[edg] (e2) at (96,-15)
+  {\texttt{hash f1a39ba19d396523}\\[1.5pt]
+   category [schedule]\, \colorbox{red!16}{inferred [health, location]}\, sens 4};
+\draw[ar] (m1.east)--(e1.west); \draw[ar] (m2.east)--(e2.west);
+\node[anchor=north,font=\scriptsize,gray!75!black] at (96,-24)
+  {\textbf{0 content bytes} --- no message text crosses};
+% ============ (c) detection + real-world validation ============
+\node[zone=green,fit={(134,-30)(178,10)},inner sep=0] {};
+\node[badge=green] at (138,7.5) {c};
+\node[anchor=west,ttl] at (141,7.5) {Detection};
+\node[draw=green!50!black,fill=white,rounded corners=1.4mm,inner sep=1.6mm,
+      text width=36mm,align=left,font=\scriptsize] at (156,-1)
+  {two converging \textcolor{red!70!black}{inferred [health]}
+   fragments on subject $s$\\[2pt]
+   $k=2\ \ge\ k^{*}$ $\Rightarrow$
+   \textcolor{red!70!black}{\bfseries cross-tenant inference} fires};
+\node[draw=red!45!black,fill=red!6,rounded corners=1.4mm,inner sep=1.6mm,
+      text width=36mm,align=left,font=\scriptsize] at (156,-21)
+  {and it is real: a live recipient (Claude Opus~4.8) infers
+   \emph{``undergoing cancer treatment''} from these two messages};
+\draw[ar] (e1.east)--(133,-2); \draw[ar] (e2.east)--(133,-6);
 \end{tikzpicture}
-\caption{Desensitization at the edge. The local tagger turns a benign-looking
-message into governance tags (here it infers \texttt{health} from a scheduling
-note) and the content is hashed; only the right-hand edge---no text---crosses the
-trust boundary to the center. Recovering the message from it is infeasible
-(Lemma~\ref{lem:blind}).}
+}
+\caption{A worked example, with real system output. \textbf{(a)} Two scheduling
+messages leave alice's agent; neither states a sensitive value, and bob is an allowed
+recipient of both. \textbf{(b)} What the center receives is only a one-way hash plus
+labels---the local tagger has derived \texttt{inferred [health]} from ``oncology
+center'' and a recurring appointment, and \emph{no message text crosses}.
+\textbf{(c)} Two converging health fragments about the same subject reach
+$k^{*}{=}2$, so the cross-tenant inference detector fires from the metadata alone;
+a live frontier recipient does in fact recover the withheld attribute from exactly
+these two messages (\S\ref{sec:eval}). Hashes and labels are verbatim auditor output.}
 \label{fig:desens}
 \end{figure*}
 
@@ -320,30 +383,9 @@ more than \texttt{ttl\_hops} times; robust to a forwarder re-wording content.
 \item \textbf{Cross-tenant inference}: no single edge is a disclosure, but a
 recipient principal accumulates converging \texttt{inferred\_categories}
 fragments about one subject, letting it infer a sensitive category it was never
-authorized for (Figure~\ref{fig:infer}); we ground this in the bound below.
+authorized for (Figure~\ref{fig:desens}); we ground this in the bound below.
 \end{enumerate}
 
-\begin{figure*}[t]\centering
-\begin{tikzpicture}[font=\footnotesize,
-  ag/.style={draw,circle,align=center,fill=blue!5,inner sep=1pt,minimum size=13mm},
-  ed/.style={-{Latex},semithick}]
-\node[ag] (A) {alice\\ agent};
-\node[ag,right=48mm of A] (B) {bob\\ agent};
-\draw[ed] (A) to[bend left=34] node[above,font=\scriptsize]
-  {``busy Tue at the clinic'' \ [infer health]} (B);
-\draw[ed] (A) to[bend right=34] node[below,font=\scriptsize]
-  {``near the oncology center'' \ [infer health]} (B);
-\node[draw,dashed,rounded corners,red!65!black,align=left,right=4mm of B,
-  font=\scriptsize,text width=32mm,inner sep=4pt]
-  {\textbf{bob infers health}\\ two converging hints $\ge k^{*}$\\
-   $\Rightarrow$ cross-tenant inference};
-\end{tikzpicture}
-\caption{Cross-tenant inference. Neither scheduling message leaks a sensitive
-value, and bob is an allowed recipient of both; but the two hints converge on the
-same subject, and their accumulated evidence crosses the detection threshold
-(Prop.~\ref{prop:k})---flagged from the labels alone, no content read.}
-\label{fig:infer}
-\end{figure*}
 
 \paragraph{A formal inference-gain bound.} We model what a recipient infers about
 a subject's sensitive attribute $A\in\{0,1\}$ from $k$ converging fragments
