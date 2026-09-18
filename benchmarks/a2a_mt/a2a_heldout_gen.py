@@ -52,15 +52,40 @@ def generate(model: str, n: int, client=None) -> list[dict]:
     return data.get("scenarios", [])
 
 
+
+def _clean_clearances(raw) -> dict:
+    """Keep only well-formed [principal, [purposes]] entries.
+
+    Author models often emit a stray entry such as ``"recipient": []`` alongside the
+    real ones. Previously that raised IndexError inside run_custom and the ENTIRE
+    scenario was discarded, so a malformed extra key silently shrank the sample.
+    We drop just the bad entry. We deliberately do NOT coerce a bare
+    ``["tenant:x"]`` into a zero-purpose clearance: an agent with no cleared purpose
+    would manufacture purpose violations the author never intended, biasing the
+    comparison in our favour. No clearance is the safe reading.
+    """
+    out = {}
+    if not isinstance(raw, dict):
+        return out
+    for agent, v in raw.items():
+        if (isinstance(v, (list, tuple)) and len(v) >= 2
+                and isinstance(v[0], str) and isinstance(v[1], (list, tuple))):
+            out[agent] = [v[0], list(v[1])]
+    return out
+
+
 def evaluate(scenarios: list[dict], tagger=None) -> dict:
     tp = fp = fn = tn = 0
     raw = 0
     disagreements = []
     n = 0
+    dropped = []
     for scn in scenarios:
-        payload = {"clearances": scn.get("clearances", {}), "hops": scn.get("hops", [])}
+        payload = {"clearances": _clean_clearances(scn.get("clearances", {})),
+                   "hops": scn.get("hops", [])}
         res = demo.run_custom(payload, tagger=tagger)
         if "error" in res:
+            dropped.append((scn.get("name"), str(res["error"])[:60]))
             continue
         n += 1
         ours_leak = bool(res["violations"])
@@ -89,7 +114,8 @@ def evaluate(scenarios: list[dict], tagger=None) -> dict:
     return {"n": n, "tp": tp, "fp": fp, "fn": fn, "tn": tn, "raw": raw,
             "recall": round(recall, 2), "precision": round(prec, 2),
             "f1": round(f1, 2), "agreement": round(agree, 2),
-            "disagreements": disagreements, "missed_types": missed_types}
+            "disagreements": disagreements, "missed_types": missed_types,
+            "dropped": dropped}
 
 
 def main(argv=None) -> int:
@@ -129,8 +155,14 @@ def main(argv=None) -> int:
         raise SystemExit("no scenarios generated")
 
     lex = evaluate(scns)
-    print(f"\n  pooled scenarios scored: {lex['n']}  "
-          f"({lex['tp'] + lex['fn']} intended leaks)")
+    nd = len(lex["dropped"])
+    print(f"\n  generated {len(scns)}; scored {lex['n']}; dropped {nd} "
+          f"(unparseable trace)  --  {lex['tp'] + lex['fn']} intended leaks")
+    if nd:
+        for nm, why in lex["dropped"][:5]:
+            print(f"    dropped: {nm} -- {why}")
+    if lex["n"] < 10:
+        print("  !! sample too small to read anything into; generate more batches.")
     print(f"  {'tagger':<16}{'agree':<8}{'P':<7}{'R':<7}{'F1':<7}{'TP/FP/TN/FN'}")
     print("  " + "-" * 62)
     print(f"  {'lexical':<16}{lex['agreement']:<8.0%}{lex['precision']:<7}"
