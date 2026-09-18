@@ -1,0 +1,88 @@
+% Figure 1 -- the federated, center-blind pipeline.
+% Design intent: the trust boundary is the most important object in the paper, so
+% it is the strongest object in the figure -- a full-height band, not a hairline.
+% The rose content lane visibly TERMINATES at it; only the amber metadata chip
+% crosses. "Content never leaves the agent" is shown, not asserted.
+\begin{widefigure}[t]\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm, y=1mm]
+
+% ======================= (1) inside each tenant =========================
+\node[figzone, fit={(0,-34) (74,13)}, inner sep=0] {};
+\node[fignum=figindigo] at (5,9.5) {1};
+\node[figtitle, anchor=west] at (8.4,9.5) {Local --- inside each agent};
+
+\foreach \y/\p in {0/{P}, -17/{Q}}{
+  \node at (7.5,\y+2.4) {\icon{tenant}{ink}{4.4mm}};
+  \node[figlabel, anchor=north] at (7.5,\y-1.4) {tenant $\p$};
+  \node at (26,\y+2.6) {\icon{content}{rose}{5.2mm}};
+  \node[figchip=figrose, anchor=north] at (26,\y-1.4) {content};
+  \node at (44,\y+2.6) {\icon{tag}{indigo}{5.2mm}};
+  \node[figchip=figindigo, anchor=north] at (44,\y-1.4) {label};
+  \node at (62,\y+2.6) {\icon{hash}{emerald}{5.2mm}};
+  \node[figchip=figemerald, anchor=north] at (62,\y-1.4) {hash};
+  \draw[figflow] (31.5,\y+2) -- (38.5,\y+2);
+  \draw[figflow] (49.5,\y+2) -- (56.5,\y+2);}
+
+\node[fignote, anchor=north] at (37,-27) {raw content is labeled and hashed in process};
+
+% ======================= the trust boundary =============================
+% Drawn on the background layer so the crossing arrows sit on top of the band:
+% the metadata visibly passes THROUGH the boundary rather than restarting after it.
+\begin{scope}[on background layer]
+  \fill[figwash] (90,-36) rectangle (98,14);
+  \draw[figbound] (90,-36) -- (90,14);
+  \draw[figbound] (98,-36) -- (98,14);
+\end{scope}
+\node at (94,10) {\icon{boundary}{slate}{5mm}};
+\node[fignote, anchor=south] at (94,14.6) {trust boundary};
+\node[fignote, text=figrose!85!black, rotate=90] at (94,-23)
+  {\itshape content cannot cross};
+
+% ======================= (2) what crosses ===============================
+\node[fignum=figamber] at (105,9.5) {2};
+\node[figtitle, anchor=west] at (108.4,9.5) {Only metadata crosses};
+\foreach \y in {0,-17}{
+  % one continuous lane: it turns amber at the hash and carries straight through
+  % the band, so what crosses is visibly the SAME object the agent produced.
+  \node[figchip=figamber] at (129,\y+2) {$\langle$\,hash,\ \ext{} labels\,$\rangle$};
+  \draw[figcross] (67.5,\y+2) -- (108.6,\y+2);
+  \draw[figcross] (149.4,\y+2) -- (159.4,\y+2);}
+\node[fignote, anchor=north] at (129,-27) {\textbf{0} content bytes cross};
+
+% ======================= (3) the auditor ================================
+\node[figzone, fit={(161,-34) (225,13)}, inner sep=0] {};
+\node[fignum=figemerald] at (166,9.5) {3};
+\node[figtitle, anchor=west] at (169.4,9.5) {Center-blind auditor};
+\node at (219,9.5) {\icon{blind}{slate}{4.6mm}};
+
+\foreach \y/\ic/\d in {2.5/{boundary}/{cross-tenant disclosure},
+                       -4.5/{tag}/{purpose limitation},
+                       -11.5/{ttl}/{hop / TTL},
+                       -18.5/{infer}/{cross-tenant inference}}{
+  \node at (167.5,\y) {\icon{\ic}{emerald}{3.9mm}};
+  \node[figlabel, anchor=west] at (171,\y) {\d};}
+\node[fignote, anchor=north] at (193,-27) {reasons over the metadata graph alone};
+
+% ======================= (4) violations =================================
+\node[figzone, fit={(234,-13) (262,0)}, inner sep=0] {};
+\node[fignum=figrose] at (238.5,-3.2) {4};
+\node[figtitle, anchor=west] at (241.6,-3.2) {violations};
+\node at (248,-9.2) {\icon{alert}{rose}{4.6mm}};
+\draw[figflow] (226,-6.5) -- (233,-6.5);
+
+% ======================= the guarantee ==================================
+\draw[draw=figrule, line width=0.6pt] (0,-40) -- (262,-40);
+\node[fignote, anchor=north] at (131,-41.5)
+  {the center learns $I(M;V)\le\log_2|\mathcal{L}|$ --- $O(\log)$ bits per message,
+   so it provably cannot invert the graph back to content (Lemma~\ref{lem:blind})};
+\end{tikzpicture}}
+\caption{The federated, center-blind pipeline. \textbf{(1)} Inside each agent the
+raw \textcolor{figrose}{content} is \textcolor{figindigo}{labeled} and
+\textcolor{figemerald}{hashed} in process. \textbf{(2)} What leaves is a
+desensitized edge---a one-way hash plus \ext{} labels, zero content
+bytes---and it is the only thing that crosses the trust boundary. \textbf{(3)} The center runs four
+detectors over the resulting metadata graph and \textbf{(4)} emits violations. It
+never sees content, and provably cannot recover it (Lemma~\ref{lem:blind}).}
+\label{fig:arch}
+\end{widefigure}

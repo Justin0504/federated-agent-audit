@@ -1,0 +1,62 @@
+% ---------------------------------------------------------------------------
+% Shared figure design system.
+%
+% One palette, one type scale, one stroke weight, one corner radius, defined
+% here and nowhere else, so every figure in the paper reads as the same hand.
+% Colours carry MEANING and are reused consistently across figures:
+%
+%   rose    the data subject's content -- the thing at risk, and the thing
+%           that must never cross the boundary
+%   indigo  governance metadata (privacy labels, tags) -- what we add
+%   amber   what actually crosses the trust boundary
+%   emerald verified / detected / safe
+%   ink     structure and primary type;  slate  secondary annotation
+%
+% They are chosen to stay distinguishable in greyscale (values ~35/45/55/25%).
+% Icons come from paper/figures/icons (authored by us, no third-party licence),
+% rendered to PDF per colour by icons/build_icons.py.
+% ---------------------------------------------------------------------------
+\definecolor{figink}{HTML}{1B2733}
+\definecolor{figslate}{HTML}{6B7885}
+\definecolor{figrose}{HTML}{B8405C}
+\definecolor{figindigo}{HTML}{3D5A9E}
+\definecolor{figemerald}{HTML}{2C7A58}
+\definecolor{figamber}{HTML}{B0662A}
+\definecolor{figrule}{HTML}{D8DEE4}
+\definecolor{figwash}{HTML}{F4F6F8}
+
+% \icon{name}{colour}{height} -- e.g. \icon{agent}{ink}{5mm}
+\newcommand{\icon}[3]{\includegraphics[height=#3]{#1-#2}}
+
+\tikzset{
+  % containers -------------------------------------------------------------
+  figzone/.style={rounded corners=1.6mm, draw=figrule, line width=0.6pt,
+                  fill=white},
+  figwashzone/.style={figzone, fill=figwash},
+  % a stage number: solid disc, white numeral
+  fignum/.style={circle, fill=#1, text=white, inner sep=0pt,
+                 font=\bfseries\scriptsize, minimum size=4.2mm},
+  figtitle/.style={font=\footnotesize\bfseries, text=figink},
+  figlabel/.style={font=\scriptsize, text=figink},
+  fignote/.style={font=\scriptsize, text=figslate},
+  figmono/.style={font=\scriptsize\ttfamily, text=figink},
+  % chips ------------------------------------------------------------------
+  figchip/.style={rounded corners=1mm, draw=#1, line width=0.6pt,
+                  fill=#1!7, inner xsep=2.2pt, inner ysep=2pt,
+                  font=\scriptsize, text=#1!75!black},
+  % flow -------------------------------------------------------------------
+  figflow/.style={-{Straight Barb[length=1.5mm,width=1.6mm]}, draw=figslate,
+                  line width=0.6pt},
+  figcross/.style={figflow, draw=figamber, line width=0.85pt},
+  % the boundary itself, and content being stopped by it
+  figbound/.style={draw=figslate!55, line width=0.5pt, dash pattern=on 1.4pt off 1.4pt},
+  figstop/.style={draw=figrose, line width=1.1pt},
+}
+
+% A full-width float. One-column builds (arXiv, ICLR) want `figure`; two-column
+% builds (PoPETs, S&P) want `figure*` or the figure is crushed into one column.
+% A build selects by defining \figenvname BEFORE \input-ing this file.
+\makeatletter
+\providecommand{\figenvname}{figure}
+\newenvironment{widefigure}{\@nameuse{\figenvname}}{\@nameuse{end\figenvname}}
+\makeatother

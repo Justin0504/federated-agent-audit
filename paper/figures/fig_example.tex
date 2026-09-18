@@ -1,0 +1,89 @@
+% Figure 2 -- a worked example, with verbatim system output.
+% Same design language as Figure 1 on purpose: identical palette, identical zone
+% and chip styles, and the trust boundary drawn as the same washed band, so a
+% reader who has parsed Figure 1 can read this one without relearning anything.
+\begin{widefigure}[t]\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm, y=1mm,
+  bubble/.style={rounded corners=1.4mm, draw=figindigo!45, fill=figindigo!5,
+                 inner sep=1.7mm, text width=52mm, align=left, font=\scriptsize,
+                 text=figink},
+  card/.style={rounded corners=1.4mm, draw=#1!55, fill=#1!5, inner sep=1.7mm,
+               align=left, font=\scriptsize, text=figink}]
+
+% ======================= (a) at the sending agent =======================
+\node[figzone, fit={(0,-34) (78,12)}, inner sep=0] {};
+\node[fignum=figindigo] at (5,8.6) {a};
+\node[figtitle, anchor=west] at (8.4,8.6) {At alice's agent (tenant $P$)};
+
+\node at (7,1) {\icon{content}{rose}{5mm}};
+\node at (7,-15) {\icon{content}{rose}{5mm}};
+\node[bubble] (m1) at (44,1)
+  {``Standing appointment every Tuesday afternoon for the next 8 weeks.''};
+\node[bubble] (m2) at (44,-15)
+  {``Can only meet somewhere near the oncology center.''};
+
+% The privacy label both Parts carry. Given an explicit text width so it wraps
+% inside the panel instead of running under the neighbouring zone.
+\node[fignote, anchor=north, text width=76mm, align=center] at (39,-25)
+  {both Parts carry the same label\\
+   subject\,$s$ $\cdot$ owner\,alice $\cdot$ purpose\,[scheduling] $\cdot$ allow\,[bob]};
+
+% ======================= trust boundary =================================
+\begin{scope}[on background layer]
+  \fill[figwash] (84,-36) rectangle (92,12);
+  \draw[figbound] (84,-36) -- (84,12);
+  \draw[figbound] (92,-36) -- (92,12);
+\end{scope}
+\node at (88,8.6) {\icon{boundary}{slate}{4.6mm}};
+\node[fignote, anchor=south] at (88,12.6) {trust boundary};
+
+% ======================= (b) what the center receives ===================
+\node[figzone, fit={(98,-34) (188,12)}, inner sep=0] {};
+\node[fignum=figamber] at (103,8.6) {b};
+\node[figtitle, anchor=west] at (106.4,8.6) {What the center actually receives};
+
+\node at (105,-1) {\icon{hash}{emerald}{4.6mm}};
+\node at (105,-17) {\icon{hash}{emerald}{4.6mm}};
+\node[card=figamber, text width=64mm] (e1) at (146,-1)
+  {\texttt{hash 303a15068941cca9}\\[1.5pt]
+   category [schedule]\quad sens 4\\[1.5pt]
+   \textcolor{figrose}{\bfseries inferred [health]}};
+\node[card=figamber, text width=64mm] (e2) at (146,-17)
+  {\texttt{hash f1a39ba19d396523}\\[1.5pt]
+   category [schedule]\quad sens 4\\[1.5pt]
+   \textcolor{figrose}{\bfseries inferred [health, location]}};
+\draw[figcross] (m1.east) -- (e1.west);
+\draw[figcross] (m2.east) -- (e2.west);
+\node[fignote, anchor=north] at (146,-25)
+  {\textbf{0} content bytes --- no message text crosses};
+
+% ======================= (c) detection ==================================
+\node[figzone, fit={(198,-34) (264,12)}, inner sep=0] {};
+\node[fignum=figemerald] at (203,8.6) {c};
+\node[figtitle, anchor=west] at (206.4,8.6) {Detection};
+\node at (204,-2) {\icon{infer}{emerald}{4.6mm}};
+
+\node[card=figemerald, text width=46mm] at (234,-2)
+  {two converging \textcolor{figrose}{\bfseries inferred [health]} fragments on
+   subject $s$\\[2.5pt]
+   $k = 2 \ge k^{*}$ $\Rightarrow$
+   \textcolor{figemerald}{\bfseries cross-tenant inference} fires};
+\node[card=figrose, text width=46mm] at (234,-22)
+  {\textbf{and it is real:} a live recipient (Claude Opus~4.8) infers
+   \emph{``undergoing cancer treatment''} from exactly these two messages};
+\draw[figcross] (e1.east) -- (196,-1);
+\draw[figcross] (e2.east) -- (196,-5);
+\end{tikzpicture}}
+\caption{A worked example, with real system output. \textbf{(a)} Two scheduling
+messages leave alice's agent; neither states a sensitive value, and bob is an
+allowed recipient of both. \textbf{(b)} What the center receives is only a one-way
+hash plus labels---the local tagger has derived \texttt{inferred [health]} from
+``oncology center'' and a recurring appointment, and \emph{no message text
+crosses}. \textbf{(c)} Two converging health fragments about the same subject
+reach $k^{*}{=}2$, so the cross-tenant inference detector fires from the metadata
+alone; a live frontier recipient does in fact recover the withheld attribute from
+exactly these two messages (\S\ref{sec:eval}). Hashes and labels are verbatim
+auditor output.}
+\label{fig:desens}
+\end{widefigure}

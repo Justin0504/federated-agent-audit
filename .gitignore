@@ -45,3 +45,8 @@ paper/**/arxiv_submission.zip
 
 # local multi-model run outputs (regenerable; numbers recorded in RESULTS.md)
 mm_results/
+
+# figure preview harness output
+paper/figures/_prev*
+paper/figures/_contact_sheet.svg
+paper/figures/icons/_contact_sheet.svg
