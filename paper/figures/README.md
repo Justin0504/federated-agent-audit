@@ -59,7 +59,16 @@ arXiv and ICLR are one-column (`figure`); PoPETs and S&P are two-column and need
 
 ## Editable exports
 
-The generated figure PDFs are vector and open editably in Illustrator, Figma and
-Inkscape. For PowerPoint/Keynote, SVG imports and ungroups more cleanly —
-`brew install pdf2svg` and convert the figure PDF if someone wants to hand-tune a
-slide version. The LaTeX source stays the master; slide exports are one-offs.
+```sh
+python paper/figures/export.py     # needs tectonic + pdf2svg
+```
+
+Writes `export/<figure>.pdf` and `export/<figure>.svg` — each tightly cropped to
+the drawing, with the float wrapper, caption and `\resizebox` stripped since none
+of them mean anything outside the paper. Cross-references resolve against the
+built arXiv paper via `xr-hyper`, so an exported figure says "Lemma 1" rather
+than "Lemma ??".
+
+SVG is the format to hand to someone working in PowerPoint or Keynote: it imports
+and ungroups into editable shapes, where PDF does not. The LaTeX source stays the
+master — slide exports are one-offs, not a second copy to maintain.

@@ -1,0 +1,44 @@
+% Figure 4 -- the two opposing trends across recipient capability.
+% The paper's headline measurement, so the figure's whole job is to make the
+% crossing legible. The two series are separated by hue AND dash pattern: rose
+% and indigo land at almost the same greyscale value, so hue alone would collapse
+% in a black-and-white print. Labelled in place rather than via a legend box.
+\begin{figure}[t]\centering
+\begin{tikzpicture}[x=26mm, y=0.30mm]
+
+\foreach \y in {25,50,75,100} \draw[figgrid] (0.78,\y) -- (3.5,\y);
+\draw[figaxis] (0.78,0) -- (3.62,0);
+\draw[figaxis] (0.78,0) -- (0.78,122) node[figaxislabel, above] {\%};
+\foreach \y in {0,50,100}
+  \draw[figtick] (0.74,\y) -- (0.78,\y) node[figticklabel, left] {\y};
+\foreach \x/\l in {1/{small\\7--8B}, 2/{mid\\14B}, 3/{frontier\\Opus 4.8}}
+  \node[figticklabel, align=center, anchor=north] at (\x,-5) {\l};
+
+% explicit over-sharing: FALLS with capability
+\draw[figseries=figrose] (1,81.5) -- (2,78) -- (3,46);
+\foreach \x/\y in {1/81.5, 2/78, 3/46}
+  \filldraw[figdot=figrose] (\x,\y) circle (1.6pt);
+\node[font=\scriptsize, text=figrose, anchor=south] at (1,84) {82\%};
+\node[font=\scriptsize, text=figrose, anchor=north] at (3,43) {46\%};
+
+% compositional inference: RISES with capability
+\draw[figseries=figindigo, dash pattern=on 2.4pt off 1.8pt]
+  (1,62.5) -- (2,81) -- (3,100);
+\foreach \x/\y in {1/62.5, 2/81, 3/100}
+  \filldraw[figdot=figindigo] (\x,\y) circle (1.6pt);
+\node[font=\scriptsize, text=figindigo, anchor=north] at (1,59) {63\%};
+\node[font=\scriptsize, text=figindigo, anchor=south] at (3,103) {100\%};
+
+% labelled in place -- a legend box would cost a saccade per reading
+\node[figseriestag=figrose, anchor=east] at (2.74,20)
+  {over-sharing\\(explicit)};
+\node[figseriestag=figindigo, anchor=east] at (2.60,114)
+  {inference @ $k^{*}{=}2$\\(implicit)};
+\end{tikzpicture}
+\caption{Two opposing trends across recipient capability (tier means; per-model
+values in Table~\ref{tab:wild} and \S\ref{sec:eval}). As recipients get stronger,
+\emph{explicit} over-sharing falls while \emph{implicit} inference rises---neither
+end is safe to trust, and the center-blind auditor catches both at zero content
+egress.}
+\label{fig:trends}
+\end{figure}

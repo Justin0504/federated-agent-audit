@@ -53,6 +53,25 @@
   figstop/.style={draw=figrose, line width=1.1pt},
 }
 
+% --- plots ------------------------------------------------------------------
+% Data figures use the same palette as the schematic ones. Two threat series in
+% the same figure are separated by BOTH hue and dash pattern, because rose and
+% indigo land at nearly the same greyscale value.
+\tikzset{
+  figaxis/.style={-{Straight Barb[length=1.3mm,width=1.4mm]}, draw=figslate!75,
+                  line width=0.5pt},
+  figgrid/.style={draw=figrule, line width=0.3pt},
+  figtick/.style={draw=figslate!75, line width=0.5pt},
+  figticklabel/.style={font=\scriptsize, text=figink},
+  figaxislabel/.style={font=\scriptsize, text=figink},
+  figseries/.style={draw=#1, line width=1.1pt, line cap=round, line join=round},
+  figdot/.style={fill=white, draw=#1, line width=0.8pt},
+  figmark/.style={fill=#1, draw=white, line width=0.5pt},
+  figseriestag/.style={font=\scriptsize, text=#1, align=right},
+  figthresh/.style={draw=figrose, line width=0.9pt, dash pattern=on 2pt off 1.6pt},
+  figguide/.style={draw=figslate!55, line width=0.4pt, dotted},
+}
+
 % A full-width float. One-column builds (arXiv, ICLR) want `figure`; two-column
 % builds (PoPETs, S&P) want `figure*` or the figure is crushed into one column.
 % A build selects by defining \figenvname BEFORE \input-ing this file.

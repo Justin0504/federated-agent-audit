@@ -1,0 +1,50 @@
+% Figure 3 -- the inference threshold.
+% A column-width plot, so a plain `figure` in every build. Curve values are the
+% closed form, not eyeballed: with p0=0.1 and lambda=3 the posterior at
+% k=0..4 is exactly 0.10, 0.25, 0.50, 0.75, 0.90, and the fire line sits at
+% p = p0 + delta = 0.4.
+\begin{figure}[t]\centering
+\begin{tikzpicture}[x=14mm, y=30mm]
+
+% decision regions: above the fire line the recipient can infer; below, tolerated
+\fill[figrose!7]    (0,0.4) rectangle (4.32,1.06);
+\fill[figemerald!7] (0,0)   rectangle (4.32,0.4);
+\foreach \y in {0.25,0.5,0.75,1} \draw[figgrid] (0,\y) -- (4.32,\y);
+
+\draw[figaxis] (0,0) -- (4.58,0) node[figaxislabel, right] {$k$};
+\draw[figaxis] (0,0) -- (0,1.13) node[figaxislabel, above] {$P(A\mid k)$};
+\foreach \y in {0,0.5,1}
+  \draw[figtick] (-0.05,\y) -- (0,\y) node[figticklabel, left] {\y};
+\foreach \k in {0,1,2,3,4}
+  \draw[figtick] (\k,-0.02) -- (\k,0) node[figticklabel, below] {\k};
+
+\draw[figthresh] (0,0.4) -- (4.32,0.4);
+\node[font=\scriptsize, text=figrose, anchor=north east, inner sep=1.5pt]
+  at (4.3,0.385) {fire threshold $g\ge\delta$};
+\node[font=\scriptsize, text=figrose!85!black, anchor=north west, inner sep=1.5pt]
+  at (0.08,1.04) {detector fires --- inferable};
+\node[font=\scriptsize, text=figemerald, anchor=south west, inner sep=1.5pt]
+  at (0.08,0.02) {silent --- tolerated};
+
+\draw[figseries=figindigo] (0,0.1) -- (1,0.25) -- (2,0.5) -- (3,0.75) -- (4,0.9);
+\foreach \k/\p in {0/0.1, 1/0.25, 2/0.5, 3/0.75, 4/0.9}
+  \filldraw[figdot=figindigo] (\k,\p) circle (1.5pt);
+
+\draw[figguide] (2,0) -- (2,0.5);
+\node[font=\scriptsize\bfseries, text=figink, anchor=west, inner sep=1.5pt]
+  at (2.06,0.17) {$k^{*}{=}2$};
+
+% a single high-specificity hint clears the line on its own
+% Sits directly above its own marker: anchored to the side, the label ran into
+% the posterior curve where it passes through (2, 0.5).
+\filldraw[figmark=figamber] (1,0.5) circle (2.2pt);
+\node[font=\scriptsize, text=figamber, anchor=south, inner sep=1.6pt]
+  at (1,0.53) {strong hint $\lambda{=}9$};
+\end{tikzpicture}
+\caption{The inference threshold. Under uniform evidence ($p_0{=}0.1,\lambda{=}3,
+\delta{=}0.3$) the posterior crosses the fire line at $k^{*}{=}2$: one hint is
+tolerated, two converge. A single high-specificity hint ($\lambda{=}9$, from the
+tagger) already clears it. Empirically a frontier recipient infers even at $k{=}1$
+(\S\ref{sec:eval}), so $k^{*}$ is a conservative lower bound.}
+\label{fig:gain}
+\end{figure}

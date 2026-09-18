@@ -23,15 +23,15 @@ p.lede{margin:0 0 6px;color:var(--slate);max-width:70ch}
 .use{font-size:12px;color:var(--slate)}
 .row{display:flex;gap:26px;align-items:center;border:1px solid var(--rule);
      border-radius:10px;padding:14px;margin-bottom:9px;background:var(--wash)}
-figure{margin:0 0 20px}
-figure img{width:100%;display:block;border:1px solid var(--rule);border-radius:10px}
+figure{margin:0 0 22px}
+figure img{width:100%;display:block;border:1px solid var(--rule);border-radius:10px;
+  background:#fff;padding:10px}
 figcaption{font-size:12px;color:var(--slate);margin-top:7px;max-width:80ch}
 @media (prefers-color-scheme:dark){
   :root{--ink:#E8ECF0;--slate:#96A2AE;--rule:#2C3742;--wash:#151C24}
   body{background:#0E141A}
-  figure img{background:#fff}
 }
 </style>
 <h1>Paper figures</h1>
-<p class="lede">Both figures share one visual language: same palette, same zone and chip styles, same boundary band. A reader who has parsed Figure 1 reads Figure 2 without relearning anything.</p>
-<h2>Figure 1 — the center-blind pipeline</h2><figure><img src="fig-pipeline.png" alt="Figure 1"><figcaption>The boundary is a full-height band, not a hairline. The lane turns amber at the hash and passes visibly through it, so what crosses is recognisably the same object the agent produced.</figcaption></figure><h2>Figure 2 — worked example, verbatim output</h2><figure><img src="fig-example.png" alt="Figure 2"><figcaption>Real hashes and labels from the auditor. Panel (c) carries the live confirmation that a frontier recipient recovers the withheld attribute from exactly these two messages.</figcaption></figure>
+<p class="lede">All four figures share one visual language: same palette, same zone and chip styles, same boundary band. A reader who has parsed Figure 1 reads the rest without relearning anything.</p>
+<h2>Figure 1 — the center-blind pipeline</h2><figure><img src="fig_pipeline.png" alt="Figure 1 — the center-blind pipeline"><figcaption>The boundary is a full-height band, not a hairline. The lane turns amber at the hash and passes visibly through it, so what crosses is recognisably the same object the agent produced.</figcaption></figure><h2>Figure 2 — worked example, verbatim output</h2><figure><img src="fig_example.png" alt="Figure 2 — worked example, verbatim output"><figcaption>Real hashes and labels from the auditor. Panel (c) carries the live confirmation that a frontier recipient recovers the withheld attribute from exactly these two messages.</figcaption></figure><h2>Figure 3 — the inference threshold</h2><figure><img src="fig_gain.png" alt="Figure 3 — the inference threshold"><figcaption>Curve values are the closed form, not eyeballed: with p0=0.1 and lambda=3 the posterior is exactly 0.10/0.25/0.50/0.75/0.90 and the fire line sits at 0.4.</figcaption></figure><h2>Figure 4 — two opposing trends</h2><figure><img src="fig_trends.png" alt="Figure 4 — two opposing trends"><figcaption>The paper's headline measurement. Separated by hue AND dash pattern, because rose and indigo land at almost the same greyscale value.</figcaption></figure>

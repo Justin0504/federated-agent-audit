@@ -508,38 +508,7 @@ owning principal equal and the multi-tenant model collapses to the in-container
 case, where the identical detectors flag a sensitive datum crossing to an agent or
 tool it should not reach, still without shipping content anywhere.
 
-\begin{figure}[t]\centering
-\begin{tikzpicture}[font=\footnotesize,x=26mm,y=0.30mm,>=Latex]
-\foreach \y in {25,50,75,100} \draw[gray!22,line width=0.3pt] (0.78,\y)--(3.45,\y);
-\draw[->,gray!70] (0.78,0)--(3.6,0);
-\draw[->,gray!70] (0.78,0)--(0.78,120) node[above,font=\scriptsize,black]{\%};
-\foreach \y in {0,50,100} \draw[gray!70] (0.74,\y)--(0.78,\y) node[left,font=\scriptsize,black]{\y};
-\foreach \x/\l in {1/{small\\7--8B},2/{mid\\14B},3/{frontier\\Opus 4.8}}
-  \node[align=center,font=\scriptsize,anchor=north] at (\x,-5) {\l};
-% explicit over-sharing: falls with capability
-\draw[very thick,red!70!black] (1,81.5)--(2,78)--(3,46);
-\foreach \x/\y in {1/81.5,2/78,3/46}
-  \filldraw[fill=white,draw=red!70!black,line width=0.7pt] (\x,\y) circle (1.6pt);
-\node[font=\scriptsize,red!70!black,anchor=south] at (1,84) {82\%};
-\node[font=\scriptsize,red!70!black,anchor=north] at (3,43) {46\%};
-% implicit inference: rises with capability
-\draw[very thick,blue!60] (1,62.5)--(2,81)--(3,100);
-\foreach \x/\y in {1/62.5,2/81,3/100}
-  \filldraw[fill=white,draw=blue!60,line width=0.7pt] (\x,\y) circle (1.6pt);
-\node[font=\scriptsize,blue!55!black,anchor=north] at (1,59) {63\%};
-\node[font=\scriptsize,blue!55!black,anchor=south] at (3,103) {100\%};
-% direct labels instead of a legend box
-\node[font=\scriptsize,red!70!black,anchor=east,align=right] at (2.92,26)
-  {over-sharing\\(explicit)};
-\node[font=\scriptsize,blue!55!black,anchor=east,align=right] at (2.62,112)
-  {inference @ $k^{*}{=}2$\\(implicit)};
-\end{tikzpicture}
-\caption{Two opposing trends across recipient capability (tier means; per-model values
-in Table~\ref{tab:wild} and \S\ref{sec:eval}). As recipients get stronger,
-\emph{explicit} over-sharing falls while \emph{implicit} inference rises---neither end
-is safe to trust, and the center-blind auditor catches both at zero content egress.}
-\label{fig:trends}
-\end{figure}
+\input{figures/fig_trends}
 
 Our multi-model study exposes two opposing trends that together make the case for
 metadata-level detection (Figure~\ref{fig:trends}). As recipient capability rises,
@@ -746,39 +715,7 @@ closed-form $k^{*}$, not the raw parameter values.}
 \label{tab:sens}
 \end{table}
 
-\begin{figure}[t]\centering
-\begin{tikzpicture}[font=\footnotesize,x=14mm,y=30mm,>=Latex]
-% decision regions: above the fire line the recipient can infer; below, tolerated
-\fill[red!7]   (0,0.4) rectangle (4.32,1.06);
-\fill[green!7] (0,0)   rectangle (4.32,0.4);
-\foreach \y in {0.25,0.5,0.75,1} \draw[gray!22,line width=0.3pt] (0,\y)--(4.32,\y);
-\draw[->,gray!70] (0,0)--(4.55,0) node[right,font=\scriptsize,black]{$k$};
-\draw[->,gray!70] (0,0)--(0,1.12) node[above,font=\scriptsize,black]{$P(A\mid k)$};
-\foreach \y in {0,0.5,1} \draw[gray!70] (-0.05,\y)--(0,\y) node[left,font=\scriptsize,black]{\y};
-\foreach \k in {0,1,2,3,4} \draw[gray!70] (\k,-0.02)--(\k,0) node[below,font=\scriptsize,black]{\k};
-\draw[dashed,red!70!black,thick] (0,0.4)--(4.32,0.4);
-\node[font=\scriptsize,red!70!black,anchor=north east,inner sep=1.5pt] at (4.3,0.39)
-  {fire threshold $g\ge\delta$};
-\node[font=\scriptsize,red!55!black,anchor=north west,inner sep=1.5pt] at (0.08,1.04)
-  {detector fires --- inferable};
-\node[font=\scriptsize,green!42!black,anchor=south west,inner sep=1.5pt] at (0.08,0.02)
-  {silent --- tolerated};
-\draw[very thick,blue!60] (0,0.1)--(1,0.25)--(2,0.5)--(3,0.75)--(4,0.9);
-\foreach \k/\p in {0/0.1,1/0.25,2/0.5,3/0.75,4/0.9}
-  \filldraw[fill=white,draw=blue!60,line width=0.7pt] (\k,\p) circle (1.5pt);
-\draw[dotted,gray!75] (2,0)--(2,0.5);
-\node[font=\scriptsize\bfseries,anchor=west,inner sep=1.5pt] at (2.06,0.17) {$k^{*}{=}2$};
-\filldraw[fill=orange!85!black,draw=white,line width=0.5pt] (1,0.5) circle (1.7pt);
-\node[font=\scriptsize,orange!62!black,anchor=south west,inner sep=1.2pt] at (1.04,0.52)
-  {strong hint $\lambda{=}9$};
-\end{tikzpicture}
-\caption{The inference threshold. Under uniform evidence ($p_0{=}0.1,\lambda{=}3,
-\delta{=}0.3$) the posterior crosses the fire line at $k^{*}{=}2$: one hint is
-tolerated, two converge. A single high-specificity hint ($\lambda{=}9$, from the
-tagger) already clears it. Empirically a frontier recipient infers even at $k{=}1$
-(\S\ref{sec:eval}), so $k^{*}$ is a conservative lower bound.}
-\label{fig:gain}
-\end{figure}
+\input{figures/fig_gain}
 
 
 \section{Use of large language models}
