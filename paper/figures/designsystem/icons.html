@@ -1,0 +1,90 @@
+<!-- @dsCard group="Icons" -->
+<!doctype html><meta charset="utf-8">
+<title>Paper icon set</title>
+<style>
+:root{--ink:#1B2733;--slate:#6B7885;--rule:#D8DEE4;--wash:#F4F6F8}
+*{box-sizing:border-box}
+body{margin:0;padding:32px;background:#fff;color:var(--ink);
+  font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+h1{font-size:19px;margin:0 0 4px}
+h2{font-size:14px;margin:34px 0 12px;letter-spacing:.04em;text-transform:uppercase;
+   color:var(--slate);font-weight:600}
+p.lede{margin:0 0 6px;color:var(--slate);max-width:70ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.cell{border:1px solid var(--rule);border-radius:10px;padding:16px 10px 11px;text-align:center}
+.cell svg{display:block;margin:0 auto 9px}
+.nm{font:600 12px ui-monospace,SFMono-Regular,Menlo,monospace}
+.mn{font-size:11px;color:var(--slate);margin-top:3px;line-height:1.35}
+.sw{display:flex;align-items:center;gap:12px;border:1px solid var(--rule);
+    border-radius:10px;padding:10px 13px;margin-bottom:7px}
+.chip{width:40px;height:40px;border-radius:7px;flex:none}
+.tok{font:600 12px ui-monospace,SFMono-Regular,Menlo,monospace}
+.hex{font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--slate)}
+.use{font-size:12px;color:var(--slate)}
+.row{display:flex;gap:26px;align-items:center;border:1px solid var(--rule);
+     border-radius:10px;padding:14px;margin-bottom:9px;background:var(--wash)}
+figure{margin:0 0 20px}
+figure img{width:100%;display:block;border:1px solid var(--rule);border-radius:10px}
+figcaption{font-size:12px;color:var(--slate);margin-top:7px;max-width:80ch}
+@media (prefers-color-scheme:dark){
+  :root{--ink:#E8ECF0;--slate:#96A2AE;--rule:#2C3742;--wash:#151C24}
+  body{background:#0E141A}
+  figure img{background:#fff}
+}
+</style>
+<h1>Paper icon set</h1>
+<p class="lede">Drawn for this paper on a 24&times;24 grid, 1.75 stroke, round caps and joins, authored once as SVG with <code>currentColor</code>. Not Flaticon: the free tier wants attribution, awkward in a camera-ready, and a mixed-provenance set never shares a hand. Each renders to PDF in every palette colour for <code>\includegraphics</code>.</p>
+<h2>The set</h2><div class="grid"><div class="cell"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<rect x="5" y="5" width="14" height="14" rx="3"/>
+<circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/>
+<path d="M9 2.8v2.2M15 2.8v2.2M9 19v2.2M15 19v2.2M2.8 9h2.2M2.8 15h2.2M19 9h2.2M19 15h2.2"/>
+</svg><div class="nm">agent</div><div class="mn">an agent process</div></div><div class="cell"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M6 2.8h7.5L18 7.3V21.2H6z"/>
+<path d="M13.3 2.9v4.5h4.5"/>
+<path d="M9 12h6M9 15.4h6M9 18.2h3.6"/>
+</svg><div class="nm">content</div><div class="mn">raw content — the thing at risk</div></div><div class="cell"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M2.9 11.1V4.6a1.7 1.7 0 0 1 1.7-1.7h6.5a1.7 1.7 0 0 1 1.2.5l8.2 8.2a1.7 1.7 0 0 1 0 2.4l-6.5 6.5a1.7 1.7 0 0 1-2.4 0L3.4 12.3a1.7 1.7 0 0 1-.5-1.2z"/>
+<circle cx="7.4" cy="7.4" r="1.6"/>
+</svg><div class="nm">tag</div><div class="mn">a privacy label</div></div><div class="cell"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<rect x="4.2" y="10.4" width="15.6" height="10.8" rx="2.2"/>
+<path d="M7.8 10.4V7.2a4.2 4.2 0 0 1 8.4 0v3.2"/>
+<circle cx="12" cy="15.4" r="1.5" fill="currentColor" stroke="none"/>
+<path d="M12 16.9v1.9"/>
+</svg><div class="nm">hash</div><div class="mn">one-way hash; content locked locally</div></div><div class="cell"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M12 2.6l7.6 3v6.1c0 4.7-3.2 8.2-7.6 9.7-4.4-1.5-7.6-5-7.6-9.7V5.6z"/>
+<path d="M12 2.6v18.8"/>
+</svg><div class="nm">boundary</div><div class="mn">the trust boundary</div></div><div class="cell"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="12" cy="12" r="2.1" fill="currentColor" stroke="none"/>
+<path d="M12 5.6a6.4 6.4 0 0 1 6.4 6.4"/>
+<path d="M12 2.2a9.8 9.8 0 0 1 9.8 9.8"/>
+<path d="M12 18.4A6.4 6.4 0 0 1 5.6 12"/>
+<path d="M12 21.8A9.8 9.8 0 0 1 2.2 12"/>
+</svg><div class="nm">detector</div><div class="mn">a detector locking onto a signal</div></div><div class="cell"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M13.5 3.6l8.1 14.1a1.7 1.7 0 0 1-1.5 2.6H3.9a1.7 1.7 0 0 1-1.5-2.6L10.5 3.6a1.7 1.7 0 0 1 3 0z"/>
+<path d="M12 9.1v4.6"/>
+<circle cx="12" cy="16.8" r="1.05" fill="currentColor" stroke="none"/>
+</svg><div class="nm">alert</div><div class="mn">a violation</div></div><div class="cell"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M2.9 9.6L12 3.9l9.1 5.7z"/>
+<path d="M4.9 9.9v9.6M10 9.9v9.6M14 9.9v9.6M19.1 9.9v9.6"/>
+<path d="M2.9 21.1h18.2"/>
+</svg><div class="nm">tenant</div><div class="mn">a principal / tenant</div></div><div class="cell"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="12" cy="12.8" r="8.4"/>
+<path d="M12 8.2v4.6l3.1 2.1"/>
+<path d="M9.2 2.4h5.6"/>
+</svg><div class="nm">ttl</div><div class="mn">hop budget (TTL)</div></div><div class="cell"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="4.6" cy="6.1" r="2.1"/>
+<circle cx="4.6" cy="17.9" r="2.1"/>
+<circle cx="19.4" cy="12" r="2.4" fill="currentColor" stroke="none"/>
+<path d="M6.6 7.1l10.5 3.8M6.6 16.9l10.5-3.8"/>
+</svg><div class="nm">infer</div><div class="mn">fragments converging on a conclusion</div></div><div class="cell"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M2.4 12S6 5.6 12 5.6c1.6 0 3 .45 4.2 1.1"/>
+<path d="M19.7 8.9c1.2 1.2 1.9 2.4 1.9 3.1 0 0-3.6 6.4-9.6 6.4-1.4 0-2.6-.35-3.7-.88"/>
+<path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>
+<path d="M3.1 3.1l17.8 17.8"/>
+</svg><div class="nm">blind</div><div class="mn">center-blind — cannot see content</div></div><div class="cell"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M5.4 2.9h8.2l5 5v8.3"/>
+<path d="M13.3 2.9v5h5"/>
+<path d="M5.4 2.9v13.4"/>
+<circle cx="9.9" cy="18.1" r="3.2"/>
+<path d="M7.8 20.7l-.9 2.8 3-1.3 3 1.3-.9-2.8"/>
+</svg><div class="nm">attest</div><div class="mn">a signed, build-pinned report</div></div></div>

@@ -1,0 +1,37 @@
+<!-- @dsCard group="Foundations" -->
+<!doctype html><meta charset="utf-8">
+<title>Figure palette</title>
+<style>
+:root{--ink:#1B2733;--slate:#6B7885;--rule:#D8DEE4;--wash:#F4F6F8}
+*{box-sizing:border-box}
+body{margin:0;padding:32px;background:#fff;color:var(--ink);
+  font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+h1{font-size:19px;margin:0 0 4px}
+h2{font-size:14px;margin:34px 0 12px;letter-spacing:.04em;text-transform:uppercase;
+   color:var(--slate);font-weight:600}
+p.lede{margin:0 0 6px;color:var(--slate);max-width:70ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.cell{border:1px solid var(--rule);border-radius:10px;padding:16px 10px 11px;text-align:center}
+.cell svg{display:block;margin:0 auto 9px}
+.nm{font:600 12px ui-monospace,SFMono-Regular,Menlo,monospace}
+.mn{font-size:11px;color:var(--slate);margin-top:3px;line-height:1.35}
+.sw{display:flex;align-items:center;gap:12px;border:1px solid var(--rule);
+    border-radius:10px;padding:10px 13px;margin-bottom:7px}
+.chip{width:40px;height:40px;border-radius:7px;flex:none}
+.tok{font:600 12px ui-monospace,SFMono-Regular,Menlo,monospace}
+.hex{font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--slate)}
+.use{font-size:12px;color:var(--slate)}
+.row{display:flex;gap:26px;align-items:center;border:1px solid var(--rule);
+     border-radius:10px;padding:14px;margin-bottom:9px;background:var(--wash)}
+figure{margin:0 0 20px}
+figure img{width:100%;display:block;border:1px solid var(--rule);border-radius:10px}
+figcaption{font-size:12px;color:var(--slate);margin-top:7px;max-width:80ch}
+@media (prefers-color-scheme:dark){
+  :root{--ink:#E8ECF0;--slate:#96A2AE;--rule:#2C3742;--wash:#151C24}
+  body{background:#0E141A}
+  figure img{background:#fff}
+}
+</style>
+<h1>Figure palette</h1>
+<p class="lede">Colour carries meaning and is reused identically across every figure, so a reader learns it once. Values are spread so the figures survive a greyscale print.</p>
+<h2>Tokens</h2><div class="sw"><div class="chip" style="background:#1B2733"></div><div><div class="tok">figink</div><div class="hex">#1B2733</div></div><div class="use" style="margin-left:auto;text-align:right;max-width:48%">structure, primary type</div></div><div class="sw"><div class="chip" style="background:#6B7885"></div><div><div class="tok">figslate</div><div class="hex">#6B7885</div></div><div class="use" style="margin-left:auto;text-align:right;max-width:48%">secondary annotation</div></div><div class="sw"><div class="chip" style="background:#B8405C"></div><div><div class="tok">figrose</div><div class="hex">#B8405C</div></div><div class="use" style="margin-left:auto;text-align:right;max-width:48%">the data subject's content — never crosses</div></div><div class="sw"><div class="chip" style="background:#3D5A9E"></div><div><div class="tok">figindigo</div><div class="hex">#3D5A9E</div></div><div class="use" style="margin-left:auto;text-align:right;max-width:48%">governance metadata (labels) — what we add</div></div><div class="sw"><div class="chip" style="background:#B0662A"></div><div><div class="tok">figamber</div><div class="hex">#B0662A</div></div><div class="use" style="margin-left:auto;text-align:right;max-width:48%">what actually crosses the boundary</div></div><div class="sw"><div class="chip" style="background:#2C7A58"></div><div><div class="tok">figemerald</div><div class="hex">#2C7A58</div></div><div class="use" style="margin-left:auto;text-align:right;max-width:48%">verified / detected / safe</div></div><h2>Greyscale check</h2><div class="row"><div class="chip" style="background:#1B2733;filter:grayscale(1)" title="figink"></div><div class="chip" style="background:#6B7885;filter:grayscale(1)" title="figslate"></div><div class="chip" style="background:#B8405C;filter:grayscale(1)" title="figrose"></div><div class="chip" style="background:#3D5A9E;filter:grayscale(1)" title="figindigo"></div><div class="chip" style="background:#B0662A;filter:grayscale(1)" title="figamber"></div><div class="chip" style="background:#2C7A58;filter:grayscale(1)" title="figemerald"></div></div>

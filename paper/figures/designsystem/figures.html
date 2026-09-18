@@ -1,0 +1,37 @@
+<!-- @dsCard group="Figures" -->
+<!doctype html><meta charset="utf-8">
+<title>Paper figures</title>
+<style>
+:root{--ink:#1B2733;--slate:#6B7885;--rule:#D8DEE4;--wash:#F4F6F8}
+*{box-sizing:border-box}
+body{margin:0;padding:32px;background:#fff;color:var(--ink);
+  font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+h1{font-size:19px;margin:0 0 4px}
+h2{font-size:14px;margin:34px 0 12px;letter-spacing:.04em;text-transform:uppercase;
+   color:var(--slate);font-weight:600}
+p.lede{margin:0 0 6px;color:var(--slate);max-width:70ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.cell{border:1px solid var(--rule);border-radius:10px;padding:16px 10px 11px;text-align:center}
+.cell svg{display:block;margin:0 auto 9px}
+.nm{font:600 12px ui-monospace,SFMono-Regular,Menlo,monospace}
+.mn{font-size:11px;color:var(--slate);margin-top:3px;line-height:1.35}
+.sw{display:flex;align-items:center;gap:12px;border:1px solid var(--rule);
+    border-radius:10px;padding:10px 13px;margin-bottom:7px}
+.chip{width:40px;height:40px;border-radius:7px;flex:none}
+.tok{font:600 12px ui-monospace,SFMono-Regular,Menlo,monospace}
+.hex{font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--slate)}
+.use{font-size:12px;color:var(--slate)}
+.row{display:flex;gap:26px;align-items:center;border:1px solid var(--rule);
+     border-radius:10px;padding:14px;margin-bottom:9px;background:var(--wash)}
+figure{margin:0 0 20px}
+figure img{width:100%;display:block;border:1px solid var(--rule);border-radius:10px}
+figcaption{font-size:12px;color:var(--slate);margin-top:7px;max-width:80ch}
+@media (prefers-color-scheme:dark){
+  :root{--ink:#E8ECF0;--slate:#96A2AE;--rule:#2C3742;--wash:#151C24}
+  body{background:#0E141A}
+  figure img{background:#fff}
+}
+</style>
+<h1>Paper figures</h1>
+<p class="lede">Both figures share one visual language: same palette, same zone and chip styles, same boundary band. A reader who has parsed Figure 1 reads Figure 2 without relearning anything.</p>
+<h2>Figure 1 — the center-blind pipeline</h2><figure><img src="fig-pipeline.png" alt="Figure 1"><figcaption>The boundary is a full-height band, not a hairline. The lane turns amber at the hash and passes visibly through it, so what crosses is recognisably the same object the agent produced.</figcaption></figure><h2>Figure 2 — worked example, verbatim output</h2><figure><img src="fig-example.png" alt="Figure 2"><figcaption>Real hashes and labels from the auditor. Panel (c) carries the live confirmation that a frontier recipient recovers the withheld attribute from exactly these two messages.</figcaption></figure>
