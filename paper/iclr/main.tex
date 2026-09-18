@@ -1,0 +1,933 @@
+\documentclass{article}
+\usepackage{iclr2027_conference,times}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{url}
+\setlength{\emergencystretch}{2em}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{assumption}{Assumption}
+
+\newcommand{\ext}{\texttt{a2a.privacy/v1}}
+
+\title{Agents Over-Share: Measuring Cross-Tenant Privacy Leakage\\
+Between LLM Agents, and Auditing It Without Reading Them}
+
+% \iclrfinalcopy   % UNCOMMENT for camera-ready (reveals authors)
+\author{Anonymous authors\\Paper under double-blind review}
+
+\begin{document}
+\maketitle
+
+
+\begin{abstract}
+Autonomous agents increasingly delegate work to one another across organizational
+boundaries, and protocols such as A2A now standardize how they do so. We first
+measure what actually crosses those boundaries. On matched cross-boundary
+hand-off workflows over four recipient models, agents disclose regulated
+identifiers they were never authorized to share in $46$--$82\%$ of runs, while the
+recipient's ability to \emph{infer} a withheld sensitive attribute from
+individually benign fragments \emph{rises} with model capability, reaching $100\%$
+once two converging fragments arrive. The two trends move in opposite directions,
+so neither weak nor strong recipients can be trusted to behave: the safeguard has
+to be structural rather than behavioral.
+
+Auditing this is hard because the leakage happens on internal agent-to-agent
+channels, is often compositional, and centralized observability would require
+reading the very content that sensitive deployments will not expose. We present a
+center-blind auditor that decides from desensitized metadata it cannot invert to
+content, together with a privacy-typing extension that makes multi-tenant leakage
+expressible at all. We prove the center learns $O(\log)$ bits per message, derive
+in closed form when compositional inference becomes detectable, and evaluate where
+it is easiest to fool ourselves: against Microsoft Presidio our detector reaches
+$F1=0.94$ at specificity $1.00$ with zero content egress (Presidio's best-recall
+configuration reaches $F1=0.61$ at specificity $0.47$), and on a benchmark authored
+by a separate model precision holds while recall drops sharply. Against an adaptive
+adversary that knows the detector, $20{,}000$ randomized evasion strategies yield
+none that learns more than the policy permits without firing.
+\end{abstract}
+
+
+\section{Introduction}
+Agents are starting to talk to \emph{each other}. Protocols such as A2A (v1.0,
+Linux Foundation), MCP, and ACP let agents built by different teams discover
+capabilities and delegate work across organizational boundaries. As this fabric
+forms, a question with no answer today becomes urgent: \emph{when my agent hands
+data to your agent, what did it just share, and was it allowed to?}
+
+This is already a live privacy problem, not a hypothetical one. Production agents
+in regulated settings---healthcare schedulers, financial assistants, HR
+copilots---increasingly delegate to third-party agents, and a single over-shared
+identifier (an SSN, a diagnosis, an account number) crossing that organizational
+boundary is a concrete privacy harm under regimes such as HIPAA and GDPR. Our aim
+is a deployable safeguard for exactly these real cross-organizational agent
+interactions: the system we build runs today, sees no raw content, and---as our
+in-the-wild study shows (\S\ref{sec:eval})---catches current agents over-sharing
+regulated identifiers in 46--82\% of realistic hand-offs across four open-weight and
+frontier models.
+
+Three things make this hard at once. The leakage is where it is least watched:
+inter-agent messages leak far more than final outputs, yet no current framework
+monitors the internal channel~\citep{agentleak}. It is also compositional, arising
+from messages that are each individually benign even when every agent obeys its
+own policy~\citep{sumleaks}. And across organizations the parties do not trust one
+another: the other agent is the adversary, and no one will route raw content
+through a central observer, which is precisely what centralized observability
+(LangSmith, Langfuse) requires.
+
+The protocols do not help. We verified against the A2A v1.0 specification that its
+data model (\texttt{AgentCard}, \texttt{Task}, \texttt{Message}, \texttt{Part})
+has \textbf{no data-governance semantics}: no field marks whom a datum is about,
+who owns it, what it may be used for, or which agent may receive it. A2A provides
+free-form \texttt{metadata}, an \texttt{extensions} array, and a loosely-specified
+\texttt{tenant} field that routes but does not govern.
+
+We close this gap. Our contributions:
+\begin{enumerate}
+\item \textbf{Privacy typing for multi-tenant agent interaction.} \ext{} separates the
+three roles a single identifier conflates today---data subject, owning principal,
+agent principal---and carries them in \texttt{Part.metadata}, making cross-tenant
+leakage \emph{expressible} in the first place. It composes with unmodified A2A.
+\item \textbf{A center-blind auditor with formal guarantees.} Four detectors run over
+desensitized metadata the center cannot invert. We prove the center learns only
+$O(\log)$ bits per message (Lemma~\ref{lem:blind}); we give a closed form for when
+compositional inference becomes detectable (Prop.~\ref{prop:k}), and show empirically
+that it collapses a three-parameter model to a single effective knob $k^{*}$; and we
+prove attestation soundness (Prop.~\ref{prop:attest}), confining the residual
+adversary to key compromise or sub-threshold leakage.
+\item \textbf{A measurement of the threat in today's agents.} On matched scenario sets
+across four recipient models---open-weight 7--14B through a frontier model---agents
+over-share regulated identifiers in \textbf{46--82\%} of realistic cross-boundary
+hand-offs, while inference ability \emph{rises} with capability (to $100\%$ at
+$k^{*}{=}2$). The two trends move in opposite directions, so neither weak nor strong
+recipients can be trusted to behave: the safeguard has to be structural.
+\item \textbf{A2A-MT and an honest evaluation.} The first multi-tenant agent-privacy
+benchmark, validated against the external AgentLeak suite, a properly configured
+Presidio DLP baseline, and an author-independent held-out set. We report where the
+approach fails as carefully as where it works: recall is bounded by the tagger, and an
+over-tagging LLM backend costs end-to-end precision.
+\end{enumerate}
+Setting every principal equal collapses the system to the \textbf{in-container}
+case---one organization auditing its own multi-agent app---so the research result
+and a practical product share one implementation (Figure~\ref{fig:arch}).
+
+
+\begin{figure}[t]\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm,y=1mm,font=\footnotesize,>=Latex,
+  zone/.style={rounded corners=2mm,draw=#1!40,fill=#1!5,line width=0.5pt},
+  badge/.style={circle,fill=#1!65!black,text=white,inner sep=0pt,font=\bfseries\tiny,minimum size=3.6mm},
+  pil/.style={draw=#1!55!black,fill=#1!12,rounded corners=1.1mm,inner sep=2pt,font=\scriptsize},
+  chip/.style={draw=orange!65!black,fill=orange!12,rounded corners=1.1mm,inner sep=2pt,font=\scriptsize},
+  ar/.style={-{Latex},semithick},
+  ttl/.style={font=\scriptsize\bfseries},
+  ic/.style={line width=0.34pt}]
+\tikzset{
+  ic doc/.pic={\draw[ic,fill=white](-1.3,-1.7)rectangle(1.3,1.7);
+    \draw[ic](-0.8,1.0)--(0.8,1.0)(-0.8,0.3)--(0.8,0.3)(-0.8,-0.4)--(0.3,-0.4);},
+  ic tag/.pic={\draw[ic,fill=white](-1.5,-1.1)--(0.5,-1.1)--(1.5,0)--(0.5,1.1)--(-1.5,1.1)--cycle;
+    \fill(0.55,0)circle(0.2);},
+  ic lock/.pic={\draw[ic,fill=white](-1.25,-1.6)rectangle(1.25,0.3);
+    \draw[ic](-0.7,0.3)arc(180:0:0.7);\fill(0,-0.6)circle(0.2);},
+  ic alert/.pic={\draw[ic,fill=white](0,1.6)--(1.5,-1.2)--(-1.5,-1.2)--cycle;
+    \draw[ic](0,0.9)--(0,-0.2);\fill(0,-0.7)circle(0.16);}}
+% ============ (1) local, at each agent ============
+\node[zone=blue,fit={(0,-28)(58,10)},inner sep=0] {};
+\node[badge=blue] at (4,7.5) {1};
+\node[anchor=west,ttl] at (7,7.5) {Local --- at each agent};
+\foreach \y in {-1,-16}{
+  \pic at (24,{\y+4}) {ic doc};  \node[pil=red]   at (24,\y) {content};
+  \pic at (37,{\y+4}) {ic tag};  \node[pil=blue]  at (37,\y) {tag};
+  \pic at (50,{\y+4}) {ic lock}; \node[pil=green] at (50,\y) {hash};
+  \draw[ar] (29.2,\y)--(33.4,\y); \draw[ar] (40.6,\y)--(45.4,\y);}
+\node[anchor=west,font=\scriptsize,align=left] at (2.5,-1)  {tenant $P$\\agent};
+\node[anchor=west,font=\scriptsize,align=left] at (2.5,-16) {tenant $Q$\\agent};
+\node[anchor=north,font=\scriptsize,gray!75!black] at (29,-22.5)
+  {raw content never leaves the agent};
+% ============ trust boundary ============
+\draw[dashed,gray!70,line width=0.7pt] (63,12)--(63,-29);
+\node[anchor=south,font=\scriptsize,gray!70!black] at (63,12) {trust boundary};
+% ============ (2) what crosses ============
+\node[badge=orange] at (66,7.5) {2};
+\node[anchor=west,ttl] at (69,7.5) {Only metadata crosses};
+\node[chip] (eP) at (86,-1)  {$\langle$\,hash, \ext{} labels\,$\rangle$};
+\node[chip] (eQ) at (86,-16) {$\langle$\,hash, \ext{} labels\,$\rangle$};
+\draw[ar] (54.6,-1)--(eP.west); \draw[ar] (54.6,-16)--(eQ.west);
+\node[anchor=north,font=\scriptsize,gray!75!black] at (86,-22.5) {0 content bytes};
+% ============ (3) center-blind auditor ============
+\node[zone=green,fit={(108,-28)(154,10)},inner sep=0] {};
+\node[badge=green] at (112,7.5) {3};
+\node[anchor=west,ttl] at (115,7.5) {Center-blind auditor};
+\foreach \y/\d in {1/{cross-tenant disclosure}, -4.5/{purpose limitation},
+                   -10/{hop / TTL}, -15.5/{cross-tenant inference}}{
+  \fill[green!55!black] (112,\y) circle (0.7);
+  \node[anchor=west,font=\scriptsize] at (114,\y) {\d};}
+\node[anchor=north,font=\scriptsize,gray!75!black] at (131,-22.5) {reasons over the metadata graph};
+\draw[ar] (eP.east)--(107,-3); \draw[ar] (eQ.east)--(107,-7);
+% ============ (4) violations ============
+\node[zone=red,fit={(160,-10)(178,4)},inner sep=0] {};
+\node[badge=red] at (163.5,1.5) {4};
+\node[anchor=west,font=\scriptsize\bfseries] at (166,1.5) {violations};
+\pic at (169,-5.5) {ic alert};
+\draw[ar] (154.5,-3)--(159.5,-3);
+% ============ guarantee strip ============
+\node[rounded corners=1.4mm,fill=gray!8,draw=gray!35,inner sep=1.5mm,font=\scriptsize,
+  anchor=north] at (89,-31)
+  {the center learns $I(M;V)\le\log_2|\mathcal{L}|$ --- $O(\log)$ bits per message, so it
+   cannot invert the graph to content (Lemma~\ref{lem:blind})};
+\end{tikzpicture}
+}
+\caption{The federated, center-blind pipeline. \textbf{(1)} Inside each agent the raw
+\textcolor{red!60!black}{content} is \textcolor{blue!60!black}{tagged} and
+\textcolor{green!45!black}{hashed} in process. \textbf{(2)} Only a desensitized
+edge---a one-way hash plus \ext{} labels, zero content bytes---crosses the trust
+boundary. \textbf{(3)} The center runs four detectors over the resulting metadata
+graph and \textbf{(4)} emits violations. It never sees content, and provably cannot
+recover it (Lemma~\ref{lem:blind}).}
+\label{fig:arch}
+\end{figure}
+
+\section{Background and the governance gap}
+An A2A interaction is a sequence of \texttt{Message}s between agents; each carries
+\texttt{Part}s (text/data/file) and free-form \texttt{metadata}. The model has no
+field for ownership, sensitivity, purpose, or recipient restriction; privacy is
+delegated to ``external access control'' that, across tenants, does not exist. We
+add the missing layer inside A2A's extension mechanism so it composes with
+deployed agents, and audit it with a \emph{federated} architecture: each agent
+desensitizes locally; a central auditor reasons over a graph of metadata it can
+never invert to content.
+
+
+\section{Threat model}\label{sec:threat}
+\paragraph{Principals.} A single identifier must not conflate three roles: the
+\textbf{data subject} (whom a Part is about), the \textbf{owning principal} (who
+controls the datum and the originating agent), and the \textbf{agent principal} (an
+agent's AgentCard identity). Governance is defined over principals, not agents: a
+datum owned by $P$ may reach an agent of $Q$ only if $Q$ is an allowed recipient for
+$P$'s stated purpose.
+
+\paragraph{Adversary.} We consider a receiving or forwarding agent of a different
+tenant with three capabilities: (A1) it reads every Part routed to it and may
+\emph{infer} beyond what is stated; (A2) it may \emph{paraphrase, split, or re-route}
+what it forwards; and (A3) a \emph{dishonest sender} may mislabel its own Parts
+(suppress tags or forge a subject id), since labels are produced locally. The
+adversary controls neither the A2A transport nor other tenants' processes.
+
+\paragraph{Trust assumptions (software baseline).} (T1) \emph{center-blind}: the
+auditor detects from desensitized metadata and never sees raw \texttt{Part} content,
+and no tenant reveals content to it or to peers; (T2) \emph{honest-but-curious peers}
+for the disclosure, purpose, and TTL detectors---agents route truthfully but try to
+learn more than authorized; (T3) \emph{A2A transport is given}---we annotate and
+audit, not replace. Under T1--T3 the design defeats A1 and A2 (wording and routing
+attacks) by construction, because the detectors key on labels and principals, not on
+text (\S\ref{sec:eval}); A3 is the residual the baseline does not close.
+
+\paragraph{Closing A3 with forced-embed attestation.} We remove the honest-labeler
+assumption with a downloaded, build-pinned component. The labeler and auditor ship as
+a fixed build $B$ whose signing key $k_B$ is confined to $B$; a report is
+$R=(\mathcal{E},\sigma)$ with $\sigma=\mathrm{Sign}_{k_B}(H(\mathcal{E}))$ over the
+center-view edge set $\mathcal{E}$, and the center accepts $R$ only if it verifies
+under $B$'s published fingerprint.
+
+\begin{proposition}[Attestation soundness]\label{prop:attest}
+If the signature scheme is \textup{EUF-CMA}-secure and $k_B$ is confined to $B$, then
+every report the center accepts equals $B$'s output on the sender's actual inputs,
+except with negligible probability. Hence a modified labeler that suppresses a tag or
+forges a subject id yields a report signed by an untrusted build (wrong fingerprint)
+and is rejected, and content tampering changes $H(\mathcal{E})$ and fails
+verification. The residual adversary is confined to (i) exfiltrating $k_B$ from
+$B$---the case a hardware root of trust (TEE) closes---and (ii) \emph{sub-threshold}
+leakage: disclosing strictly less than the detection threshold, which no
+metadata-only auditor can observe because nothing crosses to observe.
+\end{proposition}
+
+
+\noindent This is the guarantee the evasion study (\S\ref{sec:eval},
+Table~\ref{tab:evasion}) exercises empirically.
+
+
+\section{The \ext{} extension}
+The three roles of the threat model become fields the protocol can carry. Each
+privacy-relevant \texttt{Part} carries a label under
+\texttt{Part.metadata["a2a.privacy/v1"]}:
+\[
+\textsf{PrivacyLabel} = \{\,
+\text{subject},\ \text{owner},\ \text{sensitivity}\!\in\![0,5],\ \text{category}[],
+\]
+\[
+\text{inferred\_categories}[],\ \text{purpose}[],\ \text{allowed\_recipients}[],\
+\text{ttl\_hops},\ \text{provenance\_id}\,\}.
+\]
+Identifiers are opaque (\texttt{subject:alice}, \texttt{tenant:hospital})---governance
+metadata, never content. An \texttt{AgentClearance} (an AgentCard declaration)
+states the purposes an agent is cleared for, so cross-tenant rules are checkable
+from public metadata. Two fields are central to the results:
+\textbf{inferred\_categories} is computed \emph{locally} (the local auditor sees
+content; ``near the oncology center'' $\rightarrow$ \texttt{health}) and only the
+tag travels---the signal the inference detector accumulates without the center
+reading content; \textbf{provenance\_id} is a stable datum identity assigned by the
+origin and preserved by forwarders even when they re-word the data, so hop/TTL
+tracking follows a datum across paraphrasing (a content hash breaks the moment a
+relay rephrases).
+
+
+\section{The center-blind auditor and detectors}\label{sec:auditor}
+These labels are exactly what the auditor reads, and the content is exactly what
+it does not. The auditor desensitizes each labeled \texttt{Part} into a
+center-view edge carrying a one-way content hash, the principals, and the
+label---no raw text (Figure~\ref{fig:desens}). It
+asserts this invariant on its own output: a content token may appear in the center
+view only if it is a declared label value or a schema field name; any other token
+is a leak.
+
+\begin{lemma}[Bounded content leakage]\label{lem:blind}
+Let a message $M$ (with content entropy $H(M)$) produce center-view
+$V=(H(M),\ell)$, where $H$ is a hash modeled as a random oracle and
+$\ell\in\mathcal{L}$ is the categorical label (category, sensitivity, taint tags,
+opaque principal/subject ids). Then the center's information about $M$ satisfies
+$I(M;V)\le \log_2|\mathcal{L}|$, a constant independent of $|M|$. Hence for
+$H(M)\gg\log_2|\mathcal{L}|$ the center cannot reconstruct $M$.
+\end{lemma}
+
+\begin{figure}[t]\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm,y=1mm,font=\footnotesize,>=Latex,
+  zone/.style={rounded corners=2mm,draw=#1!40,fill=#1!5,line width=0.5pt},
+  badge/.style={circle,fill=#1!65!black,text=white,inner sep=0pt,font=\bfseries\tiny,minimum size=3.6mm},
+  ttl/.style={font=\scriptsize\bfseries},
+  bub/.style={draw=blue!45!black,fill=blue!8,rounded corners=1.4mm,inner sep=1.7mm,
+              text width=44mm,align=left,font=\scriptsize},
+  edg/.style={draw=gray!55,fill=white,rounded corners=1.4mm,inner sep=1.7mm,
+              text width=52mm,align=left,font=\scriptsize},
+  ar/.style={-{Latex},semithick}]
+% ============ (a) at the sending agent ============
+\node[zone=blue,fit={(0,-30)(54,10)},inner sep=0] {};
+\node[badge=blue] at (4,7.5) {a};
+\node[anchor=west,ttl] at (7,7.5) {At alice's agent (tenant $P$)};
+\node[bub] (m1) at (27,0)
+  {``Standing appointment every Tuesday afternoon for the next 8 weeks.''};
+\node[bub] (m2) at (27,-15)
+  {``Can only meet somewhere near the oncology center.''};
+\node[anchor=north,font=\scriptsize,gray!75!black,align=center] at (27,-24)
+  {label: subject\,$s$ $\cdot$ owner\,alice $\cdot$ purpose\,[scheduling] $\cdot$ allow\,[bob]};
+% ============ boundary ============
+\draw[dashed,gray!70,line width=0.7pt] (59,12)--(59,-32);
+\node[anchor=south,font=\scriptsize,gray!70!black] at (59,12) {trust boundary};
+% ============ (b) what the center receives ============
+\node[zone=orange,fit={(64,-30)(128,10)},inner sep=0] {};
+\node[badge=orange] at (68,7.5) {b};
+\node[anchor=west,ttl] at (71,7.5) {What the center actually receives};
+\node[edg] (e1) at (96,0)
+  {\texttt{hash 303a15068941cca9}\\[1.5pt]
+   category [schedule]\, \colorbox{red!16}{inferred [health]}\, sens 4};
+\node[edg] (e2) at (96,-15)
+  {\texttt{hash f1a39ba19d396523}\\[1.5pt]
+   category [schedule]\, \colorbox{red!16}{inferred [health, location]}\, sens 4};
+\draw[ar] (m1.east)--(e1.west); \draw[ar] (m2.east)--(e2.west);
+\node[anchor=north,font=\scriptsize,gray!75!black] at (96,-24)
+  {\textbf{0 content bytes} --- no message text crosses};
+% ============ (c) detection + real-world validation ============
+\node[zone=green,fit={(134,-30)(178,10)},inner sep=0] {};
+\node[badge=green] at (138,7.5) {c};
+\node[anchor=west,ttl] at (141,7.5) {Detection};
+\node[draw=green!50!black,fill=white,rounded corners=1.4mm,inner sep=1.6mm,
+      text width=36mm,align=left,font=\scriptsize] at (156,-1)
+  {two converging \textcolor{red!70!black}{inferred [health]}
+   fragments on subject $s$\\[2pt]
+   $k=2\ \ge\ k^{*}$ $\Rightarrow$
+   \textcolor{red!70!black}{\bfseries cross-tenant inference} fires};
+\node[draw=red!45!black,fill=red!6,rounded corners=1.4mm,inner sep=1.6mm,
+      text width=36mm,align=left,font=\scriptsize] at (156,-21)
+  {and it is real: a live recipient (Claude Opus~4.8) infers
+   \emph{``undergoing cancer treatment''} from these two messages};
+\draw[ar] (e1.east)--(133,-2); \draw[ar] (e2.east)--(133,-6);
+\end{tikzpicture}
+}
+\caption{A worked example, with real system output. \textbf{(a)} Two scheduling
+messages leave alice's agent; neither states a sensitive value, and bob is an allowed
+recipient of both. \textbf{(b)} What the center receives is only a one-way hash plus
+labels---the local tagger has derived \texttt{inferred [health]} from ``oncology
+center'' and a recurring appointment, and \emph{no message text crosses}.
+\textbf{(c)} Two converging health fragments about the same subject reach
+$k^{*}{=}2$, so the cross-tenant inference detector fires from the metadata alone;
+a live frontier recipient does in fact recover the withheld attribute from exactly
+these two messages (\S\ref{sec:eval}). Hashes and labels are verbatim auditor output.}
+\label{fig:desens}
+\end{figure}
+
+This is the formal content of ``center-blind'': the auditor operates on a metadata
+graph carrying $O(\log)$ bits per message, not a transcript. Four detectors run
+over this graph:
+\begin{enumerate}[leftmargin=1.4em]
+\item \textbf{Cross-tenant disclosure}: sensitive data ($\geq\tau$) reaches a
+principal that neither owns it nor is an allowed recipient.
+\item \textbf{Purpose limitation}: data reaches an agent whose clearance purposes
+are disjoint from the data's permitted purposes.
+\item \textbf{Hop/TTL}: a datum (tracked by \texttt{provenance\_id}) is relayed
+more than \texttt{ttl\_hops} times; robust to a forwarder re-wording content.
+\item \textbf{Cross-tenant inference}: no single edge is a disclosure, but a
+recipient principal accumulates converging \texttt{inferred\_categories}
+fragments about one subject, letting it infer a sensitive category it was never
+authorized for (Figure~\ref{fig:desens}); we ground this in the bound below.
+\end{enumerate}
+
+
+\paragraph{A formal inference-gain bound.} We model what a recipient infers about
+a subject's sensitive attribute $A\in\{0,1\}$ from $k$ converging fragments
+$f_1,\dots,f_k$, with prior $p_0=P(A{=}1)$ and odds $O_0=p_0/(1-p_0)$.
+
+\begin{assumption}[Conditional independence]\label{as:ci}
+Given $A$, the fragments are independent, each with likelihood ratio
+$\lambda_i=\tfrac{P(f_i\mid A{=}1)}{P(f_i\mid A{=}0)}\ge1$; write $\lambda$ for a
+common lower bound $\lambda_i\ge\lambda>1$.
+\end{assumption}
+
+\begin{proposition}\label{prop:k}
+Under Assumption~\ref{as:ci} the posterior odds are $O_k=O_0\prod_i\lambda_i$, the
+posterior is $P(A\mid f_{1:k})=O_k/(1+O_k)$, and the inference gain
+$g(k)=P(A\mid f_{1:k})-p_0$ is strictly increasing in $k$. With uniform $\lambda$,
+the detector (fires iff $g(k)\ge\delta$) fires exactly for
+$k\ge k^{*}=\big\lceil\log_\lambda(O_\delta/O_0)\big\rceil$, where
+$O_\delta=(p_0+\delta)/(1-p_0-\delta)$.
+\end{proposition}
+
+For defaults $(p_0,\lambda,\delta)=(0.1,3,0.3)$, $k^{*}=2$: one hint never fires,
+two converging fragments do (posterior $0.50$, gain $0.40$), replacing the
+heuristic $1-2^{-k}$ with a calibrated quantity and a closed-form bound (Figure~\ref{fig:gain});
+deployments tune $(p_0,\lambda,\delta)$ and may set $\lambda_i$ from the tagger's
+hint specificity (so one high-$\lambda$ fragment can suffice).
+\emph{On the assumption:} real fragments are correlated, so
+Assumption~\ref{as:ci} is an approximation --- positively-correlated (redundant)
+hints make the true joint ratio smaller than $\prod\lambda_i$, so the model can
+over-credit evidence; empirically the detector nonetheless \emph{under}-fires
+relative to a real LLM recipient, because tagger coverage, not the bound, is the
+binding constraint. The bound is thus a calibrated design tool, not a tight
+guarantee.
+
+
+\section{Evaluation}\label{sec:eval}
+We ask whether the auditor detects multi-tenant leaks accurately and
+without seeing content; how it fares against the tools a practitioner would
+actually deploy; whether the result survives once we stop grading our own work;
+and whether the compositional threat it targets is real.
+
+
+\subsection{Agents in the wild}
+Away from any labeled benchmark, we measure how real agents behave: 24 realistic
+multi-agent workflows across 7 domains, each holding a sensitive record, where a
+coordinator agent is asked to delegate to an \emph{external} specialist with no
+engineered leaks, run 5$\times$ each (120 trials) for \emph{each} of four recipient
+models spanning open-weight (Qwen2.5-7B/14B, Llama-3.1-8B) and frontier
+(Claude~Opus~4.8). Over-sharing is prevalent across every model and, revealingly,
+\emph{falls with capability but never disappears}: the open models leak the subject's
+sensitive identifiers (SSN, MRN, account/card numbers, diagnoses) in \textbf{78--82\%}
+of trials, the aligned frontier model in \textbf{46\%} (Table~\ref{tab:wild}). Every
+cross-purpose hand-off is a purpose violation by construction, and the center-blind
+auditor flagged all of them with \textbf{zero raw content reaching the center on every
+model}. This is the deployment-measurement counterpart to AgentLeak on the
+multi-tenant setting: left to their own judgment, current agents---weak and strong
+alike---routinely over-share a subject's identifiers across organizational boundaries,
+and the auditor catches it without seeing the data.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{llcc}
+\toprule
+Recipient model & tier & disclosure & raw$\to$center \\
+\midrule
+Qwen2.5-7B   & small (open) & 82\% (99/120) & \textbf{0} \\
+Llama-3.1-8B & small (open) & 81\% (97/120) & \textbf{0} \\
+Qwen2.5-14B  & mid (open)   & 78\% (94/120) & \textbf{0} \\
+\textbf{Claude Opus~4.8} & frontier & \textbf{46\% (55/120)} & \textbf{0} \\
+\bottomrule
+\end{tabular}
+\caption{Cross-boundary over-sharing by recipient model (24 workflows $\times$ 5 runs
+$=120$ trials each, same set). Over-sharing falls with capability/alignment but stays
+high; the auditor catches all at zero content egress.}
+\label{tab:wild}
+\end{table}
+
+\subsection{Is the inference threat real?}
+Our detector fires at $k^{*}=2$ hints, but is that where real inferability begins? We
+have an independent LLM play the recipient and infer the subject's withheld attribute
+from the $K$ benign fragments it received ($K=1,2,3$), scaled to \textbf{16 sensitive
+attributes} across health, finance, employment, legal, and behavioral domains
+($5$ trials each). \emph{The threat is real, and for a frontier recipient it begins
+below our threshold:} Claude Opus~4.8 infers the withheld attribute from two benign
+fragments in \textbf{100\% (16/16)} of attributes and from a \emph{single} fragment in
+\textbf{81\% (13/16)}. Weaker recipients need more evidence: on the same 16-attribute
+set, open-weight recipients infer at $K{=}2$ in 56--69\% (Qwen2.5-7B, Llama-3.1-8B)
+and 81\% (Qwen2.5-14B) of attributes, versus 100\% for the frontier model---inference
+at the detection threshold rises with capability, so the compositional threat grows as
+agents improve. \emph{This makes our detector
+a conservative, no-false-alarm lower bound:} it stays silent at $K=1$, yet a strong
+recipient already infers there; every disagreement is an under-fire, and we never fire
+where the recipient cannot infer. Hence detection must flag the metadata pattern, not
+try to out-infer the adversary. The
+threshold $k^{*}=2$ with uniform evidence is conservative: real inference sometimes needs one high-specificity hint, which
+the Bayesian model of \S\ref{sec:auditor} accommodates via a per-fragment
+$\lambda$; wiring
+$\lambda$ to hint specificity catches single strong hints without over-firing.
+
+
+\subsection{Comparison with real baselines}
+A hand-rolled regular-expression scanner is not a credible DLP baseline, so we run
+\textbf{Microsoft Presidio}~\citep{presidio} itself, in two realistic configurations: a
+strict identifier policy (SSN, card, email, phone, bank, passport, licence) and a
+broad one that adds \texttt{PERSON}, \texttt{LOCATION}, \texttt{NRP} and
+\texttt{DATE\_TIME}. The set is 32 realistic scenarios (17 leaks / 15 clean) spanning
+all four violation types plus the cases that separate the approaches: non-regex PII, a
+diagnosis, authorized external sharing, benign traffic, and single-hint near-misses
+that must \emph{not} fire (Table~\ref{tab:frontier}).
+
+\emph{Structurally}, every baseline must ingest content while ours ingests none---the
+disqualifier for regulated, cross-tenant deployments, independent of accuracy.
+\emph{On accuracy}, no Presidio configuration wins on both axes. The identifier policy
+reaches only $F1{=}0.26$: it has no notion of owner, purpose, or hop budget, so it
+misses inference, purpose, and TTL violations entirely, and the three clean scenarios
+it does flag are precisely the \emph{authorized} external shares. The broad policy
+buys recall ($0.65$) only by firing indiscriminately---specificity falls to $0.47$,
+flagging eight of fifteen clean scenarios including a lunch invitation and a slide
+deck---so its apparently strong $83\%$ ``inference recall'' is not inference detection
+at all, merely the observation that those messages contain a place and a date. A
+policy-aware LLM-judge that reads every byte is precise but insensitive
+($F1{=}0.58$, $0\%$ inference recall). Ours leads at $F1{=}0.94$ with specificity
+$1.00$ and \emph{zero} content reaching the center; every miss is tagger coverage
+(employment- and behavioral-domain hints), never a false alarm. Consistent with the
+tagger study below, the open-weight LLM tagger does not help here---it slightly
+\emph{trails} the lexical floor---so the lift we previously measured was specific to a
+proprietary backend.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lcccccc}
+\toprule
+Detector & P & R & F1 & spec. & inf.\ rec. & content$\to$center \\
+\midrule
+Presidio DLP, identifiers & 0.50 & 0.18 & 0.26 & 0.80 & 0\% & 1{,}839 ch \\
+Presidio DLP, broad & 0.58 & 0.65 & 0.61 & 0.47 & 83\% & 1{,}839 ch \\
+LLM-judge, policy-aware & 1.00 & 0.41 & 0.58 & 1.00 & 0\% & 1{,}839 ch \\
+Ours --- LLM tagger, open 14B & 1.00 & 0.82 & 0.90 & 1.00 & 50\% & \textbf{0} \\
+\textbf{Ours --- lexical tagger} & \textbf{1.00} & \textbf{0.88} & \textbf{0.94} & \textbf{1.00} & 67\% & \textbf{0} \\
+\bottomrule
+\end{tabular}
+\caption{Ours vs.\ real baselines on 32 realistic scenarios (17 leaks). All baselines
+read every byte; ours decides at zero content egress. Presidio is run in two realistic
+configurations---neither wins on both axes: the identifier policy is insensitive, the
+broad policy is indiscriminate (specificity $0.47$). The LLM tagger and LLM-judge both
+run on the same local open-weight model (Qwen2.5-14B).}
+\label{tab:frontier}
+\end{table}
+
+
+\subsection{Adaptive evasion: what can an adversary learn while evading?}
+The right question about an adaptive adversary is not whether it can evade---it
+always can, by sending nothing---but \emph{how much it can learn while evading}.
+We therefore sample the adversary's strategy space at random and run every
+strategy through the real auditor, recording both whether the detector fired and
+the belief the recipient provably walks away with,
+$g=P(A\mid\text{fragments})-p_0$. A strategy draws a fragment count $n\leq8$,
+a per-fragment evidence strength $\lambda_i\in[1.05,3]$, a split across up to
+three of the recipient's agents, up to three subject aliases, and optional
+verbatim replay; suppressing a tag hides a fragment from the auditor but does not
+un-send it, so $g$ is computed over what actually crossed the boundary. Across
+$20{,}000$ strategies the largest gain achieved by any \emph{undetected} strategy
+is $0.29992$ against the policy threshold $\delta{=}0.3$: not one evasion crossed
+the line (Table~\ref{tab:evasion}). Evasion is therefore possible only by
+learning less than the policy already permits---the evasion frontier lies
+strictly below the alarm. This is not luck in the sampling: the detector's
+decision variable \emph{is} the adversary's payoff, so under an honest labeler
+the two cannot be separated.
+
+The two integrity mechanisms are load-bearing rather than decorative, and
+ablating them says by how much. Removing forced-embed attestation lets the sender
+run a labeler that suppresses its own inference tags; sweeping the tag rate $q$,
+detection falls from $0.54$ to $0$ as $q\to0$ and $53.6\%$ of strategies evade
+\emph{while} crossing $\delta$---leaking at full strength, unseen. Removing
+canonical owner-derived subject ids lets the sender alias the subject and break
+the grouping the detector accumulates over: $16.3\%$ become harmful evasions. No
+configuration ever put raw content in the center view. We \emph{implement} both
+defenses:
+the auditor+tagger ship as a build-pinned component whose key is held only by the
+unmodified binary, and the center accepts a report only from a trusted build
+fingerprint. Under-tagging and forgery require modifying the labeler, so the
+report is signed by an untrusted build and is \textbf{rejected}; tampering is
+caught by an edges-hash mismatch; canonical owner-derived subject ids
+(\texttt{canonical\_subject}) make aliasing impossible without abandoning the
+attested derivation. The evasions become detected non-compliance, leaving only
+key compromise (the TEE regime) as residual---the guarantee stated formally in
+Prop.~\ref{prop:attest} (\S\ref{sec:threat}). Partial deployment degrades
+gracefully but not for free: a center that requires attestation rejects an
+unattested report outright, so the adversary can only hide on an unenrolled
+tenant, and at enrollment coverage $c$ the residual harmful-evasion rate is
+$(1-c)\times53.6\%$---$c{=}0.99$ to hold it below $1\%$.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lccc}
+\toprule
+Configuration & detect & max $g$ evaded & harmful evasions \\
+\midrule
+Full design & 0.54 & \textbf{0.29992} & \textbf{0.0\%} \\
+$-$ attestation ($q{=}0.4$) & 0.20 & 0.90 & 33.9\% \\
+$-$ attestation ($q{=}0$) & 0.00 & 0.90 & 53.6\% \\
+$-$ canonical subject ids & 0.38 & 0.90 & 16.3\% \\
+\bottomrule
+\end{tabular}
+\caption{Adaptive evasion, $20{,}000$ random strategies per configuration. A
+\emph{harmful} evasion is one that goes undetected \emph{and} gives the recipient
+a belief gain $\geq\delta{=}0.3$. Under the full design there are none: the
+largest gain any evasion achieves is $0.29992$, just under the threshold. Each
+ablated mechanism admits evasion at the full attainable gain ($0.90$).}
+\label{tab:evasion}
+\end{table}
+
+
+\subsection{An author-independent benchmark}
+Our 48-scenario benchmark scores 1.0, but we wrote both the detectors and the
+scenarios. To de-bias it, an LLM (\emph{not} the detector author) generates diverse
+scenarios with its own intended labels and we score our auditor against them. Pooling
+six batches gives \textbf{75 scenarios} (46 intended leaks), every one of which parses
+and is scored---no silent sample shrinkage. The honest result sits far below the
+self-authored 1.0: with the lexical tagger $P{=}1.00$, $R{=}0.17$; with an open-weight
+LLM tagger recall rises to $R{=}0.46$ but precision falls to $P{=}0.88$ (three false
+positives). That last number sharpens a claim we would otherwise have overstated: the
+architecture does not over-fire \emph{given correct labels}, but an over-tagging
+backend can still manufacture false positives end-to-end, so perfect precision is a
+property of the auditor, not a guarantee of the deployed pipeline.
+
+The miss taxonomy locates the gap. False negatives split roughly evenly between
+\emph{explicit disclosure} (42\% lexical, 36\% LLM-backed) and \emph{inference} (34\%,
+36\%), with purpose violations a distant third (11\%, 12\%). The bottleneck is
+therefore broad tagger and taxonomy coverage---open-world sensitive content that our
+ten configurable classes (health, finance, legal, location, employment, education,
+behavioral, credentials, biometric, demographic) simply do not name---rather than a
+weakness specific to the inference detector. Two caveats keep this honest in both
+directions. The author model states some ``inferences'' explicitly and labels
+borderline cases as leaks, so part of the 49--63\% agreement is label noise rather
+than a detector gap, which is why we report agreement alongside $P/R$ instead of
+treating the author's labels as gold. And the two settings measure different things:
+the self-authored 1.0 measures the detectors given correct labels, while the held-out
+setting measures the end-to-end pipeline on open-world content, where the tagger---an
+orthogonal, improvable component---is the binding constraint.
+
+
+\subsection{External validation on AgentLeak}
+The multi-tenant
+auditor reuses a federated engine we validate on the external \textbf{AgentLeak}
+benchmark. Driving AgentLeak's own 600 multi-agent scenarios through an LLM to
+produce real inter-agent traces and labeling leakage by AgentLeak's rule, the
+auditor detects \textbf{100\% of internal-channel leaks at 0.972 precision with
+zero raw vault content reaching the center} ($82.5\%$ internal-channel leak rate,
+matching AgentLeak). On a labeled 33-scenario set the engine holds $P/R/F1=1.0$,
+and under the full six-layer desensitizer plus DP it holds $F1\approx0.97$ at
+$\varepsilon\in[0.5,3]$ with zero raw leakage, the privacy--utility result the
+multi-tenant typing builds on.
+
+
+\section{Discussion}
+Center-blind detection works because the risks it targets are visible in the
+metadata graph (principals, categories, inferred-category tags, provenance), all
+of which the local side can emit without revealing content. The same observation
+explains why the system is at once a research result and a product: set every
+owning principal equal and the multi-tenant model collapses to the in-container
+case, where the identical detectors flag a sensitive datum crossing to an agent or
+tool it should not reach, still without shipping content anywhere.
+
+\begin{figure}[t]\centering
+\begin{tikzpicture}[font=\footnotesize,x=26mm,y=0.30mm,>=Latex]
+\foreach \y in {25,50,75,100} \draw[gray!22,line width=0.3pt] (0.78,\y)--(3.45,\y);
+\draw[->,gray!70] (0.78,0)--(3.6,0);
+\draw[->,gray!70] (0.78,0)--(0.78,120) node[above,font=\scriptsize,black]{\%};
+\foreach \y in {0,50,100} \draw[gray!70] (0.74,\y)--(0.78,\y) node[left,font=\scriptsize,black]{\y};
+\foreach \x/\l in {1/{small\\7--8B},2/{mid\\14B},3/{frontier\\Opus 4.8}}
+  \node[align=center,font=\scriptsize,anchor=north] at (\x,-5) {\l};
+% explicit over-sharing: falls with capability
+\draw[very thick,red!70!black] (1,81.5)--(2,78)--(3,46);
+\foreach \x/\y in {1/81.5,2/78,3/46}
+  \filldraw[fill=white,draw=red!70!black,line width=0.7pt] (\x,\y) circle (1.6pt);
+\node[font=\scriptsize,red!70!black,anchor=south] at (1,84) {82\%};
+\node[font=\scriptsize,red!70!black,anchor=north] at (3,43) {46\%};
+% implicit inference: rises with capability
+\draw[very thick,blue!60] (1,62.5)--(2,81)--(3,100);
+\foreach \x/\y in {1/62.5,2/81,3/100}
+  \filldraw[fill=white,draw=blue!60,line width=0.7pt] (\x,\y) circle (1.6pt);
+\node[font=\scriptsize,blue!55!black,anchor=north] at (1,59) {63\%};
+\node[font=\scriptsize,blue!55!black,anchor=south] at (3,103) {100\%};
+% direct labels instead of a legend box
+\node[font=\scriptsize,red!70!black,anchor=east,align=right] at (2.92,26)
+  {over-sharing\\(explicit)};
+\node[font=\scriptsize,blue!55!black,anchor=east,align=right] at (2.62,112)
+  {inference @ $k^{*}{=}2$\\(implicit)};
+\end{tikzpicture}
+\caption{Two opposing trends across recipient capability (tier means; per-model values
+in Table~\ref{tab:wild} and \S\ref{sec:eval}). As recipients get stronger,
+\emph{explicit} over-sharing falls while \emph{implicit} inference rises---neither end
+is safe to trust, and the center-blind auditor catches both at zero content egress.}
+\label{fig:trends}
+\end{figure}
+
+Our multi-model study exposes two opposing trends that together make the case for
+metadata-level detection (Figure~\ref{fig:trends}). As recipient capability rises,
+\emph{explicit} over-sharing falls---weaker models paste a subject's identifiers into a
+hand-off outright ($\approx$80\%), the aligned frontier model far less often
+(46\%)---while \emph{implicit} inference rises: the frontier recipient reconstructs a
+withheld attribute from two benign fragments where a small model cannot. A defender who
+trusted the model to behave would be wrong at both ends. The auditor does not: it flags
+the metadata pattern---an explicit sensitive tag crossing a boundary, or converging
+inferred-category fragments---and catches both, with zero content egress across the
+whole capability range.
+
+The honest limits lie in coverage and in trust. Recall is bounded not by the
+auditor but by the tagger that feeds it: on author-independent scenarios recall
+falls sharply because open-world sensitive content outruns any fixed taxonomy,
+and the misses are spread across explicit disclosure as much as inference. The
+auditor itself does not over-fire given correct labels, but that is a property of
+the auditor rather than of the deployed pipeline: a noisy tagger can still cost
+precision end-to-end. The inference bound assumes conditionally independent
+fragments, which real, correlated hints only approximate. And two adversaries
+remain open: a peer that both paraphrases \emph{and} keeps every recipient below
+the convergence threshold, and a colluding sender--recipient pair that suppresses
+a shared datum---the residual that only a hardware root of trust (the TEE backend
+our attestation admits) fully closes.
+
+
+\section{Related work}
+
+\noindent\textbf{Privacy leakage in LLM-agent systems.} AgentLeak~\citep{agentleak}
+and Sum-Leaks~\citep{sumleaks} measure and mitigate \emph{single-tenant}
+compositional leakage; privacy-theory work for agents~\citep{dpagents,itlimits}
+analyzes when local privacy fails to compose. LLMs also memorize and regurgitate
+training data~\citep{carlini21,carlini23}. We lift the setting to \emph{multi-tenant}
+and supply a deployable, center-blind detector rather than a measurement or a
+theory.
+
+\noindent\textbf{Agent communication protocols.} A2A~\citep{a2a}, MCP~\citep{mcp},
+and related standards define agent interoperability but no data governance;
+comparative security analyses~\citep{protosec,protoexploit} flag exactly this gap,
+which we fill inside A2A's extension mechanism.
+
+\noindent\textbf{Information-flow control and taint tracking.} Our detectors are a
+lightweight, semantic information-flow analysis: the lattice model~\citep{denning76}
+and language-based IFC~\citep{sabelfeld03} formalize where data may flow, and
+dynamic taint tracking~\citep{taintdroid} enforces it at runtime. We adapt these to
+opaque LLM agents over metadata (not program variables), adding purpose and
+cross-tenant semantics and \emph{compositional inference}, which classical IFC
+does not model. Purpose- and recipient-limitation follow the norm of contextual
+integrity~\citep{ci}.
+
+\noindent\textbf{Data-loss prevention.} DLP / PII scanners (e.g.\
+Presidio~\citep{presidio}) match sensitive patterns in content. We run Presidio
+itself as a baseline (\S\ref{sec:eval}): it sees raw data, has no policy or purpose
+semantics, and no configuration of it wins on both axes---its identifier policy is
+insensitive to inference, purpose and hop violations, while a broad policy becomes
+indiscriminate. We are center-blind and compositional.
+
+\noindent\textbf{Anonymization and differential privacy.} $k$-anonymity~\citep{ksweeney}
+and $\ell$-diversity~\citep{ldiv} motivate our structural domain generalization;
+differential privacy~\citep{dwork06,dworkroth} and local DP~\citep{rappor} underlie
+our metadata hardening (\S\ref{sec:eval}). Unlike these, our object is \emph{detection} of a
+composed leak, not release of a sanitized dataset.
+
+\noindent\textbf{Federated and secure computation.} The federated split follows
+federated learning's keep-data-local principle~\citep{fedavg}; stronger guarantees
+are available via secure computation~\citep{yao} and trusted execution, which our
+attestation layer (\S\ref{sec:eval}) plugs into. We target a deployable software baseline with a
+TEE upgrade path.
+
+\noindent\textbf{Observability.} LangSmith and Langfuse~\citep{langfuse} trace
+agent runs but must ingest raw prompts and outputs, the disqualifier for
+regulated, cross-tenant deployments and the one property our design structurally
+avoids.
+
+
+\bibliographystyle{iclr2027_conference}
+
+\bibliography{references}
+
+\appendix
+\section{Proofs}
+\begin{proof}[Proof of Proposition~\ref{prop:attest} (attestation soundness)]
+Acceptance requires a valid $\sigma$ under $B$'s fingerprint. Producing one for an
+$\mathcal{E}$ that $B$ did not emit requires forging a signature (contradicting
+EUF-CMA) or obtaining $k_B$ (excluded unless $B$ is broken). Under-tagging and forgery
+both require running a labeler other than $B$, whose reports carry no valid $\sigma$;
+tampering after signing changes $H(\mathcal{E})$. What remains is not a detection gap
+but an information gap: a sender that never emits the datum, or emits fewer than
+$k^{*}$ converging fragments (Prop.~\ref{prop:k}), leaves nothing the center could key
+on. Canonical owner-derived subject ids (\texttt{canonical\_subject}) make aliasing
+impossible without abandoning the attested derivation, collapsing A3's forgery variant
+into case~(i).
+\end{proof}
+\begin{proof}[Proof of Lemma~\ref{lem:blind} (bounded content leakage)]
+$I(M;V)=I(M;H(M))+I(M;\ell\mid H(M))$. Under the random-oracle model $H(M)$ is a
+uniformly random value revealing nothing of $M$ beyond equality tests, so
+$I(M;H(M))=0$. The second term is at most $H(\ell)\le\log_2|\mathcal{L}|$. With
+$|\mathcal{L}|$ the product of the (small) label domains --- e.g.\ a handful of
+categories $\times$ six sensitivity levels --- this is $O(\log)$ bits per Part,
+independent of $|M|$; reconstructing $M$ requires $H(M)$ bits, so it is infeasible.
+\end{proof}
+\begin{proof}[Proof of Proposition~\ref{prop:k} (detection threshold)]
+By Bayes in odds form, $O_k=O_0\prod_i\lambda_i$; since each $\lambda_i>1$, $O_k$
+is strictly increasing in $k$, and $x\mapsto x/(1+x)$ is strictly increasing, so
+$g$ is strictly increasing. With uniform $\lambda$, $g(k)\ge\delta \iff
+P(A\mid f_{1:k})\ge p_0+\delta \iff O_k\ge O_\delta \iff O_0\lambda^{k}\ge O_\delta
+\iff k\ge\log_\lambda(O_\delta/O_0)$; integrality gives the ceiling.
+\end{proof}
+
+\section{The A2A-MT benchmark}
+No multi-tenant agent-privacy benchmark exists---AgentLeak and Sum-Leaks are
+single-tenant (the vault belongs to one system; the boundary is system$\rightarrow$output).
+A2A-MT supplies labeled multi-tenant A2A interactions whose boundary is
+\emph{between} agents. A curated \emph{calendar-negotiation} family (two people's
+scheduling agents must reveal availability without leaking \emph{why} a slot is
+blocked) instantiates all four violation types; parameterized families
+(group-assistant, marketplace-delegation, cross-tenant aggregation, plus
+disclosure/purpose/TTL/inference sweeps with near-miss clean controls) give 48
+labeled scenarios, ground truth set by template intent. An LLM fills each Part
+with realistic text matching its label (labels remain the ground truth), exported
+as a shareable artifact.
+
+
+\section{Additional results}
+\subsection{Detection and center-blindness}
+Over all 48 A2A-MT scenarios, $P/R/F1 = 1.0$
+(TP$=18$, FP$=0$, TN$=30$, FN$=0$) with full per-type coverage (disclosure,
+purpose, TTL, inference), and no over-firing on single-hint clean controls.
+ Zero raw \texttt{Part} content reaches the center
+on every scenario; the only content-derived value is a one-way hash.
+
+\subsection{Realistic content}
+Re-auditing the LLM-generated export (non-templated
+text) holds $P/R/F1 = 1.0$, $0$ raw leaks: the detectors key on labels, not
+wording. Generating realistic content also exposed two correctness issues that
+hand-written tests hid (TTL fragility to paraphrasing, fixed by
+\texttt{provenance\_id}; an invariant false-positive on prose tokens coinciding
+with label/schema tokens, fixed by excluding them), a benefit of scaling.
+
+\subsection{Metadata privacy under differential privacy}
+Beyond hiding content, we harden the
+metadata: identity-bearing fields are pseudonymized with a per-audit shared salt
+(cross-tenant comparisons hold in pseudonym space; the center learns no real
+identity) and \texttt{sensitivity} is DP-noised, while categories are kept
+structurally. Pseudonymization alone is lossless ($P/R/F1=1.0$). Under DP we
+sweep two orders of magnitude, $\varepsilon\in[0.1,8]$, at 40 trials each: mean
+$F1$ decays monotonically and gracefully---$0.99$ at $\varepsilon{=}3$, $0.98$ at
+$1$, $0.96$ at $0.5$, and still $\approx0.93$ at $0.1$ (sd $\le0.033$)---with no
+cliff. The loss is concentrated in recall, i.e.\ disclosure decisions whose noised
+sensitivity crosses the floor, exactly where the mechanism predicts, and zero raw
+content reaches the center at every $\varepsilon$.
+
+\subsection{The local tagger}
+The inference
+detector accumulates \texttt{inferred\_categories}; in a real deployment these
+must be \emph{produced} from content, not hand-set. A local tagger (lexical,
+zero-dependency, optional LLM backend) emits only tags---content never leaves the
+agent. On a labeled set with paraphrased cases, the lexical backend recovers explicit
+(sensitive) \texttt{category} at $P/R/F1=1.0$ and \texttt{inferred\_categories}
+at $P=1.0$, $R=0.78$; the \textbf{LLM backend (gpt-4o-mini) lifts inferred-category
+recall $0.78\to1.0$} (the misses are novel paraphrases like ``the place where they
+treat tumors'').
+That lift, however, is \emph{backend-dependent}, and we report the negative result:
+on the same labeled set, open-weight backends served locally (Qwen2.5-7B/14B,
+Llama-3.1-8B) do \emph{not} clear the paraphrase gap---each sits at or below the
+lexical floor's $R{=}0.78$, and Llama-3.1-8B is materially worse ($R{=}0.56$)---while
+also \emph{costing} explicit-category precision ($1.0\to0.38$--$0.75$) by over-tagging
+benign text. Qwen2.5-14B is the partial exception, raising inferred \emph{precision}
+to $0.88$ (best inferred $F1{=}0.82$) with recall still at $0.78$. Capability, not
+merely ``being an LLM'', is what closes the gap: a deployer cannot assume that
+swapping in any local model buys inference coverage.
+\texttt{AuditSession.observe} wires it in so a deployer supplies only text plus
+policy. Tagger recall is exactly the residual surface identified above (an
+adversarial sender can under-tag), which attestation closes.
+
+\subsection{Is the operating point cherry-picked?}
+The inference detector fires at $k^{*}{=}2$ under our defaults, so it is fair to ask
+whether that is a knife-edge fitted to the benchmark. We sweep each knob over the full
+48-scenario suite (deterministic; no LLM calls) and find a broad plateau
+(Table~\ref{tab:sens}). \emph{Every} setting of $(p_0,\lambda,\delta)$ for which the
+closed form gives $k^{*}{=}2$ scores $P/R/F1=1.0$---roughly a $2\times$ band in each
+knob independently---and quality degrades only once $k^{*}$ moves off $2$, in the
+direction the model predicts: $k^{*}{=}1$ over-fires ($P{=}0.86$) and $k^{*}\ge3$
+under-fires ($R{=}0.83$). Detection is therefore a function of the closed-form
+$k^{*}$ rather than of the raw parameter values, so the three-parameter model
+collapses to a single effective knob and the calibration is principled rather than
+tuned. The disclosure floor $\tau$ degrades gracefully rather than cliff-edging
+($\tau{=}2$: $P{=}0.90$; $\tau{=}4$: $R{=}0.94$; $\tau{=}5$: $R{=}0.89$), and
+raw$\to$center $=0$ at every setting.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lcc}
+\toprule
+knob & $F1{=}1.0$ band ($k^{*}{=}2$) & degrades at \\
+\midrule
+$\delta$  & $[0.20,\ 0.40]$ & $0.10$, $0.50$ \\
+$\lambda$ & $[2.5,\ 5.0]$   & $2.0$, $9.0$ \\
+$p_0$     & $[0.10,\ 0.30]$ & $\le 0.05$ \\
+\bottomrule
+\end{tabular}
+\caption{Inference-detector parameter sensitivity over the 48 scenarios
+($\delta$ swept 0.10--0.50, $\lambda$ 1.5--9.0, $p_0$ 0.02--0.30). Quality tracks the
+closed-form $k^{*}$, not the raw parameter values.}
+\label{tab:sens}
+\end{table}
+
+\begin{figure}[t]\centering
+\begin{tikzpicture}[font=\footnotesize,x=14mm,y=30mm,>=Latex]
+% decision regions: above the fire line the recipient can infer; below, tolerated
+\fill[red!7]   (0,0.4) rectangle (4.32,1.06);
+\fill[green!7] (0,0)   rectangle (4.32,0.4);
+\foreach \y in {0.25,0.5,0.75,1} \draw[gray!22,line width=0.3pt] (0,\y)--(4.32,\y);
+\draw[->,gray!70] (0,0)--(4.55,0) node[right,font=\scriptsize,black]{$k$};
+\draw[->,gray!70] (0,0)--(0,1.12) node[above,font=\scriptsize,black]{$P(A\mid k)$};
+\foreach \y in {0,0.5,1} \draw[gray!70] (-0.05,\y)--(0,\y) node[left,font=\scriptsize,black]{\y};
+\foreach \k in {0,1,2,3,4} \draw[gray!70] (\k,-0.02)--(\k,0) node[below,font=\scriptsize,black]{\k};
+\draw[dashed,red!70!black,thick] (0,0.4)--(4.32,0.4);
+\node[font=\scriptsize,red!70!black,anchor=north east,inner sep=1.5pt] at (4.3,0.39)
+  {fire threshold $g\ge\delta$};
+\node[font=\scriptsize,red!55!black,anchor=north west,inner sep=1.5pt] at (0.08,1.04)
+  {detector fires --- inferable};
+\node[font=\scriptsize,green!42!black,anchor=south west,inner sep=1.5pt] at (0.08,0.02)
+  {silent --- tolerated};
+\draw[very thick,blue!60] (0,0.1)--(1,0.25)--(2,0.5)--(3,0.75)--(4,0.9);
+\foreach \k/\p in {0/0.1,1/0.25,2/0.5,3/0.75,4/0.9}
+  \filldraw[fill=white,draw=blue!60,line width=0.7pt] (\k,\p) circle (1.5pt);
+\draw[dotted,gray!75] (2,0)--(2,0.5);
+\node[font=\scriptsize\bfseries,anchor=west,inner sep=1.5pt] at (2.06,0.17) {$k^{*}{=}2$};
+\filldraw[fill=orange!85!black,draw=white,line width=0.5pt] (1,0.5) circle (1.7pt);
+\node[font=\scriptsize,orange!62!black,anchor=south west,inner sep=1.2pt] at (1.04,0.52)
+  {strong hint $\lambda{=}9$};
+\end{tikzpicture}
+\caption{The inference threshold. Under uniform evidence ($p_0{=}0.1,\lambda{=}3,
+\delta{=}0.3$) the posterior crosses the fire line at $k^{*}{=}2$: one hint is
+tolerated, two converge. A single high-specificity hint ($\lambda{=}9$, from the
+tagger) already clears it. Empirically a frontier recipient infers even at $k{=}1$
+(\S\ref{sec:eval}), so $k^{*}$ is a conservative lower bound.}
+\label{fig:gain}
+\end{figure}
+
+
+\section{Use of large language models}
+LLMs were used in this work in three distinct roles, which we separate because
+only the first bears on the scientific claims. \textbf{(i) As objects of study:}
+every model named in \S\ref{sec:eval} is measured, not assisted by us---the
+over-sharing rates, inference rates, and tagger results are observations of model
+behavior. \textbf{(ii) As instruments:} an LLM authors the held-out benchmark and
+another serves as the LLM-judge baseline; both are described where used, and the
+held-out set is deliberately authored by a model different from the one under
+test. \textbf{(iii) As a writing and coding aid:} the authors used an LLM
+assistant while implementing the system and preparing this manuscript. All
+experimental designs, all claims, and every number reported here were specified,
+run, and verified by the authors; the artifact reproduces them end to end.
+
+
+\end{document}
+
