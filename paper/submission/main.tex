@@ -571,6 +571,15 @@ agent. On a labeled set with paraphrased cases, the lexical backend recovers exp
 at $P=1.0$, $R=0.78$; the \textbf{LLM backend (gpt-4o-mini) lifts inferred-category
 recall $0.78\to1.0$} (the misses are novel paraphrases like ``the place where they
 treat tumors'').
+That lift, however, is \emph{backend-dependent}, and we report the negative result:
+on the same labeled set, open-weight backends served locally (Qwen2.5-7B/14B,
+Llama-3.1-8B) do \emph{not} clear the paraphrase gap---each sits at or below the
+lexical floor's $R{=}0.78$, and Llama-3.1-8B is materially worse ($R{=}0.56$)---while
+also \emph{costing} explicit-category precision ($1.0\to0.38$--$0.75$) by over-tagging
+benign text. Qwen2.5-14B is the partial exception, raising inferred \emph{precision}
+to $0.88$ (best inferred $F1{=}0.82$) with recall still at $0.78$. Capability, not
+merely ``being an LLM'', is what closes the gap: a deployer cannot assume that
+swapping in any local model buys inference coverage.
 \texttt{AuditSession.observe} wires it in so a deployer supplies only text plus
 policy. Tagger recall is exactly the residual surface identified above (an
 adversarial sender can under-tag), which attestation closes.
@@ -660,6 +669,37 @@ threshold $k^{*}=2$ with uniform evidence is conservative: real inference someti
 the Bayesian model of \S\ref{sec:auditor} accommodates via a per-fragment
 $\lambda$; wiring
 $\lambda$ to hint specificity catches single strong hints without over-firing.
+
+\subsection{Is the operating point cherry-picked?}
+The inference detector fires at $k^{*}{=}2$ under our defaults, so it is fair to ask
+whether that is a knife-edge fitted to the benchmark. We sweep each knob over the full
+48-scenario suite (deterministic; no LLM calls) and find a broad plateau
+(Table~\ref{tab:sens}). \emph{Every} setting of $(p_0,\lambda,\delta)$ for which the
+closed form gives $k^{*}{=}2$ scores $P/R/F1=1.0$---roughly a $2\times$ band in each
+knob independently---and quality degrades only once $k^{*}$ moves off $2$, in the
+direction the model predicts: $k^{*}{=}1$ over-fires ($P{=}0.86$) and $k^{*}\ge3$
+under-fires ($R{=}0.83$). Detection is therefore a function of the closed-form
+$k^{*}$ rather than of the raw parameter values, so the three-parameter model
+collapses to a single effective knob and the calibration is principled rather than
+tuned. The disclosure floor $\tau$ degrades gracefully rather than cliff-edging
+($\tau{=}2$: $P{=}0.90$; $\tau{=}4$: $R{=}0.94$; $\tau{=}5$: $R{=}0.89$), and
+raw$\to$center $=0$ at every setting.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lcc}
+\toprule
+knob & $F1{=}1.0$ band ($k^{*}{=}2$) & degrades at \\
+\midrule
+$\delta$  & $[0.20,\ 0.40]$ & $0.10$, $0.50$ \\
+$\lambda$ & $[2.5,\ 5.0]$   & $2.0$, $9.0$ \\
+$p_0$     & $[0.10,\ 0.30]$ & $\le 0.05$ \\
+\bottomrule
+\end{tabular}
+\caption{Inference-detector parameter sensitivity over the 48 scenarios
+($\delta$ swept 0.10--0.50, $\lambda$ 1.5--9.0, $p_0$ 0.02--0.30). Quality tracks the
+closed-form $k^{*}$, not the raw parameter values.}
+\label{tab:sens}
+\end{table}
 
 \section{Discussion}
 Center-blind detection works because the risks it targets are visible in the

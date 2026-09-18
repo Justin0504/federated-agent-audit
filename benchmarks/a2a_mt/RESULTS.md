@@ -60,3 +60,56 @@ those (as label values already were) restores 0, now verified across all four mo
 _Provenance: open-weight via Ollama on an Apple M4 Pro (24GB), 2026-09; frontier via
 Anthropic API `claude-opus-4-8`, 2026-08. Reproduce open rows with
 `bash benchmarks/a2a_mt/run_local_ollama.sh`; frontier with `--models claude`._
+
+## Experiment 3 — detector parameter sensitivity (is the operating point cherry-picked?)
+Deterministic sweep over the full 48-scenario suite; no LLM calls. `k*` is the
+closed-form threshold `ceil(log_lambda(O_delta/O_0))`.
+
+| knob | range swept | F1 = 1.00 over | degrades at | why |
+|---|---|---|---|---|
+| gain threshold δ | 0.10 – 0.50 | **δ ∈ [0.20, 0.40]** (k\*=2) | δ=0.10 → k\*=1, P=0.86 (over-fires); δ=0.50 → k\*=3, R=0.83 | k\* leaves 2 |
+| likelihood ratio λ | 1.5 – 9.0 | **λ ∈ [2.5, 5.0]** (k\*=2) | λ=2.0 → k\*=3, R=0.83; λ=9 → k\*=1, P=0.86 | k\* leaves 2 |
+| base rate p₀ | 0.02 – 0.30 | **p₀ ∈ [0.10, 0.30]** (k\*=2) | p₀≤0.05 → k\*=3, R=0.83 | k\* leaves 2 |
+| disclosure floor τ | 2 – 5 | **τ = 3** | τ=2 → P=0.90; τ=4 → R=0.94; τ=5 → R=0.89 | floor crosses labelled sensitivity levels |
+
+`raw→center = 0` at **every** setting.
+
+**The key reading:** detection quality is a function of the closed-form **k\***, not of
+the raw parameter values. Every (p₀, λ, δ) combination that yields k\*=2 scores
+F1 = 1.00 — a wide plateau, roughly a 2× band in each knob independently — and
+quality drops exactly when k\* moves off 2, in the direction the model predicts
+(k\*=1 over-fires, k\*≥3 under-fires). So the three-parameter model collapses to one
+effective knob, the operating point is not a knife-edge, and τ degrades gracefully
+rather than cliff-edging.
+
+Reproduce: `python benchmarks/a2a_mt/a2a_sensitivity.py`
+
+## Experiment 4 — does the tagger bottleneck depend on the backend?
+End-to-end recall is tagger-bound (the auditor's precision is architectural). Same
+16-case labeled set, same harness, different tagger backends. Open-weight backends
+served locally by Ollama; no API key.
+
+| backend | category P/R/F1 | inferred P/R/F1 |
+|---|---|---|
+| lexical (zero-dependency floor) | 1.00 / 1.00 / 1.00 | 0.78 / **0.78** / 0.78 |
+| qwen2.5-7b (open) | 0.75 / 1.00 / 0.86 | 0.78 / **0.78** / 0.78 |
+| llama-3.1-8b (open) | 0.38 / 1.00 / 0.55 | 0.71 / **0.56** / 0.63 |
+| qwen2.5-14b (open) | 0.60 / 1.00 / 0.75 | **0.88** / **0.78** / 0.82 |
+| gpt-4o-mini (proprietary, earlier run) | — | — / **1.00** / — |
+
+**Honest reading — this did not go the way we expected.** Small open-weight backends
+do **not** close the paraphrase gap: every one tested sits at or below the lexical
+floor's 0.78 inferred recall (llama-3.1-8b is materially worse at 0.56). They also
+*cost* explicit-category precision (1.00 → 0.38–0.75) by over-tagging benign text.
+Only the proprietary gpt-4o-mini reached 1.00 inferred recall in the earlier run.
+qwen2.5-14b is the one partial win: it raises inferred *precision* to 0.88 (best
+overall inferred F1 at 0.82) while recall stays at 0.78.
+
+Implication: the tagger bottleneck is **backend-dependent, and capability — not
+merely "being an LLM" — is what closes it.** A practitioner cannot assume that
+swapping in any local model buys inference coverage; a weak one buys nothing and
+costs precision. This sharpens rather than softens the paper's stated limit: recall
+is bounded by the tagger, an orthogonal and improvable component, and improving it
+demands a genuinely capable tagger.
+
+Reproduce: `python benchmarks/a2a_mt/a2a_tagger_multi.py`
