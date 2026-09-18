@@ -36,6 +36,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+bench = ["presidio-analyzer", "openai", "anthropic"]
 dev = ["pytest>=7.0", "ruff>=0.1"]
 langchain = ["langchain-core>=0.2"]
 langgraph = ["langgraph>=0.2", "langchain-core>=0.2"]

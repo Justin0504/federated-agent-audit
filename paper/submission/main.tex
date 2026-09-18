@@ -92,18 +92,29 @@ free-form \texttt{metadata}, an \texttt{extensions} array, and a loosely-specifi
 \texttt{tenant} field that routes but does not govern.
 
 We close this gap. Our contributions:
-\begin{enumerate}[leftmargin=1.4em]
-\item \textbf{\ext{}}, a privacy-typing extension carried in \texttt{Part.metadata}
-that types every shared datum (owner, subject, sensitivity, category, purpose,
-recipient set, hop limit, provenance id) and composes with unmodified A2A.
-\item \textbf{A multi-tenant threat model and a center-blind auditor.} We separate
-the data subject, owning principal, and agent principal, and detect cross-tenant
-disclosure, purpose, hop/TTL, and \emph{cross-tenant inference} from desensitized
-metadata the center cannot invert---the privacy-preserving counterpart to
-centralized observability.
-\item \textbf{A2A-MT}, the first multi-tenant agent-privacy benchmark
-(parameterized families, realistic LLM-generated content), plus validation of the
-underlying engine on the external AgentLeak benchmark.
+\begin{enumerate}
+\item \textbf{Privacy typing for multi-tenant agent interaction.} \ext{} separates the
+three roles a single identifier conflates today---data subject, owning principal,
+agent principal---and carries them in \texttt{Part.metadata}, making cross-tenant
+leakage \emph{expressible} in the first place. It composes with unmodified A2A.
+\item \textbf{A center-blind auditor with formal guarantees.} Four detectors run over
+desensitized metadata the center cannot invert. We prove the center learns only
+$O(\log)$ bits per message (Lemma~\ref{lem:blind}); we give a closed form for when
+compositional inference becomes detectable (Prop.~\ref{prop:k}), and show empirically
+that it collapses a three-parameter model to a single effective knob $k^{*}$; and we
+prove attestation soundness (Prop.~\ref{prop:attest}), confining the residual
+adversary to key compromise or sub-threshold leakage.
+\item \textbf{A measurement of the threat in today's agents.} On matched scenario sets
+across four recipient models---open-weight 7--14B through a frontier model---agents
+over-share regulated identifiers in \textbf{46--82\%} of realistic cross-boundary
+hand-offs, while inference ability \emph{rises} with capability (to $100\%$ at
+$k^{*}{=}2$). The two trends move in opposite directions, so neither weak nor strong
+recipients can be trusted to behave: the safeguard has to be structural.
+\item \textbf{A2A-MT and an honest evaluation.} The first multi-tenant agent-privacy
+benchmark, validated against the external AgentLeak suite, a properly configured
+Presidio DLP baseline, and an author-independent held-out set. We report where the
+approach fails as carefully as where it works: recall is bounded by the tagger, and an
+over-tagging LLM backend costs end-to-end precision.
 \end{enumerate}
 Setting every principal equal collapses the system to the \textbf{in-container}
 case---one organization auditing its own multi-agent app---so the research result
@@ -538,40 +549,50 @@ sensitivity crosses the floor, exactly where the mechanism predicts, and zero ra
 content reaches the center at every $\varepsilon$.
 
 \subsection{Comparison with real baselines}
-Against the two detectors a practitioner would actually reach for, on \textbf{32}
-realistic scenarios (17 leaks / 15 clean) spanning all four violation types plus the
-cases that separate the approaches: non-regex PII (a diagnosis, a salary), authorized
-external sharing, benign traffic, and single-hint near-misses that must \emph{not}
-fire (Table~\ref{tab:frontier}). \emph{Structurally}, both baselines must ingest
-content while ours ingests none---the disqualifier for regulated, cross-tenant
-deployments, independent of accuracy. \emph{On accuracy}, the larger set exposes the
-DLP scanner: it both over-flags authorized sharing ($P{=}0.57$; it has no policy or
-purpose semantics) and is blind to inference, purpose, and TTL violations
-($R{=}0.24$), collapsing to $F1{=}0.33$. A policy-aware LLM-judge reads every byte and
-still reaches only $F1{=}0.58$ at $0\%$ inference recall---essentially the $0.57$ we
-measured with a proprietary judge, so the weakness on compositional and policy
-reasoning is robust across judges rather than an artifact of the local one. Ours leads
-at $F1{=}0.94$ with \emph{zero} content reaching the center, and its precision is
-$1.00$ in both tagger configurations: every miss is tagger coverage (employment- and
-behavioral-domain hints), never an architectural false alarm. Consistent with the
+A hand-rolled regular-expression scanner is not a credible DLP baseline, so we run
+\textbf{Microsoft Presidio}~\cite{presidio} itself, in two realistic configurations: a
+strict identifier policy (SSN, card, email, phone, bank, passport, licence) and a
+broad one that adds \texttt{PERSON}, \texttt{LOCATION}, \texttt{NRP} and
+\texttt{DATE\_TIME}. The set is 32 realistic scenarios (17 leaks / 15 clean) spanning
+all four violation types plus the cases that separate the approaches: non-regex PII, a
+diagnosis, authorized external sharing, benign traffic, and single-hint near-misses
+that must \emph{not} fire (Table~\ref{tab:frontier}).
+
+\emph{Structurally}, every baseline must ingest content while ours ingests none---the
+disqualifier for regulated, cross-tenant deployments, independent of accuracy.
+\emph{On accuracy}, no Presidio configuration wins on both axes. The identifier policy
+reaches only $F1{=}0.26$: it has no notion of owner, purpose, or hop budget, so it
+misses inference, purpose, and TTL violations entirely, and the three clean scenarios
+it does flag are precisely the \emph{authorized} external shares. The broad policy
+buys recall ($0.65$) only by firing indiscriminately---specificity falls to $0.47$,
+flagging eight of fifteen clean scenarios including a lunch invitation and a slide
+deck---so its apparently strong $83\%$ ``inference recall'' is not inference detection
+at all, merely the observation that those messages contain a place and a date. A
+policy-aware LLM-judge that reads every byte is precise but insensitive
+($F1{=}0.58$, $0\%$ inference recall). Ours leads at $F1{=}0.94$ with specificity
+$1.00$ and \emph{zero} content reaching the center; every miss is tagger coverage
+(employment- and behavioral-domain hints), never a false alarm. Consistent with the
 tagger study below, the open-weight LLM tagger does not help here---it slightly
-\emph{trails} the lexical floor ($0.90$ vs $0.94$), so the lift we previously measured
-was specific to a proprietary backend.
+\emph{trails} the lexical floor---so the lift we previously measured was specific to a
+proprietary backend.
 
 \begin{table}[t]\centering\small
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccccc}
 \toprule
-Detector & P & R & F1 & inf.\ rec. & content$\to$center \\
+Detector & P & R & F1 & spec. & inf.\ rec. & content$\to$center \\
 \midrule
-DLP / PII scanner (reads all) & 0.57 & 0.24 & 0.33 & 0\% & 1{,}839 ch \\
-LLM-judge, policy-aware (reads all) & 1.00 & 0.41 & 0.58 & 0\% & 1{,}839 ch \\
-Ours --- LLM tagger, open 14B (blind) & 1.00 & 0.82 & 0.90 & 50\% & \textbf{0} \\
-\textbf{Ours --- lexical tagger (blind)} & \textbf{1.00} & \textbf{0.88} & \textbf{0.94} & \textbf{67\%} & \textbf{0} \\
+Presidio DLP, identifiers & 0.50 & 0.18 & 0.26 & 0.80 & 0\% & 1{,}839 ch \\
+Presidio DLP, broad & 0.58 & 0.65 & 0.61 & 0.47 & 83\% & 1{,}839 ch \\
+LLM-judge, policy-aware & 1.00 & 0.41 & 0.58 & 1.00 & 0\% & 1{,}839 ch \\
+Ours --- LLM tagger, open 14B & 1.00 & 0.82 & 0.90 & 1.00 & 50\% & \textbf{0} \\
+\textbf{Ours --- lexical tagger} & \textbf{1.00} & \textbf{0.88} & \textbf{0.94} & \textbf{1.00} & 67\% & \textbf{0} \\
 \bottomrule
 \end{tabular}
-\caption{Ours vs.\ real baselines on 32 realistic scenarios (17 leaks). Both baselines
-ingest all content; ours decides at zero content egress. The LLM tagger and the
-LLM-judge both run on the same local open-weight model (Qwen2.5-14B).}
+\caption{Ours vs.\ real baselines on 32 realistic scenarios (17 leaks). All baselines
+read every byte; ours decides at zero content egress. Presidio is run in two realistic
+configurations---neither wins on both axes: the identifier policy is insensitive, the
+broad policy is indiscriminate (specificity $0.47$). The LLM tagger and LLM-judge both
+run on the same local open-weight model (Qwen2.5-14B).}
 \label{tab:frontier}
 \end{table}
 
@@ -816,9 +837,11 @@ does not model. Purpose- and recipient-limitation follow the norm of contextual
 integrity~\cite{ci}.
 
 \noindent\textbf{Data-loss prevention.} DLP / PII scanners (e.g.\
-Presidio~\cite{presidio}) match sensitive patterns in content; they see raw data,
-have no policy/purpose semantics, and are blind to no-PII inference (\S\ref{sec:eval}). We are
-center-blind and compositional.
+Presidio~\cite{presidio}) match sensitive patterns in content. We run Presidio
+itself as a baseline (\S\ref{sec:eval}): it sees raw data, has no policy or purpose
+semantics, and no configuration of it wins on both axes---its identifier policy is
+insensitive to inference, purpose and hop violations, while a broad policy becomes
+indiscriminate. We are center-blind and compositional.
 
 \noindent\textbf{Anonymization and differential privacy.} $k$-anonymity~\cite{ksweeney}
 and $\ell$-diversity~\cite{ldiv} motivate our structural domain generalization;

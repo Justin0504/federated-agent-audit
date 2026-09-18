@@ -114,39 +114,44 @@ demands a genuinely capable tagger.
 
 Reproduce: `python benchmarks/a2a_mt/a2a_tagger_multi.py`
 
-## Experiment 5 — baselines on a 4x larger, harder scenario set
-The original comparison used 8 curated scenarios. Expanded to **32** (17 leaks / 15
-clean) spanning all four violation types plus the cases that separate the approaches:
-non-regex PII (a diagnosis, a salary), authorized external sharing, benign traffic,
-and **single-hint near-misses** that must *not* fire. LLM tagger and LLM-judge both
-run on a local open-weight model (qwen2.5-14b) — free and reproducible.
+## Experiment 5 — baselines on a 4x larger, harder set, against REAL Presidio
+The original comparison used 8 curated scenarios and a hand-rolled regex "DLP", which
+is a strawman. Now: **32 scenarios** (17 leaks / 15 clean) covering all four violation
+types plus the cases that separate the approaches (non-regex PII, a diagnosis,
+authorized external sharing, benign traffic, single-hint near-misses), scored against
+**Microsoft Presidio itself** in two realistic configurations. LLM tagger and
+LLM-judge both run on a local open-weight model (qwen2.5-14b) — free and reproducible.
 
-| detector | P | R | F1 | inference recall | content → center |
-|---|---|---|---|---|---|
-| **ours — lexical tagger (blind)** | **1.00** | **0.88** | **0.94** | **67%** | **0** |
-| ours — LLM tagger, qwen2.5-14b (blind) | 1.00 | 0.82 | 0.90 | 50% | **0** |
-| LLM-judge, qwen2.5-14b (reads all) | 1.00 | 0.41 | 0.58 | 0% | 1,839 ch |
-| DLP / PII scanner (reads all) | 0.57 | 0.24 | 0.33 | 0% | 1,839 ch |
+| detector | P | R | F1 | specificity | inference recall | content → center |
+|---|---|---|---|---|---|---|
+| **ours — lexical tagger (blind)** | **1.00** | **0.88** | **0.94** | **1.00** | 67% | **0** |
+| ours — LLM tagger, qwen2.5-14b (blind) | 1.00 | 0.82 | 0.90 | 1.00 | 50% | **0** |
+| LLM-judge, qwen2.5-14b (reads all) | 1.00 | 0.41 | 0.58 | 1.00 | 0% | 1,839 ch |
+| Presidio DLP — broad config (reads all) | 0.58 | 0.65 | 0.61 | **0.47** | 83% | 1,839 ch |
+| Presidio DLP — identifier config (reads all) | 0.50 | 0.18 | 0.26 | 0.80 | 0% | 1,839 ch |
+| regex scanner (naive reference only) | 0.57 | 0.24 | 0.33 | 0.80 | 0% | 1,839 ch |
 
-Three readings, including one that went against us:
-1. **The harder set exposes DLP properly** (F1 0.67 on the old 8 → **0.33** here): it
-   over-flags authorized external sharing (P=0.57, no policy/purpose semantics) *and*
-   is blind to inference, purpose, and TTL violations (R=0.24).
-2. **The LLM-judge reads every byte and still lands at F1 0.58** (R=0.41, inference
-   recall 0%) — essentially the same as the earlier gpt-4o-mini judge's 0.57, so the
-   weakness on compositional/policy reasoning is robust across judges, not an
-   artifact of a weak local model.
-3. **Against us:** the local 14B *LLM tagger* now **underperforms the lexical floor**
-   (F1 0.90 vs 0.94; inference recall 50% vs 67%). This is the same lesson as
-   Experiment 4 — a mid-size open backend over-tags and buys nothing — and it means
-   the "LLM tagger lifts everything" claim from the 8-scenario run was
-   backend-specific (gpt-4o-mini), not general.
+**No Presidio configuration wins on both axes.** The identifier policy reaches only
+F1 0.26 — it has no notion of owner, purpose or hop budget, so it misses inference,
+purpose and TTL violations entirely, and the three clean scenarios it *does* flag are
+exactly the **authorized** external shares. The broad policy buys recall (0.65) purely
+by firing indiscriminately: specificity collapses to **0.47**, flagging 8/15 clean
+scenarios including *"Let's grab lunch Tuesday at noon"* and *"Sending over the
+quarterly slide deck."* So its headline 83% "inference recall" is **not** inference
+detection — it is the observation that those messages contain a place and a date. We
+report it anyway rather than quietly choosing the config that flatters us.
 
-Our precision stays **1.00** in both configurations: the misses are tagger coverage
-(employment- and behavioral-domain hints the lexical floor does not know), never
-architectural false alarms.
+The LLM-judge reads every byte and is precise but insensitive (F1 0.58, 0% inference
+recall) — essentially the 0.57 measured earlier with a proprietary judge, so that
+weakness is robust across judges.
 
-Reproduce: `python benchmarks/a2a_mt/a2a_baseline_compare.py --local-model qwen2.5:14b`
+Reported against us: the open-weight LLM tagger **trails** the lexical floor
+(0.90 vs 0.94), so the earlier "LLM tagger lifts 0.89 → 1.0" was backend-specific.
+Our specificity is 1.00 in both configurations — every miss is tagger coverage, never
+a false alarm.
+
+Reproduce: `python benchmarks/a2a_mt/a2a_baseline_compare.py` (needs
+`pip install presidio-analyzer`; the spaCy model downloads on first run).
 
 ## Experiment 6 — privacy/utility curve under DP (denser sweep)
 The earlier result sampled three epsilons. Swept ten across two orders of magnitude,
