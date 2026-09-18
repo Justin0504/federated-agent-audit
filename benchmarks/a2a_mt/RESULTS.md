@@ -219,3 +219,62 @@ Note these are not directly comparable to the earlier ~20-scenario run (recall
 0.31/0.38): different author model and 3.75x the sample.
 
 Reproduce: `python benchmarks/a2a_mt/a2a_heldout_gen.py --n 12 --batches 6`
+
+---
+
+## Experiment 8 — adaptive adversary: how much can it learn while evading?
+
+**Question.** The earlier evasion study was a hand-picked list with asserted
+verdicts ("paraphrase → RESISTED"), which proves nothing about the strategies we
+did not think of. The right question is not *can* an adaptive adversary evade —
+it always can, by sending nothing — but **how much it can learn while evading**.
+
+**Method.** Sample the adversary's strategy space at random and run every
+strategy through the real auditor. A strategy draws: fragment count `n ≤ 8`,
+per-fragment evidence strength `λᵢ ∈ [1.05, 3]`, a split across up to 3 of the
+recipient's agents, up to 3 subject aliases, and optional verbatim replay. For
+each we record whether the detector fired **and** the belief the recipient
+provably gains, `g = P(A | fragments) − p₀`. Crucially `g` is computed over what
+actually crossed the boundary: suppressing a tag hides a fragment from the
+auditor but does not un-send it, so a tag-suppressing adversary gets no discount
+on its measured payoff. 20,000 strategies per configuration.
+
+**Result.**
+
+| configuration | detect | max `g` among evasions | harmful evasions |
+|---|---|---|---|
+| **full design** | 0.539 | **0.29992** | **0 / 20,000 (0.0%)** |
+| − attestation (q=0.8) | 0.457 | 0.90 | 7.9% |
+| − attestation (q=0.4) | 0.197 | 0.90 | 33.9% |
+| − attestation (q=0.0) | 0.000 | 0.90 | 53.6% |
+| − canonical subject ids | 0.378 | 0.90 | 16.3% |
+
+A *harmful* evasion is undetected **and** carries `g ≥ δ = 0.3`. Raw content
+reaching the center across all configurations: **0**.
+
+**Readings.**
+1. **The evasion frontier sits strictly below the alarm.** The best any undetected
+   strategy achieved is `0.29992` against `δ = 0.3` — it grazes the threshold and
+   does not cross it. Evasion is only possible by learning less than the policy
+   already permits. This is not luck in the sampling: under an honest labeler the
+   detector's decision variable *is* the adversary's payoff, so the two cannot be
+   separated. The random search is a check on the implementation, not the proof.
+2. **The headline detection rate (0.54) is not a claim.** It reflects how we draw
+   strategies — many draws are weak by construction. The load-bearing number is
+   the harmful-evasion count.
+3. **Both integrity mechanisms are load-bearing, and now we know by how much.**
+   Drop attestation and a tag-suppressing labeler leaks at the *full* attainable
+   gain (0.90) undetected in 53.6% of strategies. Drop canonical subject ids and
+   free aliasing breaks the grouping the detector accumulates over: 16.3%. Neither
+   is decorative.
+4. **Partial deployment degrades gracefully but not for free.** A center requiring
+   attestation rejects an unattested report outright, so the adversary can only
+   hide on an unenrolled tenant: at coverage `c` the residual harmful-evasion rate
+   is `(1−c) × 53.6%`. Holding it under 1% needs `c = 0.99` — effectively, the
+   mechanism has to be mandatory to be worth anything.
+
+Pinned as tests (`test_adaptive_evasion_frontier_below_threshold`,
+`test_adaptive_ablations_are_load_bearing`) so a silently-disabled defense, or a
+strategy generator that stops building real attacks, fails the suite.
+
+Reproduce: `python benchmarks/a2a_mt/a2a_adaptive.py --trials 20000`

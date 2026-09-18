@@ -501,13 +501,34 @@ hand-written tests hid (TTL fragility to paraphrasing, fixed by
 \texttt{provenance\_id}; an invariant false-positive on prose tokens coinciding
 with label/schema tokens, fixed by excluding them), a benefit of scaling.
 
-\subsection{Adaptive evasion, and closing the gap}
-An adversary that knows the inference detector is
-tested across evasions (Table~\ref{tab:evasion}). The design resists attacks on
-\emph{wording and routing}; it is evaded only by a dishonest \emph{local} labeler
-(suppressing tags or forging subject ids)---the trust assumption removed by
-forced-embed attestation and canonical owner-issued subject ids. Sub-threshold
-leakage evades only by leaking strictly less. We \emph{implement} this defense:
+\subsection{Adaptive evasion: what can an adversary learn while evading?}
+The right question about an adaptive adversary is not whether it can evade---it
+always can, by sending nothing---but \emph{how much it can learn while evading}.
+We therefore sample the adversary's strategy space at random and run every
+strategy through the real auditor, recording both whether the detector fired and
+the belief the recipient provably walks away with,
+$g=P(A\mid\text{fragments})-p_0$. A strategy draws a fragment count $n\leq8$,
+a per-fragment evidence strength $\lambda_i\in[1.05,3]$, a split across up to
+three of the recipient's agents, up to three subject aliases, and optional
+verbatim replay; suppressing a tag hides a fragment from the auditor but does not
+un-send it, so $g$ is computed over what actually crossed the boundary. Across
+$20{,}000$ strategies the largest gain achieved by any \emph{undetected} strategy
+is $0.29992$ against the policy threshold $\delta{=}0.3$: not one evasion crossed
+the line (Table~\ref{tab:evasion}). Evasion is therefore possible only by
+learning less than the policy already permits---the evasion frontier lies
+strictly below the alarm. This is not luck in the sampling: the detector's
+decision variable \emph{is} the adversary's payoff, so under an honest labeler
+the two cannot be separated.
+
+The two integrity mechanisms are load-bearing rather than decorative, and
+ablating them says by how much. Removing forced-embed attestation lets the sender
+run a labeler that suppresses its own inference tags; sweeping the tag rate $q$,
+detection falls from $0.54$ to $0$ as $q\to0$ and $53.6\%$ of strategies evade
+\emph{while} crossing $\delta$---leaking at full strength, unseen. Removing
+canonical owner-derived subject ids lets the sender alias the subject and break
+the grouping the detector accumulates over: $16.3\%$ become harmful evasions. No
+configuration ever put raw content in the center view. We \emph{implement} both
+defenses:
 the auditor+tagger ship as a build-pinned component whose key is held only by the
 unmodified binary, and the center accepts a report only from a trusted build
 fingerprint. Under-tagging and forgery require modifying the labeler, so the
@@ -516,22 +537,28 @@ caught by an edges-hash mismatch; canonical owner-derived subject ids
 (\texttt{canonical\_subject}) make aliasing impossible without abandoning the
 attested derivation. The evasions become detected non-compliance, leaving only
 key compromise (the TEE regime) as residual---the guarantee stated formally in
-Prop.~\ref{prop:attest} (\S\ref{sec:threat}).
+Prop.~\ref{prop:attest} (\S\ref{sec:threat}). Partial deployment degrades
+gracefully but not for free: a center that requires attestation rejects an
+unattested report outright, so the adversary can only hide on an unenrolled
+tenant, and at enrollment coverage $c$ the residual harmful-evasion rate is
+$(1-c)\times53.6\%$---$c{=}0.99$ to hold it below $1\%$.
 
 \begin{table}[t]\centering\small
-\begin{tabular}{lc}
+\begin{tabular}{lccc}
 \toprule
-Evasion strategy & Result \\
+Configuration & detect & max $g$ evaded & harmful evasions \\
 \midrule
-Paraphrase each fragment & resisted (tag-based, not text) \\
-Split across recipient's agents & resisted (grouped by principal) \\
-Partial under-tag ($\geq2$ tagged) & resisted \\
-Sub-threshold (leak 1 fragment) & evades, but leaks less \\
-Under-tag ($1$ of $3$) & evades $\rightarrow$ needs attestation \\
-Subject-id forgery & evades $\rightarrow$ needs canonical ids \\
+Full design & 0.54 & \textbf{0.29992} & \textbf{0.0\%} \\
+$-$ attestation ($q{=}0.4$) & 0.20 & 0.90 & 33.9\% \\
+$-$ attestation ($q{=}0$) & 0.00 & 0.90 & 53.6\% \\
+$-$ canonical subject ids & 0.38 & 0.90 & 16.3\% \\
 \bottomrule
 \end{tabular}
-\caption{Adaptive evasion vs.\ the inference detector.}
+\caption{Adaptive evasion, $20{,}000$ random strategies per configuration. A
+\emph{harmful} evasion is one that goes undetected \emph{and} gives the recipient
+a belief gain $\geq\delta{=}0.3$. Under the full design there are none: the
+largest gain any evasion achieves is $0.29992$, just under the threshold. Each
+ablated mechanism admits evasion at the full attainable gain ($0.90$).}
 \label{tab:evasion}
 \end{table}
 

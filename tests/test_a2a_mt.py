@@ -317,29 +317,42 @@ def test_dp_keeps_zero_raw_leaks():
     assert r.raw_leaks == 0
 
 
-# ── adaptive evasion (honest resistance map) ────────────────────────
+# ── adaptive evasion (the security invariant, and the two ablations) ─
 
 
-def test_adaptive_evasion_resistance():
-    from a2a_adaptive import (
-        base,
-        detected,
-        paraphrase,
-        principal_split,
-        sub_threshold,
-        subject_alias,
-        under_tag,
-    )
-    # resisted: detection survives these evasions
-    assert detected(base())
-    assert detected(paraphrase())
-    assert detected(principal_split())
-    assert detected(under_tag(2))
-    # evaded: these defeat detection (documented limitations needing attestation/
-    # canonical ids), or cost the attacker information
-    assert not detected(sub_threshold())
-    assert not detected(under_tag(1))
-    assert not detected(subject_alias())
+def test_adaptive_evasion_frontier_below_threshold():
+    """No evasion may teach the recipient more than the policy threshold.
+
+    This is the paper's central security claim, pinned as a test: over randomly
+    drawn adaptive strategies, every one that would carry a belief gain >= delta
+    is detected. Fewer trials than the reported experiment (which runs 20k) so
+    the suite stays fast; the invariant is exact, not statistical, so a
+    regression shows up at this size too.
+    """
+    import random
+
+    from a2a_adaptive import GAIN_THRESHOLD, _run
+    r = _run(random.Random(0), 600, q=1.0, canonical=True)
+    assert r["harmful_evasions"] == 0
+    assert r["max_evaded_gain"] < GAIN_THRESHOLD
+    assert r["raw_leaks"] == 0
+
+
+def test_adaptive_ablations_are_load_bearing():
+    """Both integrity mechanisms must actually matter.
+
+    If either ablation stopped producing harmful evasions, the experiment would
+    have gone silently trivial (e.g. the strategy generator no longer building
+    real attacks) and the paper's ablation would be reporting nothing.
+    """
+    import random
+
+    from a2a_adaptive import _run
+    no_attest = _run(random.Random(1), 600, q=0.0, canonical=True)
+    no_canon = _run(random.Random(2), 600, q=1.0, canonical=False)
+    assert no_attest["harmful_evasions"] > 0
+    assert no_canon["harmful_evasions"] > 0
+    assert no_attest["detect_rate"] == 0.0  # zero tags -> nothing to accumulate
 
 
 # ── Telegram group integration ──────────────────────────────────────
