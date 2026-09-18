@@ -475,9 +475,12 @@ def test_baseline_dlp_blind_to_inference():
     for s in SCENARIOS:
         if s[2] == "cross_tenant_inference":
             assert dlp(s) is False                       # DLP: no PII to match
-    # and DLP over-flags authorized cross-boundary sharing (no policy semantics)
-    authorized = next(s for s in SCENARIOS if s[0] == "clean_authorized")
-    assert dlp(authorized) is True and ours(authorized) is False
+    # and DLP over-flags authorized cross-boundary sharing (no policy semantics),
+    # while ours stays silent on every authorized case
+    authorized = [s for s in SCENARIOS if s[0].startswith("clean_auth_")]
+    assert authorized, "expected authorized-sharing scenarios in the suite"
+    assert all(ours(s) is False for s in authorized)
+    assert any(dlp(s) is True for s in authorized)
 
 
 def test_inference_validate_detector_side():

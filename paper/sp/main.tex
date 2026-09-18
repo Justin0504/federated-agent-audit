@@ -531,29 +531,40 @@ disclosure decisions whose sensitivity noises across the floor, with zero raw
 content at every $\varepsilon$.
 
 \subsection{Comparison with real baselines}
-Against the two detectors a
-practitioner would actually reach for (Table~\ref{tab:frontier}, 8 realistic
-scenarios spanning PII disclosure, no-PII inference, and authorized sharing):
-\emph{structurally}, both baselines must ingest content while ours ingests none, the disqualifier
-for regulated, cross-tenant deployments, independent of
-accuracy. \emph{On accuracy}, the DLP scanner is blind to no-PII inference (0\%
-recall) and over-flags authorized cross-boundary sharing; a single-shot
-policy-aware LLM-judge is unreliable on compositional inference across messages
-(0\%, $F1=0.57$). Ours reaches full detection at zero content, the LLM tagger
-lifting the honest lexical floor $0.89\to1.0$.
+Against the two detectors a practitioner would actually reach for, on \textbf{32}
+realistic scenarios (17 leaks / 15 clean) spanning all four violation types plus the
+cases that separate the approaches: non-regex PII (a diagnosis, a salary), authorized
+external sharing, benign traffic, and single-hint near-misses that must \emph{not}
+fire (Table~\ref{tab:frontier}). \emph{Structurally}, both baselines must ingest
+content while ours ingests none---the disqualifier for regulated, cross-tenant
+deployments, independent of accuracy. \emph{On accuracy}, the larger set exposes the
+DLP scanner: it both over-flags authorized sharing ($P{=}0.57$; it has no policy or
+purpose semantics) and is blind to inference, purpose, and TTL violations
+($R{=}0.24$), collapsing to $F1{=}0.33$. A policy-aware LLM-judge reads every byte and
+still reaches only $F1{=}0.58$ at $0\%$ inference recall---essentially the $0.57$ we
+measured with a proprietary judge, so the weakness on compositional and policy
+reasoning is robust across judges rather than an artifact of the local one. Ours leads
+at $F1{=}0.94$ with \emph{zero} content reaching the center, and its precision is
+$1.00$ in both tagger configurations: every miss is tagger coverage (employment- and
+behavioral-domain hints), never an architectural false alarm. Consistent with the
+tagger study below, the open-weight LLM tagger does not help here---it slightly
+\emph{trails} the lexical floor ($0.90$ vs $0.94$), so the lift we previously measured
+was specific to a proprietary backend.
 
 \begin{table*}[t]\centering\small
-\begin{tabular}{lccc}
+\begin{tabular}{lccccc}
 \toprule
-Detector & F1 & inference rec. & content$\to$center \\
+Detector & P & R & F1 & inf.\ rec. & content$\to$center \\
 \midrule
-DLP / PII scanner (sees content) & 0.67 & 0\% & 439 ch \\
-LLM-judge, policy-aware (reads all) & 0.57 & 0\% & 439 ch \\
-Ours --- lexical tagger (blind) & 0.89 & 50\% & \textbf{0} \\
-\textbf{Ours --- LLM tagger (blind)} & \textbf{1.00} & \textbf{100\%} & \textbf{0} \\
+DLP / PII scanner (reads all) & 0.57 & 0.24 & 0.33 & 0\% & 1{,}839 ch \\
+LLM-judge, policy-aware (reads all) & 1.00 & 0.41 & 0.58 & 0\% & 1{,}839 ch \\
+Ours --- LLM tagger, open 14B (blind) & 1.00 & 0.82 & 0.90 & 50\% & \textbf{0} \\
+\textbf{Ours --- lexical tagger (blind)} & \textbf{1.00} & \textbf{0.88} & \textbf{0.94} & \textbf{67\%} & \textbf{0} \\
 \bottomrule
 \end{tabular}
-\caption{Ours vs.\ real baselines on realistic scenarios.}
+\caption{Ours vs.\ real baselines on 32 realistic scenarios (17 leaks). Both baselines
+ingest all content; ours decides at zero content egress. The LLM tagger and the
+LLM-judge both run on the same local open-weight model (Qwen2.5-14B).}
 \label{tab:frontier}
 \end{table*}
 

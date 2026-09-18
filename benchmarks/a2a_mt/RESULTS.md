@@ -113,3 +113,37 @@ is bounded by the tagger, an orthogonal and improvable component, and improving 
 demands a genuinely capable tagger.
 
 Reproduce: `python benchmarks/a2a_mt/a2a_tagger_multi.py`
+
+## Experiment 5 — baselines on a 4x larger, harder scenario set
+The original comparison used 8 curated scenarios. Expanded to **32** (17 leaks / 15
+clean) spanning all four violation types plus the cases that separate the approaches:
+non-regex PII (a diagnosis, a salary), authorized external sharing, benign traffic,
+and **single-hint near-misses** that must *not* fire. LLM tagger and LLM-judge both
+run on a local open-weight model (qwen2.5-14b) — free and reproducible.
+
+| detector | P | R | F1 | inference recall | content → center |
+|---|---|---|---|---|---|
+| **ours — lexical tagger (blind)** | **1.00** | **0.88** | **0.94** | **67%** | **0** |
+| ours — LLM tagger, qwen2.5-14b (blind) | 1.00 | 0.82 | 0.90 | 50% | **0** |
+| LLM-judge, qwen2.5-14b (reads all) | 1.00 | 0.41 | 0.58 | 0% | 1,839 ch |
+| DLP / PII scanner (reads all) | 0.57 | 0.24 | 0.33 | 0% | 1,839 ch |
+
+Three readings, including one that went against us:
+1. **The harder set exposes DLP properly** (F1 0.67 on the old 8 → **0.33** here): it
+   over-flags authorized external sharing (P=0.57, no policy/purpose semantics) *and*
+   is blind to inference, purpose, and TTL violations (R=0.24).
+2. **The LLM-judge reads every byte and still lands at F1 0.58** (R=0.41, inference
+   recall 0%) — essentially the same as the earlier gpt-4o-mini judge's 0.57, so the
+   weakness on compositional/policy reasoning is robust across judges, not an
+   artifact of a weak local model.
+3. **Against us:** the local 14B *LLM tagger* now **underperforms the lexical floor**
+   (F1 0.90 vs 0.94; inference recall 50% vs 67%). This is the same lesson as
+   Experiment 4 — a mid-size open backend over-tags and buys nothing — and it means
+   the "LLM tagger lifts everything" claim from the 8-scenario run was
+   backend-specific (gpt-4o-mini), not general.
+
+Our precision stays **1.00** in both configurations: the misses are tagger coverage
+(employment- and behavioral-domain hints the lexical floor does not know), never
+architectural false alarms.
+
+Reproduce: `python benchmarks/a2a_mt/a2a_baseline_compare.py --local-model qwen2.5:14b`
