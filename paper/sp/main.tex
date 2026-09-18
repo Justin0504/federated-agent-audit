@@ -47,7 +47,10 @@ center learns $O(\log)$ bits per message) and characterize when inference become
 detectable, then test the system where it is easiest to fool ourselves: on a
 benchmark authored by a separate model precision holds but recall drops sharply,
 and against a real LLM recipient we confirm that two benign fragments expose a withheld
-attribute, a threat that grows with model capability. On its single-tenant
+attribute, a threat that grows with model capability. Against an adaptive
+adversary that knows the detector, $20{,}000$ randomized evasion strategies yield
+none that learns more than the policy permits without firing: evasion costs the
+adversary more than it stands to gain. On its single-tenant
 projection, which is the deployable product, the auditor catches every
 internal-channel leak in AgentLeak's 600 scenarios at 0.97 precision with zero
 content egress.
