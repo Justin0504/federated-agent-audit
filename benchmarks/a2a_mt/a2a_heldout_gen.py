@@ -40,9 +40,10 @@ GEN_SYS = (
     "relevant). Do not explain.")
 
 
-def generate(model: str, n: int) -> list[dict]:
-    from openai import OpenAI
-    client = OpenAI()
+def generate(model: str, n: int, client=None) -> list[dict]:
+    if client is None:
+        from openai import OpenAI
+        client = OpenAI()
     r = client.chat.completions.create(
         model=model, temperature=0.9, response_format={"type": "json_object"},
         messages=[{"role": "system", "content": GEN_SYS},
@@ -80,46 +81,78 @@ def evaluate(scenarios: list[dict], tagger=None) -> dict:
     prec = tp / (tp + fp) if tp + fp else 1.0
     f1 = 2 * prec * recall / (prec + recall) if prec + recall else 0.0
     agree = (tp + tn) / n if n else 1.0
+    missed_types: dict[str, int] = {}
+    for d in disagreements:
+        if d["intended"]:                      # a false negative (we under-fired)
+            t = d.get("intended_type") or "unspecified"
+            missed_types[t] = missed_types.get(t, 0) + 1
     return {"n": n, "tp": tp, "fp": fp, "fn": fn, "tn": tn, "raw": raw,
             "recall": round(recall, 2), "precision": round(prec, 2),
             "f1": round(f1, 2), "agreement": round(agree, 2),
-            "disagreements": disagreements}
+            "disagreements": disagreements, "missed_types": missed_types}
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--n", type=int, default=20)
-    ap.add_argument("--model", default="gpt-4o-mini")
+    ap.add_argument("--n", type=int, default=15, help="scenarios per batch")
+    ap.add_argument("--batches", type=int, default=1)
+    ap.add_argument("--model", default="qwen2.5:14b",
+                    help="author model (an ollama tag, or an OpenAI model with a key)")
+    ap.add_argument("--ollama-url", default=os.environ.get(
+        "OLLAMA_URL", "http://localhost:11434/v1"))
+    ap.add_argument("--openai", action="store_true", help="author with OpenAI instead")
     args = ap.parse_args(argv)
-    if not os.environ.get("OPENAI_API_KEY"):
-        raise SystemExit("set OPENAI_API_KEY first")
 
-    print("=" * 72)
-    print(f"  Held-out, LLM-authored benchmark ({args.model} authors; our auditor scores)")
-    print("=" * 72)
-    scns = generate(args.model, args.n)
+    from openai import OpenAI
+    if args.openai:
+        if not os.environ.get("OPENAI_API_KEY"):
+            raise SystemExit("set OPENAI_API_KEY or drop --openai")
+        client, where = OpenAI(), "OpenAI"
+    else:
+        client, where = OpenAI(base_url=args.ollama_url, api_key="ollama"), "local"
+
+    print("=" * 74)
+    print(f"  Held-out, LLM-authored benchmark  (author: {args.model} [{where}]; "
+          f"our auditor scores)")
+    print("=" * 74)
+
+    scns: list[dict] = []
+    for b in range(args.batches):
+        try:
+            got = generate(args.model, args.n, client)
+        except Exception as e:  # noqa: BLE001 - keep whatever batches succeeded
+            print(f"  batch {b + 1}: generation failed ({str(e)[:50]})")
+            continue
+        scns += got
+        print(f"  batch {b + 1}: +{len(got)} scenarios (pool {len(scns)})")
+    if not scns:
+        raise SystemExit("no scenarios generated")
 
     lex = evaluate(scns)
-    print(f"  scenarios: {lex['n']}")
-    print(f"  lexical tagger : agreement {lex['agreement']:.0%}  "
-          f"P={lex['precision']} R={lex['recall']} F1={lex['f1']}  "
-          f"(TP={lex['tp']} FP={lex['fp']} TN={lex['tn']} FN={lex['fn']})")
+    print(f"\n  pooled scenarios scored: {lex['n']}  "
+          f"({lex['tp'] + lex['fn']} intended leaks)")
+    print(f"  {'tagger':<16}{'agree':<8}{'P':<7}{'R':<7}{'F1':<7}{'TP/FP/TN/FN'}")
+    print("  " + "-" * 62)
+    print(f"  {'lexical':<16}{lex['agreement']:<8.0%}{lex['precision']:<7}"
+          f"{lex['recall']:<7}{lex['f1']:<7}"
+          f"{lex['tp']}/{lex['fp']}/{lex['tn']}/{lex['fn']}")
 
     from federated_agent_audit.a2a import PrivacyTagger, llm_tagger
-    llm = evaluate(scns, tagger=PrivacyTagger(llm=llm_tagger(args.model)))
-    print(f"  LLM tagger     : agreement {llm['agreement']:.0%}  "
-          f"P={llm['precision']} R={llm['recall']} F1={llm['f1']}  "
-          f"(TP={llm['tp']} FP={llm['fp']} TN={llm['tn']} FN={llm['fn']})")
+    tg = PrivacyTagger(llm=llm_tagger(model=args.model, client=client))
+    llm = evaluate(scns, tagger=tg)
+    print(f"  {'LLM-backed':<16}{llm['agreement']:<8.0%}{llm['precision']:<7}"
+          f"{llm['recall']:<7}{llm['f1']:<7}"
+          f"{llm['tp']}/{llm['fp']}/{llm['tn']}/{llm['fn']}")
     print(f"  raw content reaching the center: {llm['raw']} (must be 0)")
 
-    m = llm
-    if m["disagreements"]:
-        print(f"\n  {len(m['disagreements'])} disagreements (detector gap OR ambiguous label):")
-        for d in m["disagreements"][:10]:
-            print(f"    - {d['name']}: intended leak={d['intended']} "
-                  f"({d['intended_type']}), ours={d['ours']}")
-            for fp_, tp_, txt in d["hops"]:
-                print(f"        {fp_}->{tp_}: {txt!r}")
+    # where the recall gap actually lives
+    for tag, m in (("lexical", lex), ("LLM-backed", llm)):
+        if m["missed_types"]:
+            tot = sum(m["missed_types"].values())
+            parts = ", ".join(f"{t} {c}/{tot}"
+                              for t, c in sorted(m["missed_types"].items(),
+                                                 key=lambda kv: -kv[1]))
+            print(f"  misses by intended type ({tag}): {parts}")
     return 0
 
 

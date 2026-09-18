@@ -529,10 +529,13 @@ Beyond hiding content, we harden the
 metadata: identity-bearing fields are pseudonymized with a per-audit shared salt
 (cross-tenant comparisons hold in pseudonym space; the center learns no real
 identity) and \texttt{sensitivity} is DP-noised, while categories are kept
-structurally. Pseudonymization is lossless ($P/R/F1=1.0$); with DP,
-$F1 = 0.99/0.97/0.96$ at $\varepsilon = 3/1/0.5$, recall falling only for
-disclosure decisions whose sensitivity noises across the floor, with zero raw
-content at every $\varepsilon$.
+structurally. Pseudonymization alone is lossless ($P/R/F1=1.0$). Under DP we
+sweep two orders of magnitude, $\varepsilon\in[0.1,8]$, at 40 trials each: mean
+$F1$ decays monotonically and gracefully---$0.99$ at $\varepsilon{=}3$, $0.98$ at
+$1$, $0.96$ at $0.5$, and still $\approx0.93$ at $0.1$ (sd $\le0.033$)---with no
+cliff. The loss is concentrated in recall, i.e.\ disclosure decisions whose noised
+sensitivity crosses the floor, exactly where the mechanism predicts, and zero raw
+content reaches the center at every $\varepsilon$.
 
 \subsection{Comparison with real baselines}
 Against the two detectors a practitioner would actually reach for, on \textbf{32}
