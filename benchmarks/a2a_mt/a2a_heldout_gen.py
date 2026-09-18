@@ -53,6 +53,23 @@ def generate(model: str, n: int, client=None) -> list[dict]:
 
 
 
+def _canon_type(t) -> str:
+    """Author models name the same class inconsistently (explicit_disclosure /
+    explicitDisclosure / data_disclosure / explicit). Fold to a coarse family so the
+    miss taxonomy is readable rather than a long tail of spellings."""
+    k = (t or "unspecified").lower().replace("-", "_")
+    k = "".join("_" + c.lower() if c.isupper() else c for c in (t or "")).lower() or k
+    if "infer" in k:
+        return "inference"
+    if "disclos" in k or k.startswith("explicit"):
+        return "disclosure"
+    if "purpose" in k:
+        return "purpose"
+    if "ttl" in k or "forward" in k or "hop" in k:
+        return "ttl"
+    return "unspecified"
+
+
 def _clean_clearances(raw) -> dict:
     """Keep only well-formed [principal, [purposes]] entries.
 
@@ -109,8 +126,8 @@ def evaluate(scenarios: list[dict], tagger=None) -> dict:
     missed_types: dict[str, int] = {}
     for d in disagreements:
         if d["intended"]:                      # a false negative (we under-fired)
-            t = d.get("intended_type") or "unspecified"
-            missed_types[t] = missed_types.get(t, 0) + 1
+            missed_types[_canon_type(d.get("intended_type"))] = \
+                missed_types.get(_canon_type(d.get("intended_type")), 0) + 1
     return {"n": n, "tp": tp, "fp": fp, "fn": fn, "tn": tn, "raw": raw,
             "recall": round(recall, 2), "precision": round(prec, 2),
             "f1": round(f1, 2), "agreement": round(agree, 2),

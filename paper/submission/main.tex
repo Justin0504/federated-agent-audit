@@ -49,8 +49,8 @@ cross-tenant disclosure, purpose violations, over-forwarding, and cross-tenant
 inference, all without reading a message. We prove the center-blind guarantee (the
 center learns $O(\log)$ bits per message) and characterize when inference becomes
 detectable, then test the system where it is easiest to fool ourselves: on a
-benchmark authored by a separate model it keeps perfect precision, and against a
-real LLM recipient we confirm that two benign fragments already expose a withheld
+benchmark authored by a separate model precision holds but recall drops sharply,
+and against a real LLM recipient we confirm that two benign fragments expose a withheld
 attribute, a threat that grows with model capability. On its single-tenant
 projection, which is the deployable product, the auditor catches every
 internal-channel leak in AgentLeak's 600 scenarios at 0.97 precision with zero
@@ -645,22 +645,32 @@ high; the auditor catches all at zero content egress.}
 \end{table}
 
 \subsection{An author-independent benchmark}
-Our 48-scenario benchmark scores
-1.0, but we wrote both the detectors and the scenarios. To de-bias it, an LLM
-(\emph{not} the detector author) generates diverse scenarios with its own intended
-labels and we score our auditor against them. Across held-out runs ($\approx$20
-scenarios each), \textbf{precision is 1.0 (the architecture never over-fires) but
-recall is only $\approx$0.31 (lexical) / 0.38 (LLM tagger)}, far below the
-self-authored 1.0. The misses are dominated by tagger/taxonomy coverage: we
-broaden the sensitive set from health/finance/legal to ten configurable classes
-(+location, employment, education, behavioral, credentials, biometric,
-demographic), which raises recall, but open-world sensitive content remains the
-bottleneck; the author also states inferences explicitly and labels some
-borderline cases as leaks. Recall here is bounded by the tagger, an orthogonal
-and improvable component, not the auditor: every violation the
-architecture reports is real. The self-authored 1.0 measures the detectors given
-correct labels; the held-out setting measures the end-to-end pipeline on
-open-world content.
+Our 48-scenario benchmark scores 1.0, but we wrote both the detectors and the
+scenarios. To de-bias it, an LLM (\emph{not} the detector author) generates diverse
+scenarios with its own intended labels and we score our auditor against them. Pooling
+six batches gives \textbf{75 scenarios} (46 intended leaks), every one of which parses
+and is scored---no silent sample shrinkage. The honest result sits far below the
+self-authored 1.0: with the lexical tagger $P{=}1.00$, $R{=}0.17$; with an open-weight
+LLM tagger recall rises to $R{=}0.46$ but precision falls to $P{=}0.88$ (three false
+positives). That last number sharpens a claim we would otherwise have overstated: the
+architecture does not over-fire \emph{given correct labels}, but an over-tagging
+backend can still manufacture false positives end-to-end, so perfect precision is a
+property of the auditor, not a guarantee of the deployed pipeline.
+
+The miss taxonomy locates the gap. False negatives split roughly evenly between
+\emph{explicit disclosure} (42\% lexical, 36\% LLM-backed) and \emph{inference} (34\%,
+36\%), with purpose violations a distant third (11\%, 12\%). The bottleneck is
+therefore broad tagger and taxonomy coverage---open-world sensitive content that our
+ten configurable classes (health, finance, legal, location, employment, education,
+behavioral, credentials, biometric, demographic) simply do not name---rather than a
+weakness specific to the inference detector. Two caveats keep this honest in both
+directions. The author model states some ``inferences'' explicitly and labels
+borderline cases as leaks, so part of the 49--63\% agreement is label noise rather
+than a detector gap, which is why we report agreement alongside $P/R$ instead of
+treating the author's labels as gold. And the two settings measure different things:
+the self-authored 1.0 measures the detectors given correct labels, while the held-out
+setting measures the end-to-end pipeline on open-world content, where the tagger---an
+orthogonal, improvable component---is the binding constraint.
 
 \subsection{Is the inference threat real?}
 Our detector fires at $k^{*}=2$ hints, but is that where real inferability begins? We
@@ -769,9 +779,12 @@ inferred-category fragments---and catches both, with zero content egress across 
 whole capability range.
 
 The honest limits lie in coverage and in trust. Recall is bounded not by the
-auditor but by the tagger that feeds it: on author-independent scenarios precision
-stays perfect while recall trails, because open-world sensitive content outruns
-any fixed taxonomy. The inference bound assumes conditionally independent
+auditor but by the tagger that feeds it: on author-independent scenarios recall
+falls sharply because open-world sensitive content outruns any fixed taxonomy,
+and the misses are spread across explicit disclosure as much as inference. The
+auditor itself does not over-fire given correct labels, but that is a property of
+the auditor rather than of the deployed pipeline: a noisy tagger can still cost
+precision end-to-end. The inference bound assumes conditionally independent
 fragments, which real, correlated hints only approximate. And two adversaries
 remain open: a peer that both paraphrases \emph{and} keeps every recipient below
 the convergence threshold, and a colluding sender--recipient pair that suppresses

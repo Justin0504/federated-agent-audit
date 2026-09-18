@@ -174,3 +174,43 @@ cliff**; the loss is concentrated in recall, i.e. disclosure decisions whose noi
 `sensitivity` crosses the floor, exactly where the mechanism predicts.
 
 Reproduce: `python benchmarks/a2a_mt/a2a_dp_eval.py --trials 40`
+
+## Experiment 7 — author-independent (held-out) benchmark, at scale
+An LLM that is *not* the detector author generates scenarios with its own intended
+labels; we score our auditor against them. Six pooled batches, author = qwen2.5-14b
+(local, free). **75 generated, 75 scored, 0 dropped**, 46 intended leaks.
+
+| tagger | agreement | P | R | F1 | TP/FP/TN/FN |
+|---|---|---|---|---|---|
+| lexical | 49% | **1.00** | **0.17** | 0.30 | 8/0/29/38 |
+| LLM-backed (qwen2.5-14b) | 63% | **0.88** | **0.46** | 0.60 | 21/3/26/25 |
+
+`raw→center = 0`.
+
+**Where the misses actually are** (false negatives bucketed by the author's intended
+violation type, spelling variants folded):
+
+| | disclosure | inference | purpose | unspecified |
+|---|---|---|---|---|
+| lexical (38 FN) | **42%** | 34% | 11% | 13% |
+| LLM-backed (25 FN) | 36% | **36%** | 12% | 16% |
+
+Three honest readings, two of which correct earlier claims:
+1. **The blanket "precision is 1.0, the architecture never over-fires" is too strong.**
+   It holds with the *lexical* tagger (P=1.00, zero FPs). With an over-tagging
+   open-weight LLM backend, end-to-end precision falls to **0.88** (3 FPs). The
+   architectural claim is properly stated as: *given correct labels* the auditor does
+   not over-fire — the tagger can still manufacture false positives.
+2. **The recall gap is not inference-specific.** Misses split roughly evenly between
+   explicit disclosure and inference, so the bottleneck is broad tagger/taxonomy
+   coverage (open-world sensitive content our ten classes do not name), not a
+   weakness of the inference detector in particular.
+3. **Part of the disagreement is label noise, not detector gap.** The author model
+   states some "inferences" explicitly and labels borderline cases as leaks; 49–63%
+   agreement reflects both. This cuts both ways and is why we report agreement
+   alongside P/R rather than treating the author's labels as gold.
+
+Note these are not directly comparable to the earlier ~20-scenario run (recall
+0.31/0.38): different author model and 3.75x the sample.
+
+Reproduce: `python benchmarks/a2a_mt/a2a_heldout_gen.py --n 12 --batches 6`
