@@ -88,8 +88,8 @@ boundary is a concrete privacy harm under regimes such as HIPAA and GDPR. Our ai
 is a deployable safeguard for exactly these real cross-organizational agent
 interactions: the system we build runs today, sees no raw content, and---as our
 in-the-wild study shows (\S\ref{sec:eval})---catches current agents over-sharing
-regulated identifiers in 46--82\% of realistic hand-offs across four open-weight and
-frontier models.
+regulated identifiers in 46--82\% of realistic hand-offs across four recipient
+models, open-weight and frontier.
 
 Three things make this hard at once. The leakage is where it is least watched:
 inter-agent messages leak far more than final outputs, yet no current framework
@@ -118,8 +118,11 @@ desensitized metadata the center cannot invert. We prove the center learns only
 $O(\log)$ bits per message (Lemma~\ref{lem:blind}); we give a closed form for when
 compositional inference becomes detectable (Prop.~\ref{prop:k}), and show empirically
 that it collapses a three-parameter model to a single effective knob $k^{*}$; and we
-prove attestation soundness (Prop.~\ref{prop:attest}), confining the residual
-adversary to key compromise or sub-threshold leakage.
+prove attestation soundness (Prop.~\ref{prop:attest}). Against an adversary that knows
+the detector exactly, $20{,}000$ randomized evasion strategies produce none that
+teaches the recipient more than the policy permits: evasion is possible only by
+learning less than is allowed anyway. Ablating either integrity mechanism breaks
+that---which is how we know both are load-bearing rather than decorative.
 \item \textbf{A measurement of the threat in today's agents.} On matched scenario sets
 across four recipient models---open-weight 7--14B through a frontier model---agents
 over-share regulated identifiers in \textbf{46--82\%} of realistic cross-boundary
@@ -175,7 +178,7 @@ text (\S\ref{sec:eval}); A3 is the residual the baseline does not close.
 \paragraph{Closing A3 with forced-embed attestation.} We remove the honest-labeler
 assumption with a downloaded, build-pinned component. The labeler and auditor ship as
 a fixed build $B$ whose signing key $k_B$ is confined to $B$; a report is
-$R=(\mathcal{E},\sigma)$ with $\sigma=\mathrm{Sign}_{k_B}(H(\mathcal{E}))$ over the
+$R=(\mathcal{E},\sigma)$ with $\sigma=\mathrm{Sign}_{k_B}(h(\mathcal{E}))$ over the
 center-view edge set $\mathcal{E}$, and the center accepts $R$ only if it verifies
 under $B$'s published fingerprint.
 
@@ -184,7 +187,7 @@ If the signature scheme is \textup{EUF-CMA}-secure and $k_B$ is confined to $B$,
 every report the center accepts equals $B$'s output on the sender's actual inputs,
 except with negligible probability. Hence a modified labeler that suppresses a tag or
 forges a subject id yields a report signed by an untrusted build (wrong fingerprint)
-and is rejected, and content tampering changes $H(\mathcal{E})$ and fails
+and is rejected, and content tampering changes $h(\mathcal{E})$ and fails
 verification. The residual adversary is confined to (i) exfiltrating $k_B$ from
 $B$---the case a hardware root of trust (TEE) closes---and (ii) \emph{sub-threshold}
 leakage: disclosing strictly less than the detection threshold, which no
@@ -195,7 +198,7 @@ Acceptance requires a valid $\sigma$ under $B$'s fingerprint. Producing one for 
 $\mathcal{E}$ that $B$ did not emit requires forging a signature (contradicting
 EUF-CMA) or obtaining $k_B$ (excluded unless $B$ is broken). Under-tagging and forgery
 both require running a labeler other than $B$, whose reports carry no valid $\sigma$;
-tampering after signing changes $H(\mathcal{E})$. What remains is not a detection gap
+tampering after signing changes $h(\mathcal{E})$. What remains is not a detection gap
 but an information gap: a sender that never emits the datum, or emits fewer than
 $k^{*}$ converging fragments (Prop.~\ref{prop:k}), leaves nothing the center could key
 on. Canonical owner-derived subject ids (\texttt{canonical\_subject}) make aliasing
@@ -236,16 +239,16 @@ is a leak.
 
 \begin{lemma}[Bounded content leakage]\label{lem:blind}
 Let a message $M$ (with content entropy $H(M)$) produce center-view
-$V=(H(M),\ell)$, where $H$ is a hash modeled as a random oracle and
+$V=(h(M),\ell)$, where $h$ is a hash modeled as a random oracle and
 $\ell\in\mathcal{L}$ is the categorical label (category, sensitivity, taint tags,
 opaque principal/subject ids). Then the center's information about $M$ satisfies
 $I(M;V)\le \log_2|\mathcal{L}|$, a constant independent of $|M|$. Hence for
 $H(M)\gg\log_2|\mathcal{L}|$ the center cannot reconstruct $M$.
 \end{lemma}
 \begin{proof}
-$I(M;V)=I(M;H(M))+I(M;\ell\mid H(M))$. Under the random-oracle model $H(M)$ is a
+$I(M;V)=I(M;h(M))+I(M;\ell\mid h(M))$. Under the random-oracle model $h(M)$ is a
 uniformly random value revealing nothing of $M$ beyond equality tests, so
-$I(M;H(M))=0$. The second term is at most $H(\ell)\le\log_2|\mathcal{L}|$. With
+$I(M;h(M))=0$. The second term is at most $H(\ell)\le\log_2|\mathcal{L}|$. With
 $|\mathcal{L}|$ the product of the (small) label domains --- e.g.\ a handful of
 categories $\times$ six sensitivity levels --- this is $O(\log)$ bits per Part,
 independent of $|M|$; reconstructing $M$ requires $H(M)$ bits, so it is infeasible.
@@ -644,11 +647,13 @@ and the misses are spread across explicit disclosure as much as inference. The
 auditor itself does not over-fire given correct labels, but that is a property of
 the auditor rather than of the deployed pipeline: a noisy tagger can still cost
 precision end-to-end. The inference bound assumes conditionally independent
-fragments, which real, correlated hints only approximate. And two adversaries
-remain open: a peer that both paraphrases \emph{and} keeps every recipient below
-the convergence threshold, and a colluding sender--recipient pair that suppresses
-a shared datum---the residual that only a hardware root of trust (the TEE backend
-our attestation admits) fully closes.
+fragments, which real, correlated hints only approximate. And two adversaries remain
+open, though not equally: a peer that keeps every recipient below the convergence
+threshold is real but bounded---by construction it learns less than the policy
+already permits, which the evasion frontier measures
+(\S\ref{sec:eval})---whereas a colluding sender--recipient pair that suppresses a
+shared datum is the genuine residual, and only a hardware root of trust (the TEE
+backend our attestation admits) fully closes it.
 
 \section{Related work}
 
