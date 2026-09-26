@@ -278,3 +278,81 @@ Pinned as tests (`test_adaptive_evasion_frontier_below_threshold`,
 strategy generator that stops building real attacks, fails the suite.
 
 Reproduce: `python benchmarks/a2a_mt/a2a_adaptive.py --trials 20000`
+
+---
+
+## Experiment 9 — can you just *tell* the agent not to over-share?
+
+**Question.** The paper claims the safeguard has to be structural rather than
+behavioral. Until now that was an assertion. Worse, our main measurement's
+coordinator prompt ends *"Include whatever you think is helpful"* — which a
+reviewer can fairly call a leading prompt, making the 46–82% an artifact of our
+own wording. Two things had to be tested: does the invitation cause the leak, and
+does instructing the agent fix it.
+
+**Method.** Same 24 workflows, 3 runs, 3 local open-weight models (864 trials),
+sweeping only the coordinator's instruction:
+
+| condition | what changes |
+|---|---|
+| `permissive` | the original prompt, verbatim — keeps the new numbers comparable |
+| `neutral` | the "include whatever is helpful" invitation removed |
+| `instructed` | explicitly forbids identifiers and sensitive details, itemised |
+| `policy` | states the record's real policy: owner, permitted recipient, purpose, and that the recipient is **not** permitted |
+
+Ground truth here is **independent of our auditor** — literal identifiers and
+attribute terms from the source record, matched against what the coordinator
+actually wrote. Every pattern is checked against its own record at import, so a
+drifted annotation fails loudly instead of silently scoring zero. Identifiers and
+attributes are counted separately: an instruction that stops a model pasting an
+SSN but not the diagnosis has not solved anything.
+
+**Result** (pooled over the three models, 216 trials per condition):
+
+| condition | leak (any) | 95% CI | identifiers | attributes | our auditor |
+|---|---|---|---|---|---|
+| permissive | **99%** | [96, 100] | 88% | 94% | 81% |
+| neutral | **100%** | [97, 100] | 88% | 93% | 77% |
+| instructed | **78%** | [72, 83] | 53% | 74% | 56% |
+| policy | **73%** | [67, 79] | 48% | 66% | 74% |
+
+Per model, under the strongest condition (`policy`): Llama-3.1-8B 44%,
+Qwen2.5-14B 79%, Qwen2.5-7B 96%.
+
+**Readings.**
+1. **The leading-prompt objection is dead.** Removing the invitation changed
+   nothing: 99% → 100%. The over-sharing is the models', not our prompt's.
+2. **Instructing the agent does not fix it.** Spelling out the forbidden
+   categories leaves 78%; handing the model the actual policy and telling it the
+   recipient is not permitted leaves 73%. The best single model under the best
+   condition still leaks in 44% of hand-offs. This is the evidence the
+   "structural, not behavioral" claim needed, and it is now measured rather than
+   asserted.
+3. **Instructions suppress identifiers about twice as well as attributes**
+   (88→48 vs 94→66). Models learn "do not paste the number" and keep writing the
+   diagnosis. Qwen2.5-14B under `policy` is the clearest case: identifiers
+   86%→36%, attributes 93%→71%. A redaction-shaped reflex, not an understanding
+   of what is sensitive.
+4. **Compliance does not track capability.** Llama-3.1-8B (8B) complies far
+   better than Qwen2.5-14B — 44% vs 79% under `policy`. Instruction-following on
+   privacy is a per-model property, so "use a better model" is not a fix either.
+5. **Our auditor under-detects: recall 0.78 against this independent ground
+   truth** (169 misses in 864). So the headline 46–82% in Experiment 2 is a
+   *lower bound*, and we now say so. Precision is 0.95; the 34 fires without a
+   literal match are mostly paraphrased disclosures the literal patterns cannot
+   see. Both measures are lower bounds on different things and neither dominates.
+
+**An annotation bug we caught and fixed.** The first pass matched `refinanc` for
+the mortgage case and `disput` for the chargeback case. But the recipients there
+are an underwriting partner and a chargeback processor — those words are the
+*task*, not the secret, and scoring them as leaks inflated the attribute rate in
+our own favour. Patterns were tightened to name only what the recipient must not
+learn (the balance, the score, the diagnosis). The table above is post-fix; the
+pre-fix numbers were 2–7 pp higher.
+
+Reproduce: `bash benchmarks/a2a_mt/run_prompt_conditions.sh 3`
+Re-score saved traces after an annotation change (no LLM calls):
+`python benchmarks/a2a_mt/a2a_prompt_conditions.py --rescore <trace-dir>`
+
+**Not yet run:** the frontier arm. Needs `ANTHROPIC_API_KEY`; the open-weight
+result stands on its own but the capability story is incomplete without it.
