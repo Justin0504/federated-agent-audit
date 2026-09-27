@@ -594,3 +594,48 @@ def test_a2a_mt_benchmark():
               "cross_tenant_inference"):
         d, e = m["type_hits"][t]
         assert d == e and e >= 1, (t, d, e)
+
+
+def test_raw_leak_prefilter_is_sound():
+    """The no-leak fast path must never hide a leak.
+
+    _count_raw_leaks skips a content token whose first word-chunk is absent from
+    the center view; that is what stops it scanning the whole blob per token, and
+    it is only correct if the skip can never drop a token the regex would have
+    matched. Assert the implication directly over awkward inputs -- emails,
+    paths, dotted and hyphenated ids -- rather than trusting it by inspection.
+    """
+    import re as _re
+
+    from federated_agent_audit.a2a.auditor import _WORD_RE
+
+    blob = ('{"subject":"case.7742@clinic-a","cat":"other.id-9931",'
+            '"path":"a/b/c-9","n":"plain"}')
+    blob_words = set(_WORD_RE.findall(blob))
+    candidates = [
+        "case.7742@clinic-a", "other.id-9931", "a/b/c-9", "plain",
+        "clinic-a", "7742", "-9931", "./a/b", "absent.token-1", "zzzz",
+        "case.7742@clinic-b", "id-9931",
+    ]
+    for tok in candidates:
+        matches = _re.search(rf"\b{_re.escape(tok)}\b", blob) is not None
+        head = _WORD_RE.search(tok)
+        skipped = head is not None and head.group(0) not in blob_words
+        # soundness: anything the regex would match must survive the prefilter
+        assert not (matches and skipped), f"prefilter would hide {tok!r}"
+
+
+def test_raw_leak_declared_label_value_is_not_a_leak():
+    """A punctuated id that is a declared label value is governance metadata."""
+    from federated_agent_audit.a2a import (
+        A2AAuditor, AgentClearance, Message, Part, PrivacyLabel, label_part,
+    )
+    planted = "case.7742@clinic-a"
+    lbl = PrivacyLabel(data_subject=planted, owning_principal="tenant:x",
+                       sensitivity=2, category=["schedule"], purpose=["task"],
+                       allowed_recipients=["tenant:x"])
+    msg = Message(message_id="m0", from_agent="a", to_agent="b",
+                  from_principal="tenant:x", to_principal="tenant:y",
+                  parts=[label_part(Part(text=f"note about {planted} today"), lbl)])
+    clr = [AgentClearance(agent_id="b", principal="tenant:y", purposes=["task"])]
+    assert A2AAuditor(clearances=clr).audit([msg]).raw_leaks == 0

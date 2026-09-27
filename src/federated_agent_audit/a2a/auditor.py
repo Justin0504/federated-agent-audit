@@ -323,23 +323,43 @@ class A2AAuditor:
         for e in edges:
             allowed |= _label_tokens(e.label)
             allowed |= _routing_tokens(e)
+
+        # Sound pre-filter, so the common (no-leak) case never runs a regex.
+        # If \btok\b matches the blob then tok's first maximal word-chunk is
+        # itself bounded by non-word characters there, so it appears in this set;
+        # a token whose head is absent cannot match and is skipped. The regex
+        # still decides every candidate that survives, so the invariant is
+        # unchanged -- this only avoids scanning the whole blob per token.
+        blob_words = set(_WORD_RE.findall(blob))
+        text_by_edge = _index_text(messages)
+
         leaks = 0
         for e in edges:
-            text = self._text_for_edge(messages, e)
+            text = text_by_edge.get((e.message_id, e.part_index), "")
             for tok in _content_tokens(text):
                 if tok in allowed:
+                    continue
+                head = _WORD_RE.search(tok)
+                if head is not None and head.group(0) not in blob_words:
                     continue
                 if re.search(rf"\b{re.escape(tok)}\b", blob):
                     leaks += 1
                     break
         return leaks
 
-    @staticmethod
-    def _text_for_edge(messages: list[Message], edge: _Edge):
-        for msg in messages:
-            if msg.message_id == edge.message_id and edge.part_index < len(msg.parts):
-                return msg.parts[edge.part_index].text
-        return ""
+
+_WORD_RE = re.compile(r"[A-Za-z0-9_]+")
+
+
+def _index_text(messages: list[Message]) -> dict[tuple[str, int], str]:
+    """(message_id, part_index) -> Part text, built once.
+
+    Looking this up by scanning the message list per edge made the invariant
+    check quadratic in traffic, which made the whole audit look super-linear
+    even though every detector is linear in edges.
+    """
+    return {(m.message_id, i): p.text
+            for m in messages for i, p in enumerate(m.parts)}
 
 
 def _content_tokens(text: str) -> list[str]:

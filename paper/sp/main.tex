@@ -121,7 +121,10 @@ across four recipient models---open-weight 7--14B through a frontier model---age
 over-share regulated identifiers in \textbf{46--82\%} of realistic cross-boundary
 hand-offs, while inference ability \emph{rises} with capability (to $100\%$ at
 $k^{*}{=}2$). The two trends move in opposite directions, so neither weak nor strong
-recipients can be trusted to behave: the safeguard has to be structural.
+recipients can be trusted to behave. Nor can they be instructed out of it: handing
+the model the record's own policy still leaves $73\%$ of hand-offs leaking
+(\S\ref{sec:instr}). The safeguard has to be structural, and we measure that
+rather than assert it.
 \item \textbf{A2A-MT and an honest evaluation.} The first multi-tenant agent-privacy
 benchmark, validated against the external AgentLeak suite, a properly configured
 Presidio DLP baseline, and an author-independent held-out set. We report where the
@@ -526,8 +529,65 @@ Qwen2.5-14B  & mid (open)   & 78\% (94/120) & \textbf{0} \\
 \end{tabular}
 \caption{Cross-boundary over-sharing by recipient model (24 workflows $\times$ 5 runs
 $=120$ trials each, same set). Over-sharing falls with capability/alignment but stays
-high; the auditor catches all at zero content egress.}
+high; the auditor catches all at zero content egress. These are detections by our
+own auditor and therefore \emph{lower bounds}: measured against independent ground
+truth (\S\ref{sec:instr}) its recall is $0.78$.}
 \label{tab:wild}
+\end{table}
+
+\subsection{Can the agent simply be told not to?}\label{sec:instr}
+The measurement above invites an obvious objection: our coordinator prompt ends
+\emph{``include whatever you think is helpful''}, so a reader may reasonably
+suspect the leak is our wording rather than the model's behavior. It also leaves
+this paper's central claim---that the safeguard has to be structural---as an
+assertion. We test both by sweeping the instruction alone, over the same 24
+workflows, three open-weight models and 864 trials. Ground truth here is
+deliberately \emph{independent of our auditor}: literal identifiers and attribute
+terms taken from the source record, matched against what the coordinator actually
+wrote, with each pattern checked against its own record so a drifted annotation
+fails loudly rather than scoring zero in our favor.
+
+Removing the invitation changes nothing ($99\%\!\to\!100\%$): the over-sharing is
+the models', not the prompt's. Instructing the agent does not fix it either.
+Naming the forbidden categories explicitly leaves $78\%$; handing the model the
+record's actual policy---owner, permitted recipient, purpose, and the fact that
+this recipient is \emph{not} permitted---leaves $73\%$, and the most compliant
+model under the strongest condition still leaks in $44\%$ of hand-offs
+(Table~\ref{tab:instr}).
+
+The breakdown is sharper than the totals. Instructions suppress hard identifiers
+about twice as effectively as sensitive attributes ($88\!\to\!48\%$ against
+$94\!\to\!66\%$): models learn not to paste the account number and go on writing
+the diagnosis, a redaction-shaped reflex rather than an understanding of what is
+sensitive. Compliance does not track capability either---Llama-3.1-8B complies
+markedly better than the larger Qwen2.5-14B ($44\%$ versus $79\%$ under the
+policy condition)---so neither a better prompt nor a better model is the fix.
+This is the evidence the structural claim needed.
+
+The same experiment costs us a number we would rather not report. Against this
+independent ground truth our own auditor's recall is $0.78$ (169 misses in 864),
+so the rates in Table~\ref{tab:wild} are \emph{lower bounds} on over-sharing, not
+estimates of it. Precision is $0.95$; the 34 firings without a literal match are
+largely paraphrased disclosures the literal patterns cannot see. Both measures
+are lower bounds on different things and neither dominates the other.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lccccc}
+\toprule
+Coordinator instruction & leak & 95\% CI & ident. & attrib. & auditor \\
+\midrule
+permissive (as \S\ref{sec:eval}) & 99\% & [96, 100] & 88\% & 94\% & 81\% \\
+invitation removed & 100\% & [97, 100] & 88\% & 93\% & 77\% \\
+categories forbidden & 78\% & [72, 83] & 53\% & 74\% & 56\% \\
+\textbf{full policy stated} & \textbf{73\%} & [67, 79] & \textbf{48\%} & \textbf{66\%} & 74\% \\
+\bottomrule
+\end{tabular}
+\caption{Sweeping the coordinator's instruction, pooled over three open-weight
+models ($216$ trials per row). Scored against ground truth independent of our
+auditor. Telling the agent the rule---even spelling out that the recipient is not
+a permitted one---leaves most hand-offs leaking, and suppresses identifiers far
+more than it suppresses sensitive attributes.}
+\label{tab:instr}
 \end{table}
 
 \subsection{An author-independent benchmark}
@@ -628,7 +688,8 @@ metadata-level detection (Figure~\ref{fig:trends}). As recipient capability rise
 hand-off outright ($\approx$80\%), the aligned frontier model far less often
 (46\%)---while \emph{implicit} inference rises: the frontier recipient reconstructs a
 withheld attribute from two benign fragments where a small model cannot. A defender who
-trusted the model to behave would be wrong at both ends. The auditor does not: it flags
+trusted the model to behave would be wrong at both ends---and, as \S\ref{sec:instr}
+shows, would still be wrong after telling the model the rule. The auditor does not: it flags
 the metadata pattern---an explicit sensitive tag crossing a boundary, or converging
 inferred-category fragments---and catches both, with zero content egress across the
 whole capability range.

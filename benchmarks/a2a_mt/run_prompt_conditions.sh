@@ -23,8 +23,12 @@ if ! curl -sf "$VLLM_BASE_URL/models" >/dev/null; then
   exit 1
 fi
 
-# tier only orders the output rows; it does not affect the measurement
-for spec in "qwen2.5:7b 1" "llama3.1:8b 1" "qwen2.5:14b 2"; do
+# Six open-weight families, so the result is not a property of one lineage.
+# Tier only orders the output rows; it does not affect the measurement.
+# Override with MODELS="name tier;name tier" to run a subset.
+DEFAULT_MODELS="qwen2.5:7b 1;llama3.1:8b 1;qwen2.5:14b 2;mistral:7b 1;gemma2:9b 1;phi3.5:3.8b 1"
+IFS=';' read -ra SPECS <<< "${MODELS:-$DEFAULT_MODELS}"
+for spec in "${SPECS[@]}"; do
   set -- $spec
   model="$1"; tier="$2"
   safe="${model//[:.]/_}"
