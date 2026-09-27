@@ -120,7 +120,7 @@ over-share regulated identifiers in \textbf{46--82\%} of realistic cross-boundar
 hand-offs, while inference ability \emph{rises} with capability (to $100\%$ at
 $k^{*}{=}2$). The two trends move in opposite directions, so neither weak nor strong
 recipients can be trusted to behave. Nor can they be instructed out of it: handing
-the model the record's own policy still leaves $73\%$ of hand-offs leaking
+the model the record's own policy still leaves $79\%$ of hand-offs leaking
 (\S\ref{sec:instr}). The safeguard has to be structural, and we measure that
 rather than assert it.
 \item \textbf{A2A-MT and an honest evaluation.} The first multi-tenant agent-privacy
@@ -544,7 +544,7 @@ The measurement above invites an obvious objection: our coordinator prompt ends
 suspect the leak is our wording rather than the model's behavior. It also leaves
 this paper's central claim---that the safeguard has to be structural---as an
 assertion. We test both by sweeping the instruction alone, over the same 24
-workflows, three open-weight models and 864 trials. Ground truth here is
+workflows, six open-weight model families and $1{,}728$ trials. Ground truth here is
 deliberately \emph{independent of our auditor}: literal identifiers and attribute
 terms taken from the source record, matched against what the coordinator actually
 wrote, with each pattern checked against its own record so a drifted annotation
@@ -552,15 +552,15 @@ fails loudly rather than scoring zero in our favor.
 
 Removing the invitation changes nothing ($99\%\!\to\!100\%$): the over-sharing is
 the models', not the prompt's. Instructing the agent does not fix it either.
-Naming the forbidden categories explicitly leaves $78\%$; handing the model the
+Naming the forbidden categories explicitly leaves $84\%$; handing the model the
 record's actual policy---owner, permitted recipient, purpose, and the fact that
-this recipient is \emph{not} permitted---leaves $73\%$, and the most compliant
+this recipient is \emph{not} permitted---leaves $79\%$, and the most compliant
 model under the strongest condition still leaks in $44\%$ of hand-offs
 (Table~\ref{tab:instr}).
 
 The breakdown is sharper than the totals. Instructions suppress hard identifiers
-about twice as effectively as sensitive attributes ($88\!\to\!48\%$ against
-$94\!\to\!66\%$): models learn not to paste the account number and go on writing
+markedly more effectively than sensitive attributes ($86\!\to\!51\%$ against
+$93\!\to\!68\%$): models learn not to paste the account number and go on writing
 the diagnosis, a redaction-shaped reflex rather than an understanding of what is
 sensitive. Compliance does not track capability either---Llama-3.1-8B complies
 markedly better than the larger Qwen2.5-14B ($44\%$ versus $79\%$ under the
@@ -568,9 +568,9 @@ policy condition)---so neither a better prompt nor a better model is the fix.
 This is the evidence the structural claim needed.
 
 The same experiment costs us a number we would rather not report. Against this
-independent ground truth our own auditor's recall is $0.78$ (169 misses in 864),
-so the rates in Table~\ref{tab:wild} are \emph{lower bounds} on over-sharing, not
-estimates of it. Precision is $0.95$; the 34 firings without a literal match are
+independent ground truth our own auditor's recall is $0.79$ ($331$ misses in
+$1{,}728$), so the rates in Table~\ref{tab:wild} are \emph{lower bounds} on
+over-sharing, not estimates of it. Precision is $0.94$; the 78 firings without a literal match are
 largely paraphrased disclosures the literal patterns cannot see. Both measures
 are lower bounds on different things and neither dominates the other.
 
@@ -579,14 +579,14 @@ are lower bounds on different things and neither dominates the other.
 \toprule
 Coordinator instruction & leak & 95\% CI & ident. & attrib. & auditor \\
 \midrule
-permissive (as \S\ref{sec:eval}) & 99\% & [96, 100] & 88\% & 94\% & 81\% \\
-invitation removed & 100\% & [97, 100] & 88\% & 93\% & 77\% \\
-categories forbidden & 78\% & [72, 83] & 53\% & 74\% & 56\% \\
-\textbf{full policy stated} & \textbf{73\%} & [67, 79] & \textbf{48\%} & \textbf{66\%} & 74\% \\
+permissive (as \S\ref{sec:eval}) & 98\% & [96, 99] & 86\% & 93\% & 82\% \\
+invitation removed & 100\% & [99, 100] & 86\% & 93\% & 80\% \\
+categories forbidden & 84\% & [81, 88] & 54\% & 81\% & 63\% \\
+\textbf{full policy stated} & \textbf{79\%} & [75, 83] & \textbf{51\%} & \textbf{68\%} & 77\% \\
 \bottomrule
 \end{tabular}
-\caption{Sweeping the coordinator's instruction, pooled over three open-weight
-models ($216$ trials per row). Scored against ground truth independent of our
+\caption{Sweeping the coordinator's instruction, pooled over six open-weight
+model families ($432$ trials per row). Scored against ground truth independent of our
 auditor. Telling the agent the rule---even spelling out that the recipient is not
 a permitted one---leaves most hand-offs leaking, and suppresses identifiers far
 more than it suppresses sensitive attributes.}

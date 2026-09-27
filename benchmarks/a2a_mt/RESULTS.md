@@ -356,3 +356,118 @@ Re-score saved traces after an annotation change (no LLM calls):
 
 **Not yet run:** the frontier arm. Needs `ANTHROPIC_API_KEY`; the open-weight
 result stands on its own but the capability story is incomplete without it.
+
+---
+
+## Experiment 9b — the instruction sweep at six model families
+
+Experiment 9 ran on three models. Extending to six open-weight families
+(Qwen2.5-7B/14B, Llama-3.1-8B, Mistral-7B, Gemma2-9B, Phi-3.5-3.8B; 1,728 trials)
+so the result is not a property of one lineage. It got **stronger**, not weaker:
+
+| condition | leak (any) | 95% CI | identifiers | attributes | our auditor |
+|---|---|---|---|---|---|
+| permissive | 98% | [96, 99] | 86% | 93% | 82% |
+| neutral | 100% | [99, 100] | 86% | 93% | 80% |
+| instructed | 84% | [81, 88] | 54% | 81% | 63% |
+| policy | **79%** | [75, 83] | 51% | 68% | 77% |
+
+Per model under `policy`: Llama-3.1-8B 44%, Qwen2.5-14B 79%, Phi-3.5 83%,
+Qwen2.5-7B 96%, Mistral-7B 97%, Gemma2-9B — see the trace.
+
+Llama-3.1-8B remains the only model that meaningfully complies, and it is an 8B
+model, so instruction-following on privacy is a per-model property rather than a
+capability one. Auditor recall against independent ground truth: 0.79 (331 misses
+in 1,728), precision 0.94.
+
+Reproduce: `bash benchmarks/a2a_mt/run_prompt_conditions.sh 3` (all six families).
+
+---
+
+## Experiment 10 — a relay chain: what survives re-wording?
+
+**Question.** Two claims were argued but only tested against synthetic
+paraphrases we wrote ourselves: that `provenance_id` follows a datum across
+re-wording (so hop/TTL tracking is not defeated by a relay that rephrases), and
+that exposure compounds rather than decays. A real chain tests both: each agent
+forwards the case onward *in its own words*, four hops deep, against a hop budget
+of two.
+
+**Result** (24 records × 2 runs × 4 hops × 3 models = 144 chains, 576 hops):
+
+| model | hop 1 | hop 2 | hop 3 | hop 4 |
+|---|---|---|---|---|
+| Qwen2.5-7B | 100% | 100% | 100% | **100%** |
+| Mistral-7B | 100% | 100% | 100% | **100%** |
+| Llama-3.1-8B | 94% | 88% | 81% | **79%** |
+
+- **TTL violation detected: 144/144 = 100%**
+- **Provenance held across four real LLM paraphrases: 144/144 = 100%**
+- **Raw content reaching the center: 0**
+
+**Readings.**
+1. **Information does not decay along a paraphrase chain.** Two of three models
+   still carry the subject's identifiers or attributes at hop 4 in every single
+   chain. The intuition that re-wording dilutes a leak is wrong.
+2. **Attributes are stickier than identifiers**, again. Mistral-7B's identifier
+   rate falls 90%→83% across the chain while its attribute rate *rises* 94%→96%.
+   Same asymmetry as the instruction sweep, from a completely different mechanism.
+3. **Provenance survives real re-wording**, which is what the TTL detector needs
+   to fire at all. This was the load-bearing assumption behind `provenance_id`
+   and it now has evidence from model paraphrases rather than our own.
+4. The failure mode we were looking for — a datum that keeps leaking while the
+   auditor loses track of it — did not occur in 144 chains.
+
+Reproduce: `python benchmarks/a2a_mt/a2a_relay_chain.py --runs 2 --hops 4`
+
+---
+
+## Experiment 11 — cost, and Lemma 1 measured rather than proved
+
+**Question.** Lemma 1 says the center's view of a message is a hash plus a
+categorical label, so its size is independent of the message. That is a claim
+about the implementation, not only the mathematics, and it is falsifiable.
+
+**A. Center-view size vs. message size.**
+
+| content bytes | center bytes/msg |
+|---|---|
+| 64 | 418 |
+| 1,024 | 418 |
+| 16,384 | 418 |
+| 65,536 | 418 |
+
+**Exactly constant — 0.0% variation across a 1024× range.** A flat line is the
+lemma; any slope would have been message length leaking into the center view.
+
+**B. Throughput** (single process, no batching, quiet machine):
+
+| messages | median s | msgs/sec | µs/msg |
+|---|---|---|---|
+| 100 | 0.002 | 40,352 | 24.8 |
+| 10,000 | 0.263 | 37,975 | 26.3 |
+| 50,000 | 1.553 | 32,199 | 31.1 |
+
+Per-message cost grows 1.24× from 100 to 50,000 messages — linear in edges, so an
+audit scales with traffic rather than with history. *Before* the quadratic fix in
+`_count_raw_leaks` (see commit), the 50,000-message case did not finish at all.
+
+**C. Against a content-shipping observer — stated as a crossover, not a win.**
+The center view is a constant 418 bytes, so the comparison depends entirely on
+message size, and it does **not** always favour us:
+
+| message size | vs. shipping content |
+|---|---|
+| 64 B | **6.5× MORE** |
+| 256 B | **1.6× MORE** |
+| 1 KB | 2.4× less |
+| 16 KB | 39× less |
+| 64 KB | 157× less |
+
+Below ~418 bytes the metadata is larger than the message it describes. Lemma 1
+bounds what the center *learns*, not what it receives: the guarantee is that the
+view cannot be inverted to content and does not grow with it, not that it is
+always smaller. An earlier version of this script quoted only the two favourable
+rows; it now prints the whole crossover.
+
+Reproduce: `python benchmarks/a2a_mt/a2a_cost.py` (deterministic, no LLM calls)

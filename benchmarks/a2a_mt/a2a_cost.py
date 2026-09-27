@@ -122,11 +122,18 @@ def main(argv=None) -> int:
           f" {last[0]:,} messages -- the detectors are linear in edges, so an")
     print("     audit scales with traffic rather than with history.")
 
-    print("\n  C. What a content-shipping observer would have moved instead")
-    for n, per, _ in rows:
-        if n in (1024, 16384):
-            print(f"     at {n:,}-byte messages: {n/per:.0f}x more bytes per message"
-                  f" ({n:,} vs {per})")
+    print("\n  C. Against a content-shipping observer")
+    const = rows[0][1]
+    print(f"     The center view is a constant {const} bytes per message, so the")
+    print("     comparison depends entirely on message size -- and it does not")
+    print("     always favour us, which is the point of stating it as a crossover:")
+    for n, per, ratio in rows:
+        verdict = f"{n/per:5.1f}x less" if n > per else f"{per/n:5.1f}x MORE"
+        print(f"       {n:>7,}-byte messages: {verdict} than shipping the content")
+    print(f"\n     Below ~{const} bytes the metadata is larger than the message it")
+    print("     describes. Lemma 1 bounds what the center LEARNS, not what it")
+    print("     receives: the guarantee is that the view cannot be inverted to")
+    print("     content and does not grow with it, not that it is always smaller.")
     print("\n  Raw content reaching the center in every configuration above: 0")
     return 0
 
