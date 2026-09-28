@@ -97,7 +97,11 @@ from messages that are each individually benign even when every agent obeys its
 own policy~\cite{sumleaks}. And across organizations the parties do not trust one
 another: the other agent is the adversary, and no one will route raw content
 through a central observer, which is precisely what centralized observability
-(LangSmith, Langfuse) requires.
+(LangSmith, Langfuse) requires. This last point is not merely an engineering
+inconvenience. Decades of information-flow control rest on a trusted runtime that
+may inspect every value it labels; between mutually-distrusting organizations
+that party does not exist. The question this paper answers is what remains
+enforceable once it is taken away.
 
 The protocols do not help. We verified against the A2A v1.0 specification that its
 data model (\texttt{AgentCard}, \texttt{Task}, \texttt{Message}, \texttt{Part})
@@ -108,34 +112,43 @@ free-form \texttt{metadata}, an \texttt{extensions} array, and a loosely-specifi
 
 We close this gap. Our contributions:
 \begin{enumerate}
-\item \textbf{Privacy typing for multi-tenant agent interaction.} \ext{} separates the
-three roles a single identifier conflates today---data subject, owning principal,
-agent principal---and carries them in \texttt{Part.metadata}, making cross-tenant
-leakage \emph{expressible} in the first place. It composes with unmodified A2A.
-\item \textbf{A center-blind auditor with formal guarantees.} Four detectors run over
-desensitized metadata the center cannot invert. We prove the center learns only
-$O(\log)$ bits per message (Lemma~\ref{lem:blind}); we give a closed form for when
-compositional inference becomes detectable (Prop.~\ref{prop:k}), and show empirically
-that it collapses a three-parameter model to a single effective knob $k^{*}$; and we
-prove attestation soundness (Prop.~\ref{prop:attest}). Against an adversary that knows
-the detector exactly, $20{,}000$ randomized evasion strategies produce none that
-teaches the recipient more than the policy permits: evasion is possible only by
-learning less than is allowed anyway. Ablating either integrity mechanism breaks
-that---which is how we know both are load-bearing rather than decorative.
-\item \textbf{A measurement of the threat in today's agents.} On matched scenario sets
-across four recipient models---open-weight 7--14B through a frontier model---agents
-over-share regulated identifiers in \textbf{46--82\%} of realistic cross-boundary
-hand-offs, while inference ability \emph{rises} with capability (to $100\%$ at
-$k^{*}{=}2$). The two trends move in opposite directions, so neither weak nor strong
-recipients can be trusted to behave. Nor can they be instructed out of it: handing
-the model the record's own policy still leaves $79\%$ of hand-offs leaking
-(\S\ref{sec:instr}). The safeguard has to be structural, and we measure that
-rather than assert it.
-\item \textbf{A2A-MT and an honest evaluation.} The first multi-tenant agent-privacy
-benchmark, validated against the external AgentLeak suite, a properly configured
-Presidio DLP baseline, and an author-independent held-out set. We report where the
-approach fails as carefully as where it works: recall is bounded by the tagger, and an
-over-tagging LLM backend costs end-to-end precision.
+\item \textbf{Behavioral enforcement does not work, measured rather than assumed.}
+Across six open-weight model families and $1{,}728$ cross-boundary hand-offs, agents
+disclose regulated identifiers they were never authorized to share. Removing the
+permissive phrasing from the prompt changes nothing ($99\!\to\!100\%$); naming the
+forbidden categories leaves $84\%$; handing the model the record's own policy---owner,
+permitted recipient, purpose, and the fact that this recipient is \emph{not}
+permitted---still leaves \textbf{$79\%$} leaking. Instructions suppress hard identifiers
+far better than sensitive attributes ($86\!\to\!51\%$ against $93\!\to\!68\%$): models
+learn not to paste the account number and go on writing the diagnosis. Compliance does
+not track capability, and across $144$ relay chains the exposure does not decay with
+re-wording. Meanwhile \emph{inference} ability rises with capability, reaching $100\%$
+at $k^{*}{=}2$. Neither a better prompt, nor a better model, nor a longer chain is the
+fix.
+\item \textbf{Auditing when no party may read the content.} Classical
+information-flow control assumes a trusted runtime that sees
+everything~\cite{denning76,sabelfeld03,taintdroid}; across organizational boundaries
+no such party exists, and that missing premise---not the lattice---is what makes this
+setting new. We show the audit survives its removal. Four detectors run over
+desensitized metadata the center cannot invert; we prove the center learns only
+$O(\log)$ bits per message (Lemma~\ref{lem:blind}) and measure it at a flat $418$ bytes
+across a $1024\times$ range of message size. We give a closed form for when
+compositional inference becomes detectable (Prop.~\ref{prop:k}) and prove attestation
+soundness (Prop.~\ref{prop:attest}). Against an adversary that knows the detector
+exactly, $20{,}000$ randomized evasion strategies produce none that teaches the
+recipient more than the policy permits; ablating either integrity mechanism breaks
+that, which is how we know both are load-bearing.
+\item \textbf{The privacy typing that makes the leak expressible.} \ext{} separates
+the three roles a single identifier conflates today---data subject, owning principal,
+agent principal---and carries them in \texttt{Part.metadata}. It composes with
+unmodified A2A, and it is the mechanism the two results above stand on: without it
+there is nothing for a content-blind center to reason over.
+\item \textbf{A2A-MT, calibrated against ground truth we do not control.} The first
+multi-tenant agent-privacy benchmark, validated against the external AgentLeak suite
+and a properly configured Presidio baseline. Because grading our own detector with our
+own tagger would be circular, the measurement above is scored against literal ground
+truth taken from the source records; by that standard our own recall is $0.79$, so the
+rates we report are lower bounds rather than estimates.
 \end{enumerate}
 Setting every principal equal collapses the system to the \textbf{in-container}
 case---one organization auditing its own multi-agent app---so the research result
@@ -736,7 +749,12 @@ and language-based IFC~\cite{sabelfeld03} formalize where data may flow, and
 dynamic taint tracking~\cite{taintdroid} enforces it at runtime. We adapt these to
 opaque LLM agents over metadata (not program variables), adding purpose and
 cross-tenant semantics and \emph{compositional inference}, which classical IFC
-does not model. Purpose- and recipient-limitation follow the norm of contextual
+does not model. The sharper difference is in what each assumes it may read: IFC
+enforcement presumes a runtime trusted to inspect every labeled value, which is
+exactly the party that cannot exist between mutually-distrusting tenants. Our
+detectors are therefore constrained to decide from labels alone, and the
+$O(\log)$-bit bound (Lemma~\ref{lem:blind}) is what makes that constraint a
+guarantee rather than a limitation. Purpose- and recipient-limitation follow the norm of contextual
 integrity~\cite{ci}.
 
 \noindent\textbf{Data-loss prevention.} DLP / PII scanners (e.g.\

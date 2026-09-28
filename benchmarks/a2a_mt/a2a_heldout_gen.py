@@ -41,6 +41,15 @@ GEN_SYS = (
 
 
 def generate(model: str, n: int, client=None) -> list[dict]:
+    """Ask the author model for n scenarios.
+
+    A local model asked for a long JSON document will occasionally emit a
+    malformed one, and generation is the expensive part of every experiment
+    built on this. A bad batch therefore costs that batch and nothing more: it
+    returns empty and the caller reports the drop, rather than raising and
+    taking the whole pool with it. Silence would be worse than the crash, so
+    callers are expected to print how many batches were lost.
+    """
     if client is None:
         from openai import OpenAI
         client = OpenAI()
@@ -48,8 +57,34 @@ def generate(model: str, n: int, client=None) -> list[dict]:
         model=model, temperature=0.9, response_format={"type": "json_object"},
         messages=[{"role": "system", "content": GEN_SYS},
                   {"role": "user", "content": f"Generate {n} scenarios."}])
-    data = json.loads(r.choices[0].message.content or "{}")
-    return data.get("scenarios", [])
+    raw = r.choices[0].message.content or "{}"
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        # Salvage the scenarios that did parse: a truncated or trailing-comma
+        # document usually has a long prefix of well-formed objects.
+        data = {"scenarios": _salvage_scenarios(raw)}
+    return data.get("scenarios", []) or []
+
+
+def _salvage_scenarios(raw: str) -> list[dict]:
+    """Recover whole scenario objects from a document that does not parse."""
+    out, depth, start = [], 0, None
+    for i, ch in enumerate(raw):
+        if ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}" and depth:
+            depth -= 1
+            if depth == 0 and start is not None:
+                try:
+                    obj = json.loads(raw[start:i + 1])
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(obj, dict) and "hops" in obj:
+                    out.append(obj)
+    return out
 
 
 
