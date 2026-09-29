@@ -384,10 +384,7 @@ def _label_tokens(label) -> set[str]:
     vals = (list(label.category) + list(label.inferred_categories)
             + list(label.purpose) + list(label.allowed_recipients)
             + [label.data_subject, label.owning_principal])
-    toks: set[str] = set()
-    for v in vals:
-        toks.update(re.findall(r"[A-Za-z0-9_./@-]+", str(v)))
-    return toks
+    return _declared_tokens(vals)
 
 
 def _routing_tokens(edge) -> set[str]:
@@ -397,7 +394,24 @@ def _routing_tokens(edge) -> set[str]:
     not already declare -- same exemption as label values."""
     vals = [edge.from_agent, edge.to_agent, edge.from_principal,
             edge.to_principal, edge.message_id]
+    return _declared_tokens(vals)
+
+
+def _declared_tokens(vals) -> set[str]:
+    """Every form of a declared value that could appear in the center view.
+
+    Values are tokenized twice, and the second pass is the point. The content
+    tokenizer keeps ``-`` ``.`` ``/`` ``@`` inside a token, so a declared purpose
+    of ``campaign-management`` stays whole -- but the invariant's own regex uses
+    ``\b``, for which ``-`` IS a boundary, so a message saying "campaign" matched
+    inside it and was counted as a leak. It is not one: ``campaign-management`` is
+    already in the center view, so the substring reveals nothing the declared
+    metadata did not. Splitting on word characters as well closes that
+    false-positive class, the same exemption routing identifiers already had.
+    """
     toks: set[str] = set()
     for v in vals:
-        toks.update(re.findall(r"[A-Za-z0-9_./@-]+", str(v)))
+        sv = str(v)
+        toks.update(re.findall(r"[A-Za-z0-9_./@-]+", sv))
+        toks.update(_WORD_RE.findall(sv))
     return toks

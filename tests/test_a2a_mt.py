@@ -639,3 +639,42 @@ def test_raw_leak_declared_label_value_is_not_a_leak():
                   parts=[label_part(Part(text=f"note about {planted} today"), lbl)])
     clr = [AgentClearance(agent_id="b", principal="tenant:y", purposes=["task"])]
     assert A2AAuditor(clearances=clr).audit([msg]).raw_leaks == 0
+
+
+def test_raw_leak_allows_word_chunks_of_declared_values():
+    """A content word coinciding with PART of a declared value is not a leak.
+
+    The invariant's regex uses \\b, for which "-" is a boundary, but the token
+    extractor keeps "-" inside a token. So a declared purpose of
+    "campaign-management" did not put "campaign" in the allowed set, while
+    \\bcampaign\\b matched it in the center view -- and a message mentioning a
+    campaign was counted as raw content egress. Sixteen of ninety-nine held-out
+    scenarios tripped on this class before it was fixed, which is the paper's
+    headline invariant reporting false alarms.
+    """
+    from federated_agent_audit.a2a import (
+        A2AAuditor, AgentClearance, Message, Part, PrivacyLabel, label_part,
+    )
+    lbl = PrivacyLabel(data_subject="employee:id-987654321",
+                       owning_principal="tenant:hr", sensitivity=2,
+                       category=["schedule"], purpose=["campaign-management"],
+                       allowed_recipients=["tenant:hr"])
+    msg = Message(message_id="m0", from_agent="billing-service",
+                  to_agent="admin-bot", from_principal="tenant:hr",
+                  to_principal="tenant:hr",
+                  parts=[label_part(Part(
+                      text="The campaign for employee 987654321 needs a service review."),
+                      lbl)])
+    clr = [AgentClearance(agent_id="admin-bot", principal="tenant:hr",
+                          purposes=["campaign-management"])]
+    r = A2AAuditor(clearances=clr).audit([msg])
+    assert r.raw_leaks == 0, "word-chunks of declared values must not count as egress"
+
+    # and the exemption must not swallow genuinely novel content
+    msg2 = Message(message_id="m1", from_agent="billing-service",
+                   to_agent="admin-bot", from_principal="tenant:hr",
+                   to_principal="tenant:hr",
+                   parts=[label_part(Part(text="ZQXJV_NOVEL_TOKEN in the note"), lbl)])
+    r2 = A2AAuditor(clearances=clr).audit([msg2])
+    blob = " ".join(e.model_dump_json() for e in r2.center_view)
+    assert "ZQXJV_NOVEL_TOKEN" not in blob and r2.raw_leaks == 0
