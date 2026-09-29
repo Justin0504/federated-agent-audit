@@ -603,6 +603,26 @@ more than it suppresses sensitive attributes.}
 \label{tab:instr}
 \end{table}
 
+\subsection{What survives a relay chain}\label{sec:relay}
+Two things the design rests on had only ever been tested against paraphrases we
+wrote ourselves, which is not a test: that \texttt{provenance\_id} follows a datum
+through re-wording, so hop/TTL tracking is not defeated by a relay that rephrases,
+and that exposure compounds rather than decays. We let real agents do the
+rephrasing---each forwards the case onward in its own words, four hops deep,
+against a hop budget of two---over the same 24 records, three models, 144 chains.
+
+Exposure does not decay. Two of the three models still carry the subject's
+identifiers or attributes at hop~4 in \emph{every} chain ($100\%$); the third
+declines only from $94\%$ to $79\%$. The intuition that passing a datum through
+successive re-writes dilutes it is simply wrong, and the same identifier/attribute
+asymmetry appears again from an entirely different mechanism---Mistral-7B's
+identifier rate falls across the chain ($90\!\to\!83\%$) while its attribute rate
+\emph{rises} ($94\!\to\!96\%$). Meanwhile the tracking holds: provenance survived
+all four model paraphrases in $144/144$ chains and the TTL violation fired in
+$144/144$, with zero raw content reaching the center. The failure we were looking
+for---a datum that keeps leaking while the auditor loses track of it---did not
+occur.
+
 \subsection{An author-independent benchmark}
 Our 48-scenario benchmark scores 1.0, but we wrote both the detectors and the
 scenarios. To de-bias it, an LLM (\emph{not} the detector author) generates diverse
@@ -720,6 +740,26 @@ $p_0$     & $[0.10,\ 0.30]$ & $\le 0.05$ \\
 closed-form $k^{*}$, not the raw parameter values.}
 \label{tab:sens}
 \end{table}
+
+
+\subsection{What the audit costs, and what actually crosses}\label{sec:cost}
+Lemma~\ref{lem:blind} says the center's view of a message is a hash plus a
+categorical label, so its size cannot depend on the message. That is a claim about
+the implementation as much as the mathematics, and it is falsifiable: we sweep
+content length over three orders of magnitude and measure the bytes that actually
+cross. They are constant at \textbf{418 bytes per message} from 64-byte to
+64\,KB messages---$0.0\%$ variation across a $1024\times$ range. A flat line is the
+lemma; any slope would have been message length leaking into the center view.
+
+Throughput is $32$--$40$k messages/s single-process, and per-message cost grows
+only $1.24\times$ from $100$ to $50{,}000$ messages: the detectors are linear in
+edges, so an audit scales with traffic rather than with history. We state the
+comparison against a content-shipping observer as a crossover rather than a win,
+because it is one. At $16$\,KB messages the center receives $39\times$ fewer bytes;
+at 64-byte messages it receives $6.5\times$ \emph{more}, since 418 bytes of metadata
+then outweighs the message it describes. Lemma~\ref{lem:blind} bounds what the
+center \emph{learns}, not what it receives---the guarantee is that the view cannot
+be inverted to content and does not grow with it, not that it is always smaller.
 
 \section{Discussion}
 Center-blind detection works because the risks it targets are visible in the
