@@ -471,3 +471,62 @@ always smaller. An earlier version of this script quoted only the two favourable
 rows; it now prints the whole crossover.
 
 Reproduce: `python benchmarks/a2a_mt/a2a_cost.py` (deterministic, no LLM calls)
+
+---
+
+## Experiment 12 — where does the held-out recall actually go?
+
+**Question.** Our weakest number is recall on the author-independent benchmark
+(0.17 lexical / 0.46 LLM in Exp 7). We attributed it to "taxonomy coverage" and
+said so in the paper — but never tested the attribution. It has three candidate
+causes needing different fixes: (a) taxonomy, (b) tagger judgment, (c) not the
+tagger at all (detector scope or author label noise).
+
+**Method.** Score **one** pool of 99 author-generated scenarios under
+progressively more generous taggers. Author = Qwen2.5-14B (as Exp 7, for
+comparability); LLM tagger = **Mistral-7B, a different family**, because letting
+the same model write and tag the scenarios gives it a home-field advantage and
+defeats the purpose of a held-out set.
+
+| tagger | P | R | isolates |
+|---|---|---|---|
+| lexical | 0.85 | 0.22 | the shipped floor |
+| LLM backend | 0.86 | 0.37 | shipped, fixed taxonomy |
+| LLM, open vocabulary | 0.84 | 0.43 | taxonomy coverage |
+| oracle: all inferred categories | 0.85 | **0.22** | category tagging |
+| oracle: maximal sensitivity | 0.74 | **0.76** | sensitivity estimate |
+| **oracle: both** | 0.74 | **0.76** | **the recall ceiling** |
+
+**Readings — two of which correct the paper.**
+
+1. **The ceiling is 0.76, not 1.0.** With perfect tags, ~24% of the author's
+   intended leaks still go undetected. That share is unreachable by any tagger:
+   detector scope plus author label noise. Our stated explanation ("recall is
+   bounded by the tagger") was only partly right, and a reader would otherwise
+   assume the ceiling is 1.0.
+2. **Conceding every inferred category buys nothing** — R=0.22, identical to the
+   lexical floor down to the last confusion-matrix cell. The reason is
+   structural: the author writes predominantly single-hop scenarios, so
+   converging fragments never reach k\*=2 and the inference detector *cannot*
+   contribute. Exp 7's claim that misses "split roughly evenly between explicit
+   disclosure and inference" was measuring the author's scenario mix, not our
+   detector. **Corrected in the paper.**
+3. **The whole reachable gap is the sensitivity estimate.** `oracle-sensitivity`
+   alone reaches the ceiling. The tagger under-rates sensitivity and the
+   disclosure floor τ then never fires.
+4. **Taxonomy coverage is real but secondary**: open vocabulary lifts 0.37→0.43.
+5. The oracles cost precision (0.85→0.74). They are upper bounds, not
+   deployable configurations.
+
+**A false alarm this run exposed.** It first reported raw content reaching the
+center in 16/99 scenarios — the paper's headline invariant. It was a false
+positive: the invariant matches with `\b`, for which `-` is a boundary, while
+declared values were tokenized keeping `-` inside a token, so a purpose of
+`campaign-management` never exempted the word `campaign`. Fixed; the pool is now
+0/88. See the commit for the regression test.
+
+Reproduce:
+`python benchmarks/a2a_mt/a2a_tagger_ceiling.py --n 12 --batches 8 --tagger-model mistral:7b --pool pool.json`
+
+**Cost note:** the open-vocabulary condition took 4.5 h on a local 7B (one call
+per part). Reuse `--pool` rather than regenerating.
