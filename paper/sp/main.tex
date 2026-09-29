@@ -322,6 +322,15 @@ guarantee.
 \input{figures/fig_gain}
 
 \section{The A2A-MT benchmark}
+The closest existing suite is WeClawArena~\cite{weclaw}, which pairs cross-user
+agent collaboration with attack variants spanning collaboration, security, privacy
+and governance. It differs from A2A-MT in the assumption that matters here: it is an
+\emph{auditable sandbox}, so the harness observes the workspace and can grade from
+what it sees. A2A-MT instead holds the auditor to what a mutually-distrusting
+deployment would actually expose---labels and hashes---so a scenario is only
+``detected'' if it is detectable without reading the message. The two ask different
+questions of the same setting and we take the sandbox result as the upper bound our
+center-blind numbers sit below.
 No multi-tenant agent-privacy benchmark exists---AgentLeak and Sum-Leaks are
 single-tenant (the vault belongs to one system; the boundary is system$\rightarrow$output).
 A2A-MT supplies labeled multi-tenant A2A interactions whose boundary is
@@ -784,8 +793,15 @@ the metadata pattern---an explicit sensitive tag crossing a boundary, or converg
 inferred-category fragments---and catches both, with zero content egress across the
 whole capability range.
 
-The honest limits lie in coverage and in trust. Recall on
-author-independent scenarios falls sharply, and an oracle ablation says why: about
+The honest limits lie in coverage, in trust, and in the model
+roster. The instruction sweep that carries our first claim runs on six
+\emph{open-weight} families; the frontier arm is not yet measured, and a frontier
+model is exactly where better instruction-following might change the answer---the
+same model over-shares in $46\%$ of permissive hand-offs against roughly $80\%$ for
+the open models (Table~\ref{tab:wild}), so we should expect it to comply more, not
+less. Until that arm is run, ``instructions do not fix it'' is established for
+open-weight recipients and open for frontier ones. Recall on author-independent
+scenarios also falls sharply, and an oracle ablation says why: about
 a quarter of the author's intended leaks are beyond \emph{any} tagger, and the part
 that is reachable is bounded by the sensitivity estimate rather than by taxonomy
 coverage (\S\ref{sec:eval}). So the improvable component is narrower than we first
@@ -802,6 +818,18 @@ shared datum is the genuine residual, and only a hardware root of trust (the TEE
 backend our attestation admits) fully closes it.
 
 \section{Related work}
+
+\noindent\textbf{Agent auditing.} Nian et al.~\cite{auditableagents} frame
+auditability for agent systems as evidence that makes accountability possible, and
+separate the mechanism classes that produce it---detect, enforce, recover. This
+paper is a \emph{detect} mechanism operating under an unusual restriction: the
+detecting party may not read the evidence. The enforcement counterpart is a
+pre-execution firewall such as AEGIS~\cite{aegis}, which interposes on the
+tool-execution path, scans the arguments, and hash-chains its decisions into a
+tamper-evident trail. That design is complementary and assumes the opposite of
+ours: it sits inside one party's runtime and inspects the very content our center
+is forbidden to see. The two compose---per-tenant enforcement locally, center-blind
+detection across the boundary---but neither substitutes for the other.
 
 \noindent\textbf{Privacy leakage in LLM-agent systems.} AgentLeak~\cite{agentleak}
 and Sum-Leaks~\cite{sumleaks} measure and mitigate \emph{single-tenant}
