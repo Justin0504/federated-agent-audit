@@ -1,0 +1,159 @@
+# Brief: the deployment architecture figure
+
+You are drawing **one new figure** for a privacy/security paper. Everything you
+need is in this repo. Read this file first, then `figstyle.tex` and
+`fig_pipeline.tex` — the new figure must look like it came from the same hand.
+
+---
+
+## 1. What the paper is, in four sentences
+
+Agents built by different organizations hand work to each other over the A2A
+protocol. A2A has no field saying whom a datum is about, who owns it, or who may
+receive it, so cross-boundary privacy leakage is not even expressible, let alone
+auditable. We add that typing (`a2a.privacy/v1`), and audit it from a central
+service that **never sees message content** — each agent desensitizes locally and
+ships only a one-way hash plus labels. The measured result that motivates all of
+it: agents over-share regulated identifiers in ~80% of realistic hand-offs, and
+telling them the policy still leaves 79% leaking.
+
+## 2. What is missing, and what you are drawing
+
+Four figures already exist. Do **not** redraw any of them:
+
+| exists | shows |
+|---|---|
+| Fig 1 `fig_pipeline.tex` | the *conceptual* flow: content → label → hash → boundary → detectors → violations |
+| Fig 2 `fig_example.tex` | a worked example with verbatim system output |
+| Fig 3 `fig_gain.tex` | the inference threshold curve |
+| Fig 4 `fig_trends.tex` | two opposing trends across model capability |
+
+**Your figure is the deployment architecture** — what actually runs where, which
+Fig 1 deliberately abstracts away. A reader who wants to deploy this cannot tell
+from Fig 1 what process holds what, what is signed, what is stored, or what the
+center could learn if it were malicious. That is the gap.
+
+It must answer, at a glance:
+
+1. **What runs inside a tenant** — the app's agents, plus a *build-pinned*
+   component containing the tagger and the local auditor. The tagger is the only
+   thing that reads content.
+2. **What the tenant emits** — center-view edges (hash + `a2a.privacy/v1` labels)
+   and an attestation signing them. Show that the signing key is confined to the
+   pinned build: this is what stops a tenant suppressing its own tags.
+3. **What crosses the boundary** — only those two things. Content does not.
+4. **What the center does** — verifies the attestation against a trusted build
+   fingerprint, *re-runs* the detectors itself rather than trusting the tenant's
+   claimed verdicts, and stores violations. Show that it stores no content.
+5. **Multi-tenant** — at least two tenants reporting to one center, since the
+   whole problem is cross-tenant.
+6. **The single-tenant projection** — setting every principal equal collapses this
+   to one organization auditing its own agents. A small inset or callout; this is
+   the deployable product and currently has no picture at all.
+
+Real component names, so labels match the artifact:
+
+| component | file | role |
+|---|---|---|
+| `PrivacyTagger` | `a2a/tagger.py` | reads content locally, emits only tags |
+| `A2AAuditor` | `a2a/auditor.py` | desensitizes to center-view edges; runs 4 detectors |
+| `A2AAttestor` / `A2AVerifier` | `a2a/attest.py` | signs / verifies that a report came from the pinned build |
+| `AuditSession` | `a2a/session.py` | the ~3-line integration surface an app uses |
+| audit service | `a2a/service.py` | FastAPI center: `POST /api/v1/a2a/report`, `GET /api/v1/a2a/violations` |
+
+The four detectors: cross-tenant disclosure, purpose limitation, hop/TTL,
+cross-tenant inference.
+
+**The one thing the figure must not get wrong:** nothing content-bearing may be
+drawn crossing the trust boundary. That is the paper's central claim and a figure
+that blurs it is worse than no figure.
+
+---
+
+## 3. The design system — use it, do not invent one
+
+`figstyle.tex` holds the whole visual language. `\input` it; never redefine a
+colour or a style locally.
+
+**Colour carries meaning and is reused across every figure.** A reader learns it
+once in Fig 1 and must not have to relearn it in yours:
+
+| token | hex | meaning |
+|---|---|---|
+| `figrose` | `#B8405C` | the data subject's content — the thing at risk, never crosses |
+| `figindigo` | `#3D5A9E` | governance metadata (labels) — what we add |
+| `figamber` | `#B0662A` | what actually crosses the boundary |
+| `figemerald` | `#2C7A58` | verified / detected / safe |
+| `figink` `#1B2733` / `figslate` `#6B7885` | structure / secondary type |
+| `figrule` `#D8DEE4` / `figwash` `#F4F6F8` | borders / fills |
+
+Values are spread so the figure survives a greyscale print. If you need to
+separate two series, separate them by **hue and dash pattern** — rose and indigo
+land at nearly the same greyscale value.
+
+**Styles** (all in `figstyle.tex`): `figzone` (rounded container), `fignum=<colour>`
+(numbered disc badge), `figtitle` / `figlabel` / `fignote` / `figmono` (type
+scale), `figchip=<colour>` (a labelled pill), `figflow` (grey arrow), `figcross`
+(amber arrow, for things that cross), `figbound` (the dashed boundary edge).
+
+**Icons** — ours, drawn on a 24×24 grid, no third-party licence. Use
+`\icon{name}{colour}{height}`, e.g. `\icon{attest}{emerald}{5mm}`:
+
+`agent` `alert` `attest` `blind` `boundary` `content` `detector` `hash` `infer`
+`tag` `tenant` `ttl`
+
+Icons render at **4–6 mm**. An earlier draft used 3 mm and they read as noise.
+If you need an icon that does not exist, add an SVG to `icons/` on the same grid
+(1.75 stroke, round caps/joins, `stroke="currentColor"`) and run
+`python icons/build_icons.py`.
+
+---
+
+## 4. Hard constraints
+
+- **Output is TikZ**, `\input` from `paper/figures/`, not an image. Fonts must
+  match the body text.
+- **Wrap in `\begin{widefigure}[t] … \end{widefigure}`**, not `figure`. One-column
+  builds (arXiv, ICLR) map it to `figure`; two-column builds (PoPETs, S&P) map it
+  to `figure*`, or a wide figure is crushed into one column.
+- **It must compile in all four builds**: `paper/{submission,popets,sp,iclr}`.
+  Each has a `figures` symlink, so `\input{figures/<name>}` resolves everywhere.
+- **PoPETs has a 12-page main-body limit and is currently at 8.** Budget roughly
+  half a column-width page. Do not push the body past 12.
+- **Greyscale-safe**, and **no overfull boxes over 15pt**.
+- Wrap the picture in `\resizebox{\linewidth}{!}{…}` as the other figures do.
+
+## 5. How to iterate without rebuilding the paper
+
+```sh
+cd paper/figures
+sed 's|\\input{\\figfile}|\\input{fig_deploy}|' _preview.tex > _prev_deploy.tex
+tectonic _prev_deploy.tex && open _prev_deploy.pdf     # ~2 s
+```
+
+Then check it in the real builds:
+
+```sh
+for d in submission popets sp iclr; do (cd ../$d && tectonic main.tex); done
+```
+
+Export a cropped PDF/SVG for slides with `python export.py` after adding the
+figure's name to its `FIGURES` list.
+
+## 6. Acceptance checklist
+
+- [ ] Nothing content-bearing crosses the trust boundary anywhere in the drawing
+- [ ] Colours come from `figstyle.tex` and carry their established meanings
+- [ ] Icons at 4–6 mm; no new visual language invented
+- [ ] Compiles clean in all four builds, no unresolved refs, no overfull > 15pt
+- [ ] Legible in greyscale
+- [ ] PoPETs body still ≤ 12 pages
+- [ ] Does not restate Fig 1 — a reader who has seen Fig 1 learns something new
+
+## 7. Where to read more
+
+- `paper/figures/README.md` — the figure system
+- `paper/submission/main.tex` §"The center-blind auditor and detectors", §"Threat
+  model" (the attestation argument), §"Discussion" (the single-tenant projection)
+- `benchmarks/a2a_mt/RESULTS.md` — all 13 experiments, if you want the numbers
+- `src/federated_agent_audit/a2a/` — the components named above
