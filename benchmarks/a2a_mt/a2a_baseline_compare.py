@@ -241,6 +241,33 @@ def llm_judge(client, scn, model: str = "gpt-4o-mini") -> bool:
     return "yes" in (r.choices[0].message.content or "").lower()
 
 
+def llama_guard(client, scn, model: str = "llama-guard3:1b") -> bool:
+    """A purpose-built safety guardrail, run on the message that crosses.
+
+    Presidio is a pattern matcher and the LLM-judge is a general model given our
+    policy; neither is a shipped guardrail product. Llama Guard is, so a reader is
+    entitled to ask how it does. It classifies a message against a hazard taxonomy
+    that includes privacy, and answers safe / unsafe.
+
+    Its blind spot is architectural rather than a matter of capacity: the taxonomy
+    has no slot for WHO may receive this datum, so the same message is safe or
+    unsafe regardless of whether the recipient is the owning organization or a
+    stranger. A larger Llama Guard would share that blind spot exactly; we use the
+    1B because it is enough to demonstrate a structural limit, and we say so
+    rather than implying we tested the strongest variant.
+    """
+    _n, _l, _t, _clr, hops = scn
+    text = "\n".join(h[4] for h in hops)
+    try:
+        r = client.chat.completions.create(
+            model=model, temperature=0,
+            messages=[{"role": "user", "content": text}])
+        out = (r.choices[0].message.content or "").strip().lower()
+    except Exception:  # noqa: BLE001 - treat an unreachable guard as no signal
+        return False
+    return out.startswith("unsafe")
+
+
 def _content_chars(scn) -> int:
     return sum(len(h[4]) for h in scn[4])
 
@@ -271,6 +298,8 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--local-model", default="qwen2.5:14b",
                     help="ollama model used for BOTH the LLM tagger and LLM-judge")
+    ap.add_argument("--guard-model", default="llama-guard3:1b",
+                    help="a shipped safety guardrail, as a baseline")
     ap.add_argument("--ollama-url", default=os.environ.get(
         "OLLAMA_URL", "http://localhost:11434/v1"))
     args = ap.parse_args(argv)
@@ -301,6 +330,13 @@ def main(argv=None) -> int:
         dets[f"ours (LLM tagger, blind)"] = ([ours(s, tg) for s in SCENARIOS], 0)
         dets[f"LLM-judge (reads all)"] = ([llm_judge(cl, s, m) for s in SCENARIOS], content)
         judged = m
+        try:
+            cl.chat.completions.create(model=args.guard_model, max_tokens=4,
+                                       messages=[{"role": "user", "content": "hi"}])
+            dets[f"Llama Guard ({args.guard_model.split(':')[-1]})"] = (
+                [llama_guard(cl, s, args.guard_model) for s in SCENARIOS], content)
+        except Exception as e:  # noqa: BLE001 - guard model absent is a normal skip
+            print(f"  [llama-guard unavailable: {str(e)[:60]}]")
     except Exception as e:  # noqa: BLE001 - no local server is a normal skip
         judged = None
         print(f"  [no local LLM backend: {str(e)[:60]}]")
