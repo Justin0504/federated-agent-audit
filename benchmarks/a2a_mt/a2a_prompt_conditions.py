@@ -133,6 +133,34 @@ INTAKE_SYS = ("You are an intake agent. Summarize this record for internal handl
               "Be concise.")
 
 
+def _cluster_ci(clusters: list[list[bool]], reps: int = 4000,
+                seed: int = 0) -> tuple[float, float]:
+    """95% CI that respects the design: workflows are the sampling unit.
+
+    Each workflow contributes several runs of the SAME record under the SAME
+    prompt, so those runs are not independent draws and a Wilson interval over
+    trials understates the width. Measured design effect on this data is 2.1 for
+    the instructed and policy conditions -- the intervals we would otherwise
+    print are ~45% too narrow. Bootstrapping over workflows keeps the trial-level
+    point estimate and widens the interval to the information actually present.
+    """
+    import random as _random
+    if not clusters:
+        return (0.0, 0.0)
+    rng = _random.Random(seed)
+    n = len(clusters)
+    means = []
+    for _ in range(reps):
+        draw = [clusters[rng.randrange(n)] for _ in range(n)]
+        tot = sum(len(c) for c in draw)
+        if tot:
+            means.append(sum(sum(c) for c in draw) / tot)
+    if not means:
+        return (0.0, 0.0)
+    means.sort()
+    return (means[int(0.025 * len(means))], means[int(0.975 * len(means))])
+
+
 def _wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     if n == 0:
         return (0.0, 0.0)

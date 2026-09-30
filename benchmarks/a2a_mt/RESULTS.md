@@ -530,3 +530,33 @@ Reproduce:
 
 **Cost note:** the open-vocabulary condition took 4.5 h on a local 7B (one call
 per part). Reuse `--pool` rather than regenerating.
+
+---
+
+## Correction — our confidence intervals were too narrow
+
+Each cell of the instruction sweep is 24 workflows × 3 runs = 72 trials, and we
+reported a Wilson interval over n=72. That treats the three runs of one record
+under one prompt as independent draws. They are not: same record, same
+instruction, only sampling noise separates them.
+
+Measured design effect on the actual traces:
+
+| condition | deff | Wilson (as printed) | cluster bootstrap |
+|---|---|---|---|
+| permissive | 1.65 | [96, 99] | [96, 99] |
+| neutral | 1.00 | [99, 100] | [99, 100] |
+| instructed | **2.17** | [81, 88] | **[79, 89]** |
+| policy | **2.12** | [75, 83] | **[73, 84]** |
+
+On the two conditions that carry the paper's first claim the intervals were about
+**45% too narrow** — the effective sample size is roughly half what n=72 implies.
+Point estimates are unaffected, and the conclusion is untouched (79% is nowhere
+near the region where the widening would matter), but the interval we printed was
+not the one the design supports.
+
+Fixed by bootstrapping over workflows (`_cluster_ci`), which keeps the trial-level
+point estimate and widens the interval to the information actually present. The
+paper now reports the clustered intervals and says which method produced them.
+
+This applies to any future cell of this experiment, including the frontier arm.

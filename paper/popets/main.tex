@@ -606,13 +606,15 @@ Coordinator instruction & leak & 95\% CI & ident. & attrib. & auditor \\
 \midrule
 permissive (as \S\ref{sec:eval}) & 98\% & [96, 99] & 86\% & 93\% & 82\% \\
 invitation removed & 100\% & [99, 100] & 86\% & 93\% & 80\% \\
-categories forbidden & 84\% & [81, 88] & 54\% & 81\% & 63\% \\
-\textbf{full policy stated} & \textbf{79\%} & [75, 83] & \textbf{51\%} & \textbf{68\%} & 77\% \\
+categories forbidden & 84\% & [79, 89] & 54\% & 81\% & 63\% \\
+\textbf{full policy stated} & \textbf{79\%} & [73, 84] & \textbf{51\%} & \textbf{68\%} & 77\% \\
 \bottomrule
 \end{tabular}
 \caption{Sweeping the coordinator's instruction, pooled over six open-weight
 model families ($432$ trials per row). Scored against ground truth independent of our
-auditor. Telling the agent the rule---even spelling out that the recipient is not
+auditor. Intervals are a bootstrap over \emph{workflows}, not over trials: the three
+runs of one record under one prompt are not independent draws, and a trial-level
+Wilson interval is about $45\%$ too narrow here (measured design effect $2.1$). Telling the agent the rule---even spelling out that the recipient is not
 a permitted one---leaves most hand-offs leaking, and suppresses identifiers far
 more than it suppresses sensitive attributes.}
 \label{tab:instr}
