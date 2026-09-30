@@ -560,3 +560,48 @@ point estimate and widens the interval to the information actually present. The
 paper now reports the clustered intervals and says which method produced them.
 
 This applies to any future cell of this experiment, including the frontier arm.
+
+---
+
+## Experiment 13 — a shipped guardrail as a baseline
+
+**Question.** Presidio is a pattern matcher; the LLM-judge is a general model
+handed our policy. Neither is a product built to screen agent messages, and "why
+didn't you compare against a real guardrail" is a fair reviewer question.
+Llama Guard is one.
+
+**Result** (same 32 scenarios; Llama Guard 3 **1B**, run on the message that
+crosses):
+
+| detector | P | R | F1 | spec. | inf.rec | content→center |
+|---|---|---|---|---|---|---|
+| ours (lexical, blind) | 1.00 | 0.88 | **0.94** | **1.00** | 67% | **0** |
+| **Llama Guard 3 (1B)** | 0.53 | 0.53 | **0.53** | **0.47** | **0%** | 1,839 |
+| Presidio DLP (broad) | 0.58 | 0.65 | 0.61 | 0.47 | 83% | 1,839 |
+| LLM-judge (reads all) | 1.00 | 0.41 | 0.58 | 1.00 | 0% | 1,839 |
+
+Roughly chance. But the number is the least interesting part — the two failure
+modes were checked individually rather than inferred from the aggregate:
+
+1. **It flags 8/8 of the authorized and in-organization shares as unsafe.** Those
+   carry the same sensitive content as the leaks; the only difference is that the
+   recipient is entitled to it. `clean_auth_referral`, `clean_auth_lab`,
+   `clean_auth_pharmacy`, `clean_auth_followup`, `clean_inorg_ssn`,
+   `clean_inorg_card`, `clean_inorg_chart`, `clean_inorg_hr` — every one.
+2. **It calls 6/6 compositional inference cases safe**, because no single message
+   in them contains a hazard.
+
+Both are architectural, not capacity limits. The hazard taxonomy has no slot for
+*who may receive* a datum, so an authorized share and a leak are the same message
+to it; and it judges one message at a time, so evidence that is only disclosive
+once it accumulates is invisible.
+
+**On the model size.** We used the 1B, not the 8B: the machine had 5.2 GB free and
+the 8B needs 4.9 GB, and we had already filled this disk once. We state this rather
+than implying we tested the strongest variant. It does not rescue the comparison —
+a larger Llama Guard shares both blind spots exactly, since neither follows from
+the model's judgment quality. A reader who wants the 8B number can run
+`--guard-model llama-guard3:8b`.
+
+Reproduce: `python benchmarks/a2a_mt/a2a_baseline_compare.py` (auto-skips the
+guard row if the model is absent)

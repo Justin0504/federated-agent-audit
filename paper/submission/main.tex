@@ -476,6 +476,7 @@ Detector & P & R & F1 & spec. & inf.\ rec. & content$\to$center \\
 \midrule
 Presidio DLP, identifiers & 0.50 & 0.18 & 0.26 & 0.80 & 0\% & 1{,}839 ch \\
 Presidio DLP, broad & 0.58 & 0.65 & 0.61 & 0.47 & 83\% & 1{,}839 ch \\
+Llama Guard 3 (1B) & 0.53 & 0.53 & 0.53 & 0.47 & 0\% & 1{,}839 ch \\
 LLM-judge, policy-aware & 1.00 & 0.41 & 0.58 & 1.00 & 0\% & 1{,}839 ch \\
 Ours --- LLM tagger, open 14B & 1.00 & 0.82 & 0.90 & 1.00 & 50\% & \textbf{0} \\
 \textbf{Ours --- lexical tagger} & \textbf{1.00} & \textbf{0.88} & \textbf{0.94} & \textbf{1.00} & 67\% & \textbf{0} \\
@@ -485,9 +486,29 @@ Ours --- LLM tagger, open 14B & 1.00 & 0.82 & 0.90 & 1.00 & 50\% & \textbf{0} \\
 read every byte; ours decides at zero content egress. Presidio is run in two realistic
 configurations---neither wins on both axes: the identifier policy is insensitive, the
 broad policy is indiscriminate (specificity $0.47$). The LLM tagger and LLM-judge both
-run on the same local open-weight model (Qwen2.5-14B).}
+run on the same local open-weight model (Qwen2.5-14B); Llama Guard is the 1B variant
+(\S\ref{sec:guard}).}
 \label{tab:frontier}
 \end{table}
+
+\paragraph{A shipped guardrail.} Presidio is a pattern matcher and the LLM-judge is
+a general model handed our policy; neither is a product built to screen agent
+messages. Llama Guard is, so we ran it on the message that crosses. It lands at
+$F1=0.53$ --- roughly chance --- and the two ways it fails are more informative
+than the number.\label{sec:guard}
+
+It flags \textbf{all eight} of the authorized and in-organization shares as unsafe.
+Those carry exactly the same sensitive content as the leaks; the only difference is
+that the recipient is entitled to it. And it calls \textbf{all six} compositional
+inference cases safe, because no single message in them contains a hazard.
+
+Both failures are architectural rather than a matter of capacity. The hazard
+taxonomy has no slot for \emph{who may receive} a datum, so an authorized share and
+a leak are the same message to it; and it judges messages one at a time, so
+evidence that only becomes disclosive when it accumulates is invisible. A larger
+Llama Guard would share both blind spots exactly --- which is why we report the 1B
+variant, forced by local disk, without claiming it is the strongest available: the
+limit being demonstrated is not one that scale removes.
 
 \subsection{The local tagger}
 The inference
