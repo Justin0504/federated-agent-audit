@@ -35,30 +35,31 @@ Center-Blind Auditing for Multi-Tenant Agent Privacy}
 
 \begin{abstract}
 Autonomous agents increasingly delegate work to one another across organizational
-boundaries, and protocols such as A2A now standardize how they do so. These protocols carry
-no notion of whom a datum concerns or who may receive it, so the resulting
-leakage is hard to see: it happens on internal agent-to-agent channels and is
-often compositional, emerging from messages that are each individually benign.
-Centralized observability offers no remedy, because it must read the very content
-that sensitive, cross-organizational deployments will not expose.
+boundaries, and protocols such as A2A now standardize how they do so---while
+carrying no notion of whom a datum concerns or who may receive it. We begin by
+measuring what crosses. Across six model families and $1{,}728$ realistic
+hand-offs, agents put a subject's regulated identifiers into messages bound for an
+outside company in all but a handful, and \emph{telling them not to does not fix
+it}: handing the model the record's own policy---owner, permitted recipient, and
+the fact that this recipient is not permitted---still leaves $79\%$ leaking.
+Instructions suppress hard identifiers far better than sensitive attributes, so
+models learn not to paste the account number and go on writing the diagnosis.
+Compliance does not track capability, exposure does not decay along a relay chain,
+and compositional inference \emph{rises} with capability. The safeguard has to be
+structural.
 
-We present a federated auditor that detects these leaks from desensitized metadata
-it can never invert to content, together with a privacy-typing extension to A2A
-that makes the leaks expressible in the first place. By separating the data
-subject, the owning principal, and the agent principal, the auditor flags
-cross-tenant disclosure, purpose violations, over-forwarding, and cross-tenant
-inference, all without reading a message. We prove the center-blind guarantee (the
-center learns $O(\log)$ bits per message) and characterize when inference becomes
-detectable, then test the system where it is easiest to fool ourselves: on a
-benchmark authored by a separate model precision holds but recall drops sharply,
-and against a real LLM recipient we confirm that two benign fragments expose a withheld
-attribute, a threat that grows with model capability. Against an adaptive
-adversary that knows the detector, $20{,}000$ randomized evasion strategies yield
-none that learns more than the policy permits without firing: evasion costs the
-adversary more than it stands to gain. On its single-tenant
-projection, which is the deployable product, the auditor catches every
-internal-channel leak in AgentLeak's 600 scenarios at 0.97 precision with zero
-content egress.
+Building one is hard because no party may read the evidence. Classical
+information-flow control assumes a trusted runtime that inspects every value it
+labels; between mutually-distrusting organizations that party does not exist, and
+its absence---not the lattice---is what makes this setting new. We present a
+center-blind auditor that decides from desensitized metadata it cannot invert to
+content, with a privacy-typing extension to A2A that makes the leak expressible at
+all. We prove the center learns $O(\log)$ bits per message and measure it at a flat
+$418$ bytes across a $1024\times$ range of message size; against an adversary that
+knows the detector, $20{,}000$ randomized evasion strategies yield none that learns
+more than the policy already permits. We report where it fails as carefully as
+where it works: scored against ground truth we do not control, our own recall is
+$0.79$, so the rates above are lower bounds.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -788,51 +789,52 @@ sensitivity crosses the floor, exactly where the mechanism predicts, and zero ra
 content reaches the center at every $\varepsilon$.
 
 \section{Discussion}
-Center-blind detection works because the risks it targets are visible in the
-metadata graph (principals, categories, inferred-category tags, provenance), all
-of which the local side can emit without revealing content. The same observation
-explains why the system is at once a research result and a product: set every
-owning principal equal and the multi-tenant model collapses to the in-container
-case, where the identical detectors flag a sensitive datum crossing to an agent or
-tool it should not reach, still without shipping content anywhere.
+Center-blind detection works for a narrow reason worth stating plainly: the risks
+it targets happen to be visible in the metadata graph---principals, categories,
+inferred-category tags, provenance---all of which the local side can emit without
+revealing content. That is a property of these risks, not a general result. A
+harm that lives only in the wording of a message, with no governance correlate,
+would be invisible to this design, and we would not know.
 
 \input{figures/fig_trends}
 
-Our multi-model study exposes two opposing trends that together make the case for
-metadata-level detection (Figure~\ref{fig:trends}). As recipient capability rises,
-\emph{explicit} over-sharing falls---weaker models paste a subject's identifiers into a
-hand-off outright ($\approx$80\%), the aligned frontier model far less often
-(46\%)---while \emph{implicit} inference rises: the frontier recipient reconstructs a
-withheld attribute from two benign fragments where a small model cannot. A defender who
-trusted the model to behave would be wrong at both ends---and, as \S\ref{sec:instr}
-shows, would still be wrong after telling the model the rule. The auditor does not: it flags
-the metadata pattern---an explicit sensitive tag crossing a boundary, or converging
-inferred-category fragments---and catches both, with zero content egress across the
-whole capability range.
+The two trends in Figure~\ref{fig:trends} are why we think the safeguard cannot be
+behavioral, and they are worth reading as one statement rather than two. Explicit
+over-sharing falls with capability while compositional inference rises with it, so
+there is no point on the capability axis at which trusting the recipient is
+reasonable: the weak model pastes the identifier outright, and the strong one does
+not need it. Aligning models better moves a defender along this curve; it does not
+get them off it. The auditor keys on the metadata pattern instead---a sensitive tag
+crossing a boundary, or converging inferred-category fragments---and so is
+indifferent to which end of the curve a deployment happens to sit on.
 
-The honest limits lie in coverage, in trust, and in the model
-roster. The instruction sweep that carries our first claim runs on six
-\emph{open-weight} families; the frontier arm is not yet measured, and a frontier
-model is exactly where better instruction-following might change the answer---the
-same model over-shares in $46\%$ of permissive hand-offs against roughly $80\%$ for
-the open models (Table~\ref{tab:wild}), so we should expect it to comply more, not
-less. Until that arm is run, ``instructions do not fix it'' is established for
-open-weight recipients and open for frontier ones. Recall on author-independent
-scenarios also falls sharply, and an oracle ablation says why: about
-a quarter of the author's intended leaks are beyond \emph{any} tagger, and the part
-that is reachable is bounded by the sensitivity estimate rather than by taxonomy
-coverage (\S\ref{sec:eval}). So the improvable component is narrower than we first
-claimed, and the ceiling is lower. The
-auditor itself does not over-fire given correct labels, but that is a property of
-the auditor rather than of the deployed pipeline: a noisy tagger can still cost
-precision end-to-end. The inference bound assumes conditionally independent
-fragments, which real, correlated hints only approximate. And two adversaries remain
-open, though not equally: a peer that keeps every recipient below the convergence
-threshold is real but bounded---by construction it learns less than the policy
-already permits, which the evasion frontier measures
-(\S\ref{sec:eval})---whereas a colluding sender--recipient pair that suppresses a
+\paragraph{What we have not established.} Four limits, in the order we would
+attack them.
+
+\emph{The roster.} The instruction sweep carrying our first claim runs on six
+\emph{open-weight} families. A frontier model is exactly where better
+instruction-following might overturn it---the same model over-shares in $46\%$ of
+permissive hand-offs against roughly $80\%$ for the open models
+(Table~\ref{tab:wild}), so we should expect it to comply \emph{more}. Until that arm
+is run, ``instructions do not fix it'' is established for open-weight recipients
+and open for frontier ones.
+
+\emph{The ceiling.} Recall on author-independent scenarios is low, and the oracle
+ablation says the fix is narrower than we first claimed: about a quarter of the
+author's intended leaks are beyond \emph{any} tagger, and the reachable part is
+bounded by the sensitivity estimate rather than by taxonomy coverage.
+
+\emph{The pipeline, not the auditor.} The auditor does not over-fire given correct
+labels, but that is a property of the auditor and not of a deployment: a noisy
+tagger still costs precision end to end. Relatedly, the inference bound assumes
+conditionally independent fragments, which real, correlated hints only approximate.
+
+\emph{The residual adversary.} Two remain, and they are not equally serious. A peer
+that keeps every recipient below the convergence threshold is real but bounded---by
+construction it learns less than the policy already permits, which is what the
+evasion frontier measures. A colluding sender--recipient pair that suppresses a
 shared datum is the genuine residual, and only a hardware root of trust (the TEE
-backend our attestation admits) fully closes it.
+backend our attestation admits) closes it.
 
 \section{Related work}
 
