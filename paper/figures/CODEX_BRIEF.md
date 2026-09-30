@@ -1,6 +1,7 @@
-# Brief: the deployment architecture figure
+# Brief: the paper's figures
 
-You are drawing **one new figure** for a privacy/security paper. Everything you
+You own the figures for a privacy/security paper — one new one to draw, four
+existing ones to raise, and the visual system they all share. Everything you
 need is in this repo. Read this file first, then `figstyle.tex` and
 `fig_pipeline.tex` — the new figure must look like it came from the same hand.
 
@@ -17,9 +18,11 @@ ships only a one-way hash plus labels. The measured result that motivates all of
 it: agents over-share regulated identifiers in ~80% of realistic hand-offs, and
 telling them the policy still leaves 79% leaking.
 
-## 2. What is missing, and what you are drawing
+## 2. The work, in priority order
 
-Four figures already exist. Do **not** redraw any of them:
+### (a) Draw the missing figure: deployment architecture — **highest value**
+
+Four figures already exist. Do **not** restate any of them:
 
 | exists | shows |
 |---|---|
@@ -67,6 +70,30 @@ cross-tenant inference.
 **The one thing the figure must not get wrong:** nothing content-bearing may be
 drawn crossing the trust boundary. That is the paper's central claim and a figure
 that blurs it is worse than no figure.
+
+### (b) Raise the four that exist
+
+They are competent and consistent, not memorable. Each has one specific weakness
+worth fixing, and none needs a redesign:
+
+| figure | what to push on |
+|---|---|
+| Fig 1 `fig_pipeline` | Reads left-to-right as a flowchart. The *claim* is that one lane dies at the boundary while another passes through — make that asymmetry the first thing the eye lands on, not something the caption explains. |
+| Fig 2 `fig_example` | Three panels of near-equal weight, so the reader does not know where to start. Panel (c) carries the punchline (a live frontier model recovers the withheld attribute from exactly these two messages) and should look like the punchline. |
+| Fig 3 `fig_gain` | Correct and inert. The interesting fact is that *one* high-specificity hint clears a line that normally takes two — currently a small amber dot. |
+| Fig 4 `fig_trends` | The paper's headline measurement, drawn as a small line chart. Two trends crossing in opposite directions is the whole argument; the crossing deserves more than 40mm of width. |
+
+Constraint on all four: **the numbers are measured and must not change.** Verify
+against `benchmarks/a2a_mt/RESULTS.md` before touching a coordinate. Fig 3's curve
+is a closed form (posterior at k=0..4 is exactly 0.10/0.25/0.50/0.75/0.90 for
+p0=0.1, lambda=3; the fire line sits at 0.4) — it is not eyeballed, so do not
+"tidy" it.
+
+### (c) Keep the system coherent
+
+Any icon or style you add goes in `figstyle.tex` / `icons/`, never inline in one
+figure. The four builds share these files; a local override silently diverges the
+papers.
 
 ---
 
@@ -149,11 +176,15 @@ figure's name to its `FIGURES` list.
 - [ ] Legible in greyscale
 - [ ] PoPETs body still ≤ 12 pages
 - [ ] Does not restate Fig 1 — a reader who has seen Fig 1 learns something new
+- [ ] Every number in a revised figure still matches `RESULTS.md`
+- [ ] New styles/icons live in `figstyle.tex` / `icons/`, not inline
 
 ## 7. Where to read more
 
 - `paper/figures/README.md` — the figure system
 - `paper/submission/main.tex` §"The center-blind auditor and detectors", §"Threat
   model" (the attestation argument), §"Discussion" (the single-tenant projection)
-- `benchmarks/a2a_mt/RESULTS.md` — all 13 experiments, if you want the numbers
+- `benchmarks/a2a_mt/RESULTS.md` — all 13 experiments; **the authority for every
+  number that appears in a figure**
+- `paper/figures/appendix.tex` — verbatim prompts and per-model tables
 - `src/federated_agent_audit/a2a/` — the components named above
