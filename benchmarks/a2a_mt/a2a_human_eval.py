@@ -177,8 +177,15 @@ def llm_annotate(sheet: str, out: str, model: str, url: str) -> int:
     """
     import json as _json
 
-    from openai import OpenAI
-    client = OpenAI(base_url=url, api_key="ollama")
+    # Anthropic models go through the native SDK, never an OpenAI-compatible
+    # shim; everything else speaks the local OpenAI-compatible endpoint.
+    anthropic_judge = model.startswith("claude")
+    if anthropic_judge:
+        import anthropic as _anthropic
+        client = _anthropic.Anthropic()
+    else:
+        from openai import OpenAI
+        client = OpenAI(base_url=url, api_key="ollama")
     rows = list(csv.DictReader(open(sheet)))
     done = []
     for i, r in enumerate(rows):
@@ -186,12 +193,21 @@ def llm_annotate(sheet: str, out: str, model: str, url: str) -> int:
                 f"HAND-OFF WRITTEN TO AN EXTERNAL VENDOR:\n{r['handoff']}\n\n"
                 'Answer ONLY as JSON: {"leak_identifier":"y|n","leak_attribute":"y|n"}')
         try:
-            resp = client.chat.completions.create(
-                model=model, temperature=0,
-                response_format={"type": "json_object"},
-                messages=[{"role": "system", "content": INSTRUCTIONS},
-                          {"role": "user", "content": user}])
-            d = _json.loads(resp.choices[0].message.content or "{}")
+            if anthropic_judge:
+                # Opus rejects temperature; steer with the instruction instead.
+                resp = client.messages.create(
+                    model=model, max_tokens=64, system=INSTRUCTIONS,
+                    messages=[{"role": "user", "content": user}])
+                txt = "".join(b.text for b in resp.content if b.type == "text")
+                txt = txt[txt.find("{"):txt.rfind("}") + 1] or "{}"
+            else:
+                resp = client.chat.completions.create(
+                    model=model, temperature=0,
+                    response_format={"type": "json_object"},
+                    messages=[{"role": "system", "content": INSTRUCTIONS},
+                              {"role": "user", "content": user}])
+                txt = resp.choices[0].message.content or "{}"
+            d = _json.loads(txt)
             li = str(d.get("leak_identifier", "")).strip().lower()
             la = str(d.get("leak_attribute", "")).strip().lower()
         except Exception:  # noqa: BLE001 - an unparseable row is dropped, not guessed

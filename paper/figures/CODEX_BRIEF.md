@@ -16,7 +16,7 @@ auditable. We add that typing (`a2a.privacy/v1`), and audit it from a central
 service that **never sees message content** — each agent desensitizes locally and
 ships only a one-way hash plus labels. The measured result that motivates all of
 it: agents over-share regulated identifiers in ~80% of realistic hand-offs, and
-telling them the policy still leaves 79% leaking.
+telling them the policy still leaves 79% leaking (a frontier arm is in flight and may move this).
 
 ## 2. The work, in priority order
 
@@ -145,7 +145,7 @@ If you need an icon that does not exist, add an SVG to `icons/` on the same grid
   to `figure*`, or a wide figure is crushed into one column.
 - **It must compile in all four builds**: `paper/{submission,popets,sp,iclr}`.
   Each has a `figures` symlink, so `\input{figures/<name>}` resolves everywhere.
-- **PoPETs has a 12-page main-body limit and is currently at 8.** Budget roughly
+- **PoPETs has a 12-page main-body limit and is currently at 9.** Budget roughly
   half a column-width page. Do not push the body past 12.
 - **Greyscale-safe**, and **no overfull boxes over 15pt**.
 - Wrap the picture in `\resizebox{\linewidth}{!}{…}` as the other figures do.
@@ -174,7 +174,7 @@ figure's name to its `FIGURES` list.
 - [ ] Icons at 4–6 mm; no new visual language invented
 - [ ] Compiles clean in all four builds, no unresolved refs, no overfull > 15pt
 - [ ] Legible in greyscale
-- [ ] PoPETs body still ≤ 12 pages
+- [ ] PoPETs body still ≤ 12 pages (currently 9)
 - [ ] Does not restate Fig 1 — a reader who has seen Fig 1 learns something new
 - [ ] Every number in a revised figure still matches `RESULTS.md`
 - [ ] New styles/icons live in `figstyle.tex` / `icons/`, not inline
@@ -184,7 +184,7 @@ figure's name to its `FIGURES` list.
 - `paper/figures/README.md` — the figure system
 - `paper/submission/main.tex` §"The center-blind auditor and detectors", §"Threat
   model" (the attestation argument), §"Discussion" (the single-tenant projection)
-- `benchmarks/a2a_mt/RESULTS.md` — all 13 experiments; **the authority for every
+- `benchmarks/a2a_mt/RESULTS.md` — all 15 experiments; **the authority for every
   number that appears in a figure**
 - `paper/figures/appendix.tex` — verbatim prompts and per-model tables
 - `src/federated_agent_audit/a2a/` — the components named above
