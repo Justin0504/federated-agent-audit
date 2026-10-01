@@ -1,0 +1,802 @@
+{
+ "h000": {
+  "model": "mistral_7b",
+  "cond": "instructed",
+  "domain": "scheduling",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h001": {
+  "model": "mistral_7b",
+  "cond": "permissive",
+  "domain": "legal",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h002": {
+  "model": "gemma2_9b",
+  "cond": "permissive",
+  "domain": "scheduling",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h003": {
+  "model": "phi3_5_3_8b",
+  "cond": "neutral",
+  "domain": "legal",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h004": {
+  "model": "qwen2_5_7b",
+  "cond": "policy",
+  "domain": "scheduling",
+  "auto_identifier": true,
+  "auto_attribute": false,
+  "auditor": false
+ },
+ "h005": {
+  "model": "gemma2_9b",
+  "cond": "instructed",
+  "domain": "legal",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h006": {
+  "model": "llama3_1_8b",
+  "cond": "permissive",
+  "domain": "scheduling",
+  "auto_identifier": false,
+  "auto_attribute": false,
+  "auditor": false
+ },
+ "h007": {
+  "model": "phi3_5_3_8b",
+  "cond": "policy",
+  "domain": "finance",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h008": {
+  "model": "gemma2_9b",
+  "cond": "policy",
+  "domain": "education",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h009": {
+  "model": "mistral_7b",
+  "cond": "neutral",
+  "domain": "legal",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h010": {
+  "model": "mistral_7b",
+  "cond": "permissive",
+  "domain": "hr",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h011": {
+  "model": "phi3_5_3_8b",
+  "cond": "instructed",
+  "domain": "healthcare",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h012": {
+  "model": "qwen2_5_7b",
+  "cond": "policy",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h013": {
+  "model": "gemma2_9b",
+  "cond": "permissive",
+  "domain": "hr",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h014": {
+  "model": "mistral_7b",
+  "cond": "policy",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": false,
+  "auditor": true
+ },
+ "h015": {
+  "model": "gemma2_9b",
+  "cond": "policy",
+  "domain": "support",
+  "auto_identifier": false,
+  "auto_attribute": false,
+  "auditor": true
+ },
+ "h016": {
+  "model": "qwen2_5_14b",
+  "cond": "instructed",
+  "domain": "education",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h017": {
+  "model": "llama3_1_8b",
+  "cond": "neutral",
+  "domain": "finance",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h018": {
+  "model": "phi3_5_3_8b",
+  "cond": "permissive",
+  "domain": "healthcare",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h019": {
+  "model": "llama3_1_8b",
+  "cond": "instructed",
+  "domain": "finance",
+  "auto_identifier": false,
+  "auto_attribute": false,
+  "auditor": true
+ },
+ "h020": {
+  "model": "llama3_1_8b",
+  "cond": "policy",
+  "domain": "finance",
+  "auto_identifier": false,
+  "auto_attribute": false,
+  "auditor": false
+ },
+ "h021": {
+  "model": "mistral_7b",
+  "cond": "permissive",
+  "domain": "scheduling",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h022": {
+  "model": "llama3_1_8b",
+  "cond": "permissive",
+  "domain": "healthcare",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h023": {
+  "model": "qwen2_5_7b",
+  "cond": "permissive",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h024": {
+  "model": "llama3_1_8b",
+  "cond": "policy",
+  "domain": "healthcare",
+  "auto_identifier": false,
+  "auto_attribute": false,
+  "auditor": false
+ },
+ "h025": {
+  "model": "qwen2_5_7b",
+  "cond": "neutral",
+  "domain": "hr",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h026": {
+  "model": "qwen2_5_14b",
+  "cond": "instructed",
+  "domain": "healthcare",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h027": {
+  "model": "mistral_7b",
+  "cond": "neutral",
+  "domain": "education",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h028": {
+  "model": "qwen2_5_14b",
+  "cond": "neutral",
+  "domain": "healthcare",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h029": {
+  "model": "gemma2_9b",
+  "cond": "instructed",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h030": {
+  "model": "gemma2_9b",
+  "cond": "instructed",
+  "domain": "finance",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h031": {
+  "model": "gemma2_9b",
+  "cond": "instructed",
+  "domain": "healthcare",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h032": {
+  "model": "llama3_1_8b",
+  "cond": "permissive",
+  "domain": "legal",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h033": {
+  "model": "llama3_1_8b",
+  "cond": "policy",
+  "domain": "education",
+  "auto_identifier": false,
+  "auto_attribute": false,
+  "auditor": false
+ },
+ "h034": {
+  "model": "gemma2_9b",
+  "cond": "policy",
+  "domain": "scheduling",
+  "auto_identifier": false,
+  "auto_attribute": false,
+  "auditor": true
+ },
+ "h035": {
+  "model": "mistral_7b",
+  "cond": "instructed",
+  "domain": "hr",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h036": {
+  "model": "phi3_5_3_8b",
+  "cond": "policy",
+  "domain": "education",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h037": {
+  "model": "qwen2_5_14b",
+  "cond": "permissive",
+  "domain": "finance",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h038": {
+  "model": "qwen2_5_14b",
+  "cond": "policy",
+  "domain": "legal",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h039": {
+  "model": "phi3_5_3_8b",
+  "cond": "neutral",
+  "domain": "hr",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h040": {
+  "model": "qwen2_5_14b",
+  "cond": "neutral",
+  "domain": "education",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h041": {
+  "model": "qwen2_5_14b",
+  "cond": "neutral",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h042": {
+  "model": "gemma2_9b",
+  "cond": "permissive",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h043": {
+  "model": "mistral_7b",
+  "cond": "neutral",
+  "domain": "scheduling",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h044": {
+  "model": "gemma2_9b",
+  "cond": "neutral",
+  "domain": "scheduling",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h045": {
+  "model": "phi3_5_3_8b",
+  "cond": "instructed",
+  "domain": "hr",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h046": {
+  "model": "llama3_1_8b",
+  "cond": "permissive",
+  "domain": "education",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h047": {
+  "model": "phi3_5_3_8b",
+  "cond": "policy",
+  "domain": "hr",
+  "auto_identifier": false,
+  "auto_attribute": false,
+  "auditor": true
+ },
+ "h048": {
+  "model": "qwen2_5_7b",
+  "cond": "policy",
+  "domain": "education",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h049": {
+  "model": "mistral_7b",
+  "cond": "policy",
+  "domain": "finance",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h050": {
+  "model": "qwen2_5_7b",
+  "cond": "permissive",
+  "domain": "legal",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h051": {
+  "model": "gemma2_9b",
+  "cond": "neutral",
+  "domain": "education",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h052": {
+  "model": "mistral_7b",
+  "cond": "instructed",
+  "domain": "education",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h053": {
+  "model": "qwen2_5_14b",
+  "cond": "policy",
+  "domain": "scheduling",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h054": {
+  "model": "llama3_1_8b",
+  "cond": "policy",
+  "domain": "scheduling",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h055": {
+  "model": "qwen2_5_14b",
+  "cond": "policy",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h056": {
+  "model": "phi3_5_3_8b",
+  "cond": "permissive",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": false,
+  "auditor": false
+ },
+ "h057": {
+  "model": "phi3_5_3_8b",
+  "cond": "permissive",
+  "domain": "hr",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h058": {
+  "model": "qwen2_5_14b",
+  "cond": "policy",
+  "domain": "finance",
+  "auto_identifier": false,
+  "auto_attribute": false,
+  "auditor": true
+ },
+ "h059": {
+  "model": "qwen2_5_14b",
+  "cond": "instructed",
+  "domain": "legal",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h060": {
+  "model": "gemma2_9b",
+  "cond": "policy",
+  "domain": "finance",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h061": {
+  "model": "phi3_5_3_8b",
+  "cond": "neutral",
+  "domain": "scheduling",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h062": {
+  "model": "qwen2_5_7b",
+  "cond": "permissive",
+  "domain": "hr",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h063": {
+  "model": "qwen2_5_7b",
+  "cond": "permissive",
+  "domain": "finance",
+  "auto_identifier": true,
+  "auto_attribute": false,
+  "auditor": true
+ },
+ "h064": {
+  "model": "qwen2_5_14b",
+  "cond": "permissive",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h065": {
+  "model": "mistral_7b",
+  "cond": "permissive",
+  "domain": "finance",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h066": {
+  "model": "llama3_1_8b",
+  "cond": "permissive",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h067": {
+  "model": "mistral_7b",
+  "cond": "policy",
+  "domain": "scheduling",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h068": {
+  "model": "qwen2_5_7b",
+  "cond": "instructed",
+  "domain": "hr",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h069": {
+  "model": "llama3_1_8b",
+  "cond": "permissive",
+  "domain": "finance",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h070": {
+  "model": "phi3_5_3_8b",
+  "cond": "permissive",
+  "domain": "finance",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h071": {
+  "model": "gemma2_9b",
+  "cond": "permissive",
+  "domain": "healthcare",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h072": {
+  "model": "llama3_1_8b",
+  "cond": "instructed",
+  "domain": "scheduling",
+  "auto_identifier": false,
+  "auto_attribute": false,
+  "auditor": false
+ },
+ "h073": {
+  "model": "mistral_7b",
+  "cond": "instructed",
+  "domain": "healthcare",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h074": {
+  "model": "phi3_5_3_8b",
+  "cond": "policy",
+  "domain": "scheduling",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h075": {
+  "model": "gemma2_9b",
+  "cond": "permissive",
+  "domain": "education",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h076": {
+  "model": "qwen2_5_14b",
+  "cond": "permissive",
+  "domain": "scheduling",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h077": {
+  "model": "llama3_1_8b",
+  "cond": "neutral",
+  "domain": "legal",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h078": {
+  "model": "qwen2_5_7b",
+  "cond": "instructed",
+  "domain": "healthcare",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h079": {
+  "model": "llama3_1_8b",
+  "cond": "permissive",
+  "domain": "hr",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h080": {
+  "model": "qwen2_5_7b",
+  "cond": "neutral",
+  "domain": "education",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h081": {
+  "model": "phi3_5_3_8b",
+  "cond": "neutral",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h082": {
+  "model": "phi3_5_3_8b",
+  "cond": "instructed",
+  "domain": "legal",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h083": {
+  "model": "gemma2_9b",
+  "cond": "instructed",
+  "domain": "scheduling",
+  "auto_identifier": false,
+  "auto_attribute": false,
+  "auditor": false
+ },
+ "h084": {
+  "model": "llama3_1_8b",
+  "cond": "instructed",
+  "domain": "legal",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h085": {
+  "model": "qwen2_5_14b",
+  "cond": "permissive",
+  "domain": "healthcare",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h086": {
+  "model": "mistral_7b",
+  "cond": "policy",
+  "domain": "legal",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h087": {
+  "model": "qwen2_5_7b",
+  "cond": "permissive",
+  "domain": "healthcare",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h088": {
+  "model": "llama3_1_8b",
+  "cond": "policy",
+  "domain": "legal",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h089": {
+  "model": "phi3_5_3_8b",
+  "cond": "instructed",
+  "domain": "scheduling",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h090": {
+  "model": "qwen2_5_14b",
+  "cond": "instructed",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h091": {
+  "model": "mistral_7b",
+  "cond": "instructed",
+  "domain": "legal",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h092": {
+  "model": "phi3_5_3_8b",
+  "cond": "policy",
+  "domain": "legal",
+  "auto_identifier": false,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h093": {
+  "model": "qwen2_5_7b",
+  "cond": "instructed",
+  "domain": "legal",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h094": {
+  "model": "qwen2_5_7b",
+  "cond": "neutral",
+  "domain": "scheduling",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h095": {
+  "model": "qwen2_5_7b",
+  "cond": "policy",
+  "domain": "finance",
+  "auto_identifier": true,
+  "auto_attribute": false,
+  "auditor": true
+ },
+ "h096": {
+  "model": "llama3_1_8b",
+  "cond": "instructed",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": false
+ },
+ "h097": {
+  "model": "mistral_7b",
+  "cond": "permissive",
+  "domain": "support",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h098": {
+  "model": "gemma2_9b",
+  "cond": "neutral",
+  "domain": "healthcare",
+  "auto_identifier": true,
+  "auto_attribute": true,
+  "auditor": true
+ },
+ "h099": {
+  "model": "phi3_5_3_8b",
+  "cond": "neutral",
+  "domain": "finance",
+  "auto_identifier": true,
+  "auto_attribute": false,
+  "auditor": true
+ }
+}

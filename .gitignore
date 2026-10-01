@@ -46,6 +46,12 @@ paper/**/arxiv_submission.zip
 # local multi-model run outputs (regenerable; numbers recorded in RESULTS.md)
 mm_results/
 
+# Trace files are gitignored by pattern, but the published traces under
+# benchmarks/a2a_mt/traces/ are an ARTIFACT the paper points readers at -- they
+# were lost from /tmp once already. Keep them.
+!benchmarks/a2a_mt/traces/
+!benchmarks/a2a_mt/traces/**
+
 # figure preview harness output
 paper/figures/_prev*
 paper/figures/_contact_sheet.svg
