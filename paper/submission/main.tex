@@ -834,16 +834,17 @@ conditionally independent fragments, which real, correlated hints only approxima
 
 \emph{The ground truth is not yet validated by people.} Our literal patterns are
 independent of the auditor, but nobody has checked that they match what a reader
-would call a disclosure. We tried to substitute two independent model judges on a
-blinded sample of 100 hand-offs, and the attempt failed in an instructive way: the
-two judges agree with each other at $\kappa=0.35$ on whether a hand-off reveals a
-protected \emph{attribute}, which is too low for either to serve as a yardstick.
-Notably they agree far better on whether it contains a direct \emph{identifier}
-($\kappa=0.61$). ``Does this text contain a record number'' has an answer;
-``does this reveal a protected fact rather than merely name the task'' is a
-construct that two capable models do not converge on---so the attribute half of
-our measurement rests on a judgement that is genuinely contestable, and human
-adjudication is outstanding.
+would call a disclosure. Three independent model judges labeled a blinded sample
+of 100 hand-offs---none of them the model that wrote our patterns, and none
+judging its own output. Agreement with our patterns rises with the judge: the
+strongest reaches $\kappa=0.65$ on identifiers and $0.62$ on attributes
+(substantial), and marks almost exactly the same number of attribute leaks that we
+do ($82$ against our $83$ of $100$). The weakest marks $39$ and disagrees with
+\emph{every} other rater including the other open-weight one, which is the
+signature of a weak rater rather than a different standard. We report the spread
+rather than the best number: three of four raters cluster and one does not, so the
+patterns are supported but not confirmed. Human adjudication remains outstanding,
+and would settle it in a way model judges cannot.
 
 \emph{The residual adversary.} Two remain, and they are not equally serious. A peer
 that keeps every recipient below the convergence threshold is real but bounded---by

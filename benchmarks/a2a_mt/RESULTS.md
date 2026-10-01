@@ -669,3 +669,49 @@ it is needed.
 Reproduce:
 `python benchmarks/a2a_mt/a2a_human_eval.py --sample --traces <dir> --n 100 --out human_eval`
 `python benchmarks/a2a_mt/a2a_human_eval.py --llm-annotate human_eval_sheet.csv --annotator-model <a family that did not write the patterns> --out ann.csv`
+
+---
+
+## Experiment 14, revised — a third judge reverses the conclusion
+
+Experiment 14 concluded that "attribute leak" is a construct two capable models do
+not converge on, and the paper carried that as a limitation. **Adding a third,
+stronger judge shows that conclusion was wrong**, and wrong in the self-critical
+direction.
+
+Three independent judges, same blinded 100-row sample, none of which wrote our
+patterns. The sample predates the frontier arm, so **no judge is scoring its own
+output** (0 Claude-authored rows).
+
+| | Gemma2-9B | Mistral-7B | Opus-4.8 | our GT |
+|---|---|---|---|---|
+| identifier positives | 79 | 62 | 82 | 74 |
+| **attribute positives** | 75 | **39** | **82** | **83** |
+
+| pair | identifier κ | attribute κ |
+|---|---|---|
+| Gemma2 ↔ Opus | 0.65 | **0.62** |
+| Gemma2 ↔ Mistral | 0.61 | 0.35 |
+| Mistral ↔ Opus | 0.48 | 0.25 |
+| **our GT ↔ Opus** | **0.65** | **0.62** |
+| our GT ↔ Gemma2 | 0.53 | 0.28 |
+| our GT ↔ Mistral | 0.41 | 0.16 |
+
+**What was actually going on.** The earlier κ = 0.35 was not the construct being
+contestable — it was **one outlier rater**. Mistral-7B marks 39 attribute
+positives where the other three cluster at 75, 82 and 83, and it disagrees with
+*every* other rater including the other open-weight model. A rater that disagrees
+with everyone is usually the problem, not the yardstick.
+
+With the strongest judge, agreement with our patterns is substantial (κ 0.62–0.65)
+and the positive rate is near-identical (82 vs our 83).
+
+**Reported as support, not confirmation.** Three of four raters cluster and one
+does not; we give the full spread rather than the best pair. Model judges still
+cannot settle this — human adjudication is outstanding.
+
+**A note on how we got it wrong.** The two-judge result was read as evidence
+against our own ground truth, and written into the paper's limitations as such.
+That reading was available, self-critical, and unsupported. Honesty is not the
+same as resolving every ambiguity against yourself: both directions need the same
+evidentiary bar, and the earlier conclusion did not meet it.
