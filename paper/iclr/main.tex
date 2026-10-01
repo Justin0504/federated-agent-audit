@@ -699,6 +699,19 @@ labels, but that is a property of the auditor and not of a deployment: a noisy
 tagger still costs precision end to end. Relatedly, the inference bound assumes
 conditionally independent fragments, which real, correlated hints only approximate.
 
+\emph{The ground truth is not yet validated by people.} Our literal patterns are
+independent of the auditor, but nobody has checked that they match what a reader
+would call a disclosure. We tried to substitute two independent model judges on a
+blinded sample of 100 hand-offs, and the attempt failed in an instructive way: the
+two judges agree with each other at $\kappa=0.35$ on whether a hand-off reveals a
+protected \emph{attribute}, which is too low for either to serve as a yardstick.
+Notably they agree far better on whether it contains a direct \emph{identifier}
+($\kappa=0.61$). ``Does this text contain a record number'' has an answer;
+``does this reveal a protected fact rather than merely name the task'' is a
+construct that two capable models do not converge on---so the attribute half of
+our measurement rests on a judgement that is genuinely contestable, and human
+adjudication is outstanding.
+
 \emph{The residual adversary.} Two remain, and they are not equally serious. A peer
 that keeps every recipient below the convergence threshold is real but bounded---by
 construction it learns less than the policy already permits, which is what the

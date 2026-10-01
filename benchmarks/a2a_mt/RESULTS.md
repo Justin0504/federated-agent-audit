@@ -605,3 +605,67 @@ the model's judgment quality. A reader who wants the 8B number can run
 
 Reproduce: `python benchmarks/a2a_mt/a2a_baseline_compare.py` (auto-skips the
 guard row if the model is absent)
+
+---
+
+## Experiment 14 — validating the ground truth: an inconclusive result
+
+**Question.** Every "leak" in this paper is decided by a regex or by our own
+tagger. Does that match what an independent reader would call a disclosure?
+
+**Method.** 100 hand-offs, stratified across all 24 model × condition
+combinations, **blinded** — the sheet carries the source record and the hand-off
+and nothing else; the condition, our regex verdict and the auditor's verdict live
+in a separate key. Two independent judges from different families (Gemma2-9B,
+Mistral-7B), neither of which wrote our ground-truth patterns, each labeled all
+100 with the same instructions a person would get.
+
+**Result.**
+
+| | Gemma2 says yes | Mistral says yes | our GT says yes | judge-vs-judge κ |
+|---|---|---|---|---|
+| identifier | 79 | 62 | 74 | **0.61** |
+| attribute | 75 | **39** | 83 | **0.35** |
+
+| comparison | agreement | κ |
+|---|---|---|
+| our GT vs Gemma2, identifier | 83% | 0.53 |
+| our GT vs Mistral, identifier | 74% | 0.41 |
+| our GT vs Gemma2, attribute | 76% | 0.28 |
+| our GT vs Mistral, attribute | 52% | 0.16 |
+
+**This validated nothing, and the reason is the finding.** The two judges disagree
+with each other more than either disagrees with us: on the attribute judgement one
+marks 75 of 100 and the other 39, at κ = 0.35. When two instruments disagree with
+each other that badly, neither can serve as a yardstick for a third thing.
+
+**A reading we had to discard.** Against Gemma2 alone, our attribute patterns
+looked systematically liberal — 16 rows we call a leak that it does not, against 8
+the other way, i.e. over-calling in our own favour. That reading did not survive
+the second judge: Mistral shows the same nominal direction at 46 vs 2, but that
+is driven by its own conservatism (39 positives of 100) rather than a shared
+standard. The direction is consistent, the magnitude differs threefold, and the
+baseline is two judges who do not agree. So this neither supports nor refutes our
+patterns. It is **inconclusive**, not unfavourable, and reporting the Gemma2
+comparison alone would have been cherry-picking in the direction that merely
+*looks* honest.
+
+**What is a real finding.** The identifier judgement is stable across judges
+(κ 0.61) and the attribute judgement is not (κ 0.35). "Does this text contain a
+record number" has an answer; "does this text reveal a protected fact rather than
+merely name the task" is a construct that two capable models do not converge on.
+That is worth knowing about the measurement, and it means human annotators will
+need a tighter adjudication rule than our current instructions give them.
+
+**On κ and prevalence.** Most sampled rows are positive (74–84% by our GT), and κ
+is depressed by skewed marginals. Raw agreement is reported alongside it for that
+reason; quoting κ alone would overstate the disagreement.
+
+**Still outstanding: actual human annotation.** The blinded sheet, the key and the
+annotator instructions are generated and ready (`--sample`). Two people, roughly
+40 minutes each. This experiment does not substitute for it — it mainly shows why
+it is needed.
+
+Reproduce:
+`python benchmarks/a2a_mt/a2a_human_eval.py --sample --traces <dir> --n 100 --out human_eval`
+`python benchmarks/a2a_mt/a2a_human_eval.py --llm-annotate human_eval_sheet.csv --annotator-model <a family that did not write the patterns> --out ann.csv`
