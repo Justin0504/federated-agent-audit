@@ -205,7 +205,7 @@ metadata-only auditor can observe because nothing crosses to observe.
 Table~\ref{tab:evasion}) exercises empirically.
 
 
-\section{The \ext{} extension}
+\section{The \ext{} extension}\label{sec:ext}
 The three roles of the threat model become fields the protocol can carry. Each
 privacy-relevant \texttt{Part} carries a label under
 \texttt{Part.metadata["a2a.privacy/v1"]}:
@@ -704,19 +704,25 @@ labels, but that is a property of the auditor and not of a deployment: a noisy
 tagger still costs precision end to end. Relatedly, the inference bound assumes
 conditionally independent fragments, which real, correlated hints only approximate.
 
-\emph{The ground truth is not yet validated by people.} Our literal patterns are
-independent of the auditor, but nobody has checked that they match what a reader
-would call a disclosure. Three independent model judges labeled a blinded sample
-of 100 hand-offs---none of them the model that wrote our patterns, and none
-judging its own output. Agreement with our patterns rises with the judge: the
-strongest reaches $\kappa=0.65$ on identifiers and $0.62$ on attributes
-(substantial), and marks almost exactly the same number of attribute leaks that we
-do ($82$ against our $83$ of $100$). The weakest marks $39$ and disagrees with
-\emph{every} other rater including the other open-weight one, which is the
-signature of a weak rater rather than a different standard. We report the spread
-rather than the best number: three of four raters cluster and one does not, so the
-patterns are supported but not confirmed. Human adjudication remains outstanding,
-and would settle it in a way model judges cannot.
+\emph{The attribute ground truth over-calls, and we can say by how much.} Three
+independent model judges labeled a blinded sample of 100 hand-offs---none of them
+the model that wrote our patterns, none judging its own output. On identifiers our
+patterns are balanced against the judges' majority ($74\%$ against $76\%$, erring
+in both directions about equally). On \emph{attributes} they fire more often than
+the majority does, $83\%$ against $72\%$: we call a leak the judges do not in
+$16\%$ of sampled hand-offs, against $5\%$ the other way.
+
+Adjudicating those rows gives a characterizable cause, and it is the failure mode
+we had already found and thought we had removed: a pattern naming the \emph{task}
+rather than the secret. A car dispatcher has to be told the passenger travels with
+a security detail; an e-discovery vendor is routinely told a memo is privileged;
+and a request for \emph{anonymized} disciplinary trends does not disclose the
+student. Our patterns fired on all three. We have not re-tightened them to match
+the judges---doing so would make model judges the ground truth, and the weakest of
+them marks $39$ attribute positives where the others mark $75$ and $82$---so
+attribute-derived rates here should be read as \emph{upper} bounds on the attribute
+half, exactly as the auditor's detections are lower bounds on the whole. Human
+adjudication is outstanding and would settle it.
 
 \emph{The residual adversary.} Two remain, and they are not equally serious. A peer
 that keeps every recipient below the convergence threshold is real but bounded---by
@@ -848,6 +854,16 @@ deployment would actually expose---labels and hashes---so a scenario is only
 ``detected'' if it is detectable without reading the message. The two ask different
 questions of the same setting and we take the sandbox result as the upper bound our
 center-blind numbers sit below.
+
+Its schema is also independent evidence for the typing in \S\ref{sec:ext}. Built
+separately and for a different purpose, each of its resources carries an owner
+distinct from the agent acting on it, a sensitivity level, protected fields, and
+scope-limited operations---three of the four content-governance fields \ext{}
+defines, arrived at without reference to this work. The field it does not carry is
+the \emph{data subject}: in its clinical scenarios the attending's owner holds the
+case file, and the patient the file is about has no representation at all. That
+omission is the one the regimes this paper targets turn on, and it is what the
+three-way split is for.
 The closest existing suite is WeClawArena~\citep{weclaw}, which pairs cross-user
 agent collaboration with attack variants spanning collaboration, security, privacy
 and governance. It differs from A2A-MT in the assumption that matters here: it is an
