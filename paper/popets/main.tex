@@ -43,13 +43,15 @@ Multi-Tenant Agent Privacy}
 Autonomous agents increasingly delegate work to one another across organizational
 boundaries, and protocols such as A2A now standardize how they do so---while
 carrying no notion of whom a datum concerns or who may receive it. We begin by
-measuring what crosses. Across six model families and $1{,}728$ realistic
-hand-offs, agents put a subject's regulated identifiers into messages bound for an
-outside company in all but a handful, and \emph{telling them not to does not fix
-it}: handing the model the record's own policy---owner, permitted recipient, and
-the fact that this recipient is not permitted---still leaves $79\%$ leaking.
-Instructions suppress hard identifiers far better than sensitive attributes, so
-models learn not to paste the account number and go on writing the diagnosis.
+measuring what crosses. Across seven models and $2{,}016$ realistic hand-offs,
+agents put a subject's regulated identifiers into messages bound for an outside
+company in $94\%$ of them, and \emph{instructing them buys redaction rather than
+privacy}. Handed the record's own policy---owner, permitted recipient, and the
+fact that this recipient is not permitted---the frontier model stops pasting
+identifiers almost perfectly ($44\%\!\to\!1\%$) and barely changes what it says
+about the person ($40\%\!\to\!36\%$); pooled across all seven, $73\%$ of hand-offs
+still leak. Models learn not to paste the account number and go on writing the
+diagnosis.
 Compliance does not track capability, exposure does not decay along a relay chain,
 and compositional inference \emph{rises} with capability. The safeguard has to be
 structural.
@@ -85,9 +87,9 @@ in regulated settings---healthcare schedulers, financial assistants, HR
 copilots---increasingly delegate to third-party agents, and a single over-shared
 identifier (an SSN, a diagnosis, an account number) crossing that organizational
 boundary is a concrete privacy harm under regimes such as HIPAA and GDPR. It is
-also the common case rather than the exception: across six model families and
-$1{,}728$ realistic hand-offs, agents put the subject's regulated identifiers into
-a message bound for an outside company in all but a handful. Our aim is a
+also the common case rather than the exception: across seven models and
+$2{,}016$ realistic hand-offs, agents put the subject's regulated identifiers into
+a message bound for an outside company in $94\%$ of them. Our aim is a
 deployable safeguard for exactly these interactions---one that runs today and sees
 no raw content.
 
@@ -113,16 +115,17 @@ free-form \texttt{metadata}, an \texttt{extensions} array, and a loosely-specifi
 
 We close this gap. Our contributions:
 \begin{enumerate}
-\item \textbf{Behavioral enforcement does not work, measured rather than assumed.}
-Hand the model the record's own policy---owner, permitted recipient, purpose, and
-the fact that this recipient is \emph{not} permitted---and \textbf{$79\%$} of
-hand-offs still leak (six model families, $1{,}728$ trials). Three ways out are
-closed with it: the permissive phrasing in our prompt is not the cause (removing it
-changes $99\%$ to $100\%$), compliance does not track capability, and exposure does
-not decay along a relay chain. What instructions do buy is narrow and revealing---
-they suppress hard identifiers far better than sensitive attributes
-($86\!\to\!51\%$ against $93\!\to\!68\%$): models learn not to paste the account
-number and go on writing the diagnosis.
+\item \textbf{Instructions buy redaction, not privacy.} Hand the model the
+record's own policy---owner, permitted recipient, purpose, and the fact that this
+recipient is \emph{not} permitted---and $73\%$ of hand-offs still leak (seven
+models, $2{,}016$ trials). The frontier model shows why in its sharpest form: told
+not to include identifiers, it complies almost perfectly
+($44\%\!\to\!\mathbf{1\%}$), and barely changes what it discloses \emph{about the
+person} ($40\%\!\to\!36\%$). ``Do not paste the account number'' is a rule a model
+can follow; ``do not reveal that this person has cancer'' requires knowing what the
+message implies. Three other escapes close with it: the permissive phrasing in our
+prompt is not the cause (removing it changes $94\%$ to $97\%$), compliance does not
+track capability, and exposure does not decay along a relay chain.
 \item \textbf{Auditing when no party may read the content.} Classical
 information-flow control assumes a trusted runtime that sees
 everything~\cite{denning76,sabelfeld03,taintdroid}; across organizational boundaries
@@ -395,7 +398,8 @@ The measurement above invites an obvious objection: our coordinator prompt ends
 suspect the leak is our wording rather than the model's behavior. It also leaves
 this paper's central claim---that the safeguard has to be structural---as an
 assertion. We test both by sweeping the instruction alone, over the same 24
-workflows, six open-weight model families and $1{,}728$ trials. Ground truth here is
+workflows, seven models---six open-weight families and a frontier model---and
+$2{,}016$ trials. Ground truth here is
 deliberately \emph{independent of our auditor}: literal identifiers and attribute
 terms taken from the source record, matched against what the coordinator actually
 wrote, with each pattern checked against its own record so a drifted annotation
@@ -403,25 +407,25 @@ fails loudly rather than scoring zero in our favor.
 
 Removing the invitation changes nothing ($99\%\!\to\!100\%$): the over-sharing is
 the models', not the prompt's. Instructing the agent does not fix it either.
-Naming the forbidden categories explicitly leaves $84\%$; handing the model the
+Naming the forbidden categories explicitly leaves $79\%$; handing the model the
 record's actual policy---owner, permitted recipient, purpose, and the fact that
-this recipient is \emph{not} permitted---leaves $79\%$, and the most compliant
-model under the strongest condition still leaks in $44\%$ of hand-offs
+this recipient is \emph{not} permitted---leaves $73\%$, and even the frontier model
+under the strongest condition still leaks in $36\%$ of hand-offs
 (Table~\ref{tab:instr}).
 
 The breakdown is sharper than the totals. Instructions suppress hard identifiers
-markedly more effectively than sensitive attributes ($86\!\to\!51\%$ against
-$93\!\to\!68\%$): models learn not to paste the account number and go on writing
+markedly more effectively than sensitive attributes ($79\!\to\!44\%$ against
+$86\!\to\!64\%$): models learn not to paste the account number and go on writing
 the diagnosis, a redaction-shaped reflex rather than an understanding of what is
 sensitive. Compliance does not track capability either---Llama-3.1-8B complies
-markedly better than the larger Qwen2.5-14B ($44\%$ versus $79\%$ under the
-policy condition)---so neither a better prompt nor a better model is the fix.
+markedly better than the larger Qwen2.5-14B under the policy condition, and the
+frontier model's compliance is almost entirely confined to identifiers---so neither a better prompt nor a better model is the fix.
 This is the evidence the structural claim needed.
 
 The same experiment costs us a number we would rather not report. Against this
-independent ground truth our own auditor's recall is $0.79$ ($331$ misses in
-$1{,}728$), so the rates in Table~\ref{tab:wild} are \emph{lower bounds} on
-over-sharing, not estimates of it. Precision is $0.94$; the 78 firings without a literal match are
+independent ground truth our own auditor's recall is $0.77$ ($403$ misses in
+$2{,}016$), so the rates in Table~\ref{tab:wild} are \emph{lower bounds} on
+over-sharing, not estimates of it. Precision is $0.90$; the 150 firings without a literal match are
 largely paraphrased disclosures the literal patterns cannot see. Both measures
 are lower bounds on different things and neither dominates the other.
 
@@ -430,14 +434,18 @@ are lower bounds on different things and neither dominates the other.
 \toprule
 Coordinator instruction & leak & 95\% CI & ident. & attrib. & auditor \\
 \midrule
-permissive (as \S\ref{sec:eval}) & 98\% & [96, 99] & 86\% & 93\% & 82\% \\
-invitation removed & 100\% & [99, 100] & 86\% & 93\% & 80\% \\
-categories forbidden & 84\% & [79, 89] & 54\% & 81\% & 63\% \\
-\textbf{full policy stated} & \textbf{79\%} & [73, 84] & \textbf{51\%} & \textbf{68\%} & 77\% \\
+permissive (as \S\ref{sec:eval}) & 94\% & [90, 97] & 79\% & 86\% & 77\% \\
+invitation removed & 97\% & [94, 99] & 82\% & 86\% & 76\% \\
+categories forbidden & 79\% & [73, 84] & 45\% & 76\% & 60\% \\
+\textbf{full policy stated} & \textbf{73\%} & [67, 79] & \textbf{44\%} & \textbf{64\%} & 80\% \\
+\midrule
+\multicolumn{6}{l}{\emph{frontier model alone (Claude Opus~4.8), permissive $\to$ policy}} \\
+\quad identifiers & \multicolumn{5}{l}{$44\%\ \to\ \mathbf{1\%}$ \quad (obeys almost perfectly)} \\
+\quad attributes & \multicolumn{5}{l}{$40\%\ \to\ 36\%$ \quad (barely moves)} \\
 \bottomrule
 \end{tabular}
-\caption{Sweeping the coordinator's instruction, pooled over six open-weight
-model families ($432$ trials per row). Scored against ground truth independent of our
+\caption{Sweeping the coordinator's instruction, pooled over seven models
+($504$ trials per row). Scored against ground truth independent of our
 auditor. Intervals are a bootstrap over \emph{workflows}, not over trials: the three
 runs of one record under one prompt are not independent draws, and a trial-level
 Wilson interval is about $45\%$ too narrow here (measured design effect $2.1$). Telling the agent the rule---even spelling out that the recipient is not
@@ -817,13 +825,12 @@ indifferent to which end of the curve a deployment happens to sit on.
 \paragraph{What we have not established.} Four limits, in the order we would
 attack them.
 
-\emph{The roster.} The instruction sweep carrying our first claim runs on six
-\emph{open-weight} families. A frontier model is exactly where better
-instruction-following might overturn it---the same model over-shares in $46\%$ of
-permissive hand-offs against roughly $80\%$ for the open models
-(Table~\ref{tab:wild}), so we should expect it to comply \emph{more}. Until that arm
-is run, ``instructions do not fix it'' is established for open-weight recipients
-and open for frontier ones.
+\emph{The roster.} Seven models, one of them frontier. The frontier arm did
+partly overturn our first phrasing and we have changed it: ``instructions do not
+work'' is false as stated---they work very well on identifiers---and what survives
+is the narrower, sharper claim that they buy redaction rather than privacy. We have
+one frontier model, not a family of them, so whether that split is a property of
+alignment training in general or of this model is open.
 
 \emph{The ceiling.} Recall on author-independent scenarios is low, and the oracle
 ablation says the fix is narrower than we first claimed: about a quarter of the

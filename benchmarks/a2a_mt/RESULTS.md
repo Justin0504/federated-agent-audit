@@ -715,3 +715,57 @@ against our own ground truth, and written into the paper's limitations as such.
 That reading was available, self-critical, and unsupported. Honesty is not the
 same as resolving every ambiguity against yourself: both directions need the same
 evidentiary bar, and the earlier conclusion did not meet it.
+
+---
+
+## Experiment 9c — the frontier arm, and what it overturned
+
+Claude Opus 4.8 on the same 24 workflows, 3 runs, 4 conditions (288 trials),
+bringing the sweep to **seven models and 2,016 trials**.
+
+| condition | leak | 95% CI | identifiers | attributes |
+|---|---|---|---|---|
+| permissive | 67% | [55, 76] | 44% | 40% |
+| invitation removed | 78% | [67, 86] | 51% | 47% |
+| categories forbidden | 46% | [35, 57] | **0%** | 46% |
+| full policy stated | 36% | [26, 48] | **1%** | 36% |
+
+**This refuted our first phrasing, and the replacement is stronger.**
+"Instructions do not work" is false as stated. Told not to include identifiers,
+the frontier model complies *almost perfectly* — 44% → 0–1%. What it does not
+change is what it says **about the person**: 40% → 36%. Even handed the policy and
+told the recipient is not permitted, more than a third of its hand-offs still
+disclose the protected fact.
+
+So: **instructions buy redaction, not privacy.** "Do not paste the account number"
+is a rule a model can follow. "Do not reveal that this person has cancer" requires
+knowing what the message implies — and that is exactly the gap the inference
+detector exists to cover.
+
+| | identifiers (permissive → policy) | attributes (permissive → policy) |
+|---|---|---|
+| open-weight (6) | 85% → 51% | 93% → 69% |
+| **frontier (Opus)** | **44% → 1%** | **40% → 36%** |
+
+**Pooled over all seven** (cluster bootstrap over workflows): permissive 94%
+[90, 97], invitation removed 97% [94, 99], categories 79% [73, 84], policy 73%
+[67, 79]. Auditor vs independent ground truth: recall 0.77, precision 0.90.
+
+**One oddity, not reported as a finding.** For Opus, `neutral` (78%) scored
+*higher* than `permissive` (67%) — removing the permissive phrasing appeared to
+increase leakage. The intervals overlap ([55, 76] against [67, 86]); we treat it
+as noise rather than an effect.
+
+### Run-to-run variance, measured by accident
+
+Three open-weight traces were lost from a system temp directory and regenerated,
+which gives an unplanned reproducibility check on the same experiment at
+temperature 0.7:
+
+| open-weight pooled | first run | re-run |
+|---|---|---|
+| identifiers, permissive → policy | 86% → 51% | 85% → 51% |
+| attributes, permissive → policy | 93% → 68% | 93% → 69% |
+
+Within a point. The measurement is stable across independent draws, which is worth
+more than either run alone.
