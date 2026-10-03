@@ -704,6 +704,12 @@ labels, but that is a property of the auditor and not of a deployment: a noisy
 tagger still costs precision end to end. Relatedly, the inference bound assumes
 conditionally independent fragments, which real, correlated hints only approximate.
 
+\emph{This is a detector, not a gate.} Everything measured here is detection: the
+auditor says a hand-off violated the policy, after the fact and from metadata. It
+does not sit in the path and stop one. Whether the same signal can drive
+enforcement---block, hand the agent the reason, let it rewrite---is a separate
+question with its own cost in task completion, and we do not claim it here.
+
 \emph{The attribute ground truth over-calls, and we can say by how much.} Three
 independent model judges labeled a blinded sample of 100 hand-offs---none of them
 the model that wrote our patterns, none judging its own output. On identifiers our
