@@ -15,8 +15,11 @@ receive it, so cross-boundary privacy leakage is not even expressible, let alone
 auditable. We add that typing (`a2a.privacy/v1`), and audit it from a central
 service that **never sees message content** — each agent desensitizes locally and
 ships only a one-way hash plus labels. The measured result that motivates all of
-it: agents over-share regulated identifiers in ~80% of realistic hand-offs, and
-telling them the policy still leaves 79% leaking (a frontier arm is in flight and may move this).
+it: across seven models and 2,016 hand-offs, agents put the subject's regulated
+identifiers into messages bound for an outside company 94% of the time, and
+instructing them buys *redaction, not privacy*: handed the record's own policy, the
+frontier model stops pasting identifiers almost perfectly (44% → 1%) and barely
+changes what it says about the person (40% → 36%). Pooled, 73% still leak.
 
 ## 2. The work, in priority order
 
@@ -70,6 +73,23 @@ cross-tenant inference.
 **The one thing the figure must not get wrong:** nothing content-bearing may be
 drawn crossing the trust boundary. That is the paper's central claim and a figure
 that blurs it is worse than no figure.
+
+### (a2) The paper's sharpest result has no picture — second priority
+
+Contribution 1 turns on one contrast, and it is currently a row in a table:
+
+| | identifiers, permissive → policy | attributes, permissive → policy |
+|---|---|---|
+| open-weight (6 families) | 85% → 51% | 93% → 69% |
+| frontier (Claude Opus 4.8) | **44% → 1%** | **40% → 36%** |
+
+The point is the *asymmetry*: instructions nearly eliminate the identifier line and
+leave the attribute line standing. One small figure — two paired bars or two
+slopes per model group, identifiers in `figrose`, attributes in `figindigo` with a
+dash pattern so it survives greyscale — would carry the claim better than the
+table does. If you draw it, name it `fig_redaction.tex`, add it to `export.py`'s
+`FIGURES` list, and take every number from `benchmarks/a2a_mt/RESULTS.md`
+Experiment 9c. Column-width; use plain `figure`, not `widefigure`.
 
 ### (b) Raise the four that exist
 
@@ -184,7 +204,7 @@ figure's name to its `FIGURES` list.
 - `paper/figures/README.md` — the figure system
 - `paper/submission/main.tex` §"The center-blind auditor and detectors", §"Threat
   model" (the attestation argument), §"Discussion" (the single-tenant projection)
-- `benchmarks/a2a_mt/RESULTS.md` — all 15 experiments; **the authority for every
+- `benchmarks/a2a_mt/RESULTS.md` — all 18 experiments; **the authority for every
   number that appears in a figure**
 - `paper/figures/appendix.tex` — verbatim prompts and per-model tables
 - `src/federated_agent_audit/a2a/` — the components named above
