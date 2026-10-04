@@ -64,7 +64,7 @@ $418$ bytes across a $1024\times$ range of message size; against an adversary th
 knows the detector, $20{,}000$ randomized evasion strategies yield none that learns
 more than the policy already permits. We report where it fails as carefully as
 where it works: scored against ground truth we do not control, our own recall is
-$0.79$, so the rates above are lower bounds.
+$0.77$, so the rates above are lower bounds.
 \end{abstract}
 
 \section{Introduction}
@@ -96,7 +96,7 @@ through a central observer, which is precisely what centralized observability
 inconvenience. Decades of information-flow control rest on a trusted runtime that
 may inspect every value it labels; between mutually-distrusting organizations
 that party does not exist. The question this paper answers is what remains
-enforceable once it is taken away.
+auditable once it is taken away.
 
 The protocols do not help. We verified against the A2A v1.0 specification that its
 data model (\texttt{AgentCard}, \texttt{Task}, \texttt{Message}, \texttt{Part})
@@ -118,11 +118,10 @@ can follow; ``do not reveal that this person has cancer'' requires knowing what 
 message implies. Three other escapes close with it: the permissive phrasing in our
 prompt is not the cause (removing it changes $94\%$ to $97\%$), compliance does not
 track capability, and exposure does not decay along a relay chain.
-\item \textbf{Auditing when no party may read the content.} Classical
-information-flow control assumes a trusted runtime that sees
-everything~\cite{denning76,sabelfeld03,taintdroid}; across organizational boundaries
-no such party exists, and that missing premise---not the lattice---is what makes this
-setting new. We show the audit survives its removal. Four detectors run over
+\item \textbf{Auditing when no party may read the content.} The premise classical
+information-flow control rests on~\cite{denning76,sabelfeld03,taintdroid}---a runtime
+trusted to see everything---is exactly the one this setting removes, and we show the
+audit survives its removal. Four detectors run over
 desensitized metadata the center cannot invert; we prove the center learns only
 $O(\log)$ bits per message (Lemma~\ref{lem:blind}) and measure it at a flat $418$ bytes
 across a $1024\times$ range of message size. We give a closed form for when
@@ -140,7 +139,7 @@ there is nothing for a content-blind center to reason over.
 multi-tenant agent-privacy benchmark, validated against the external AgentLeak suite
 and a properly configured Presidio baseline. Because grading our own detector with our
 own tagger would be circular, the measurement above is scored against literal ground
-truth taken from the source records; by that standard our own recall is $0.79$, so the
+truth taken from the source records; by that standard our own recall is $0.77$, so the
 rates we report are lower bounds rather than estimates.
 \end{enumerate}
 \noindent One implementation serves both the research setting and a deployable
@@ -315,13 +314,26 @@ hint specificity (so one high-$\lambda$ fragment can suffice).
 Assumption~\ref{as:ci} is an approximation --- positively-correlated (redundant)
 hints make the true joint ratio smaller than $\prod\lambda_i$, so the model can
 over-credit evidence; empirically the detector nonetheless \emph{under}-fires
-relative to a real LLM recipient, because tagger coverage, not the bound, is the
+relative to a real LLM recipient, because the tagger, not the bound, is the
 binding constraint. The bound is thus a calibrated design tool, not a tight
 guarantee.
 
 \input{figures/fig_gain}
 
 \section{The A2A-MT benchmark}
+AgentLeak and Sum-Leaks are single-tenant---the vault belongs to one system and
+the boundary is system$\rightarrow$output---and no existing suite holds an auditor
+to center-blind evidence. A2A-MT supplies labeled multi-tenant A2A interactions
+whose boundary is \emph{between} agents and whose ground truth is detectable from
+labels and hashes alone. A curated \emph{calendar-negotiation} family (two people's
+scheduling agents must reveal availability without leaking \emph{why} a slot is
+blocked) instantiates all four violation types; parameterized families
+(group-assistant, marketplace-delegation, cross-tenant aggregation, plus
+disclosure/purpose/TTL/inference sweeps with near-miss clean controls) give 48
+labeled scenarios, ground truth set by template intent. An LLM fills each Part
+with realistic text matching its label (labels remain the ground truth), exported
+as a shareable artifact.
+
 The closest existing suite is WeClawArena~\cite{weclaw}, which pairs cross-user
 agent collaboration with attack variants spanning collaboration, security, privacy
 and governance. It differs from A2A-MT in the assumption that matters here: it is an
@@ -341,17 +353,6 @@ the \emph{data subject}: in its clinical scenarios the attending's owner holds t
 case file, and the patient the file is about has no representation at all. That
 omission is the one the regimes this paper targets turn on, and it is what the
 three-way split is for.
-No multi-tenant agent-privacy benchmark exists---AgentLeak and Sum-Leaks are
-single-tenant (the vault belongs to one system; the boundary is system$\rightarrow$output).
-A2A-MT supplies labeled multi-tenant A2A interactions whose boundary is
-\emph{between} agents. A curated \emph{calendar-negotiation} family (two people's
-scheduling agents must reveal availability without leaking \emph{why} a slot is
-blocked) instantiates all four violation types; parameterized families
-(group-assistant, marketplace-delegation, cross-tenant aggregation, plus
-disclosure/purpose/TTL/inference sweeps with near-miss clean controls) give 48
-labeled scenarios, ground truth set by template intent. An LLM fills each Part
-with realistic text matching its label (labels remain the ground truth), exported
-as a shareable artifact.
 
 \section{Evaluation}\label{sec:eval}
 In three parts, in the order the claims depend on each other. First, what agents
@@ -395,7 +396,7 @@ Qwen2.5-14B  & mid (open)   & 78\% (94/120) & \textbf{0} \\
 $=120$ trials each, same set). Over-sharing falls with capability/alignment but stays
 high; the auditor catches all at zero content egress. These are detections by our
 own auditor and therefore \emph{lower bounds}: measured against independent ground
-truth (\S\ref{sec:instr}) its recall is $0.78$.}
+truth (\S\ref{sec:instr}) its recall is $0.77$.}
 \label{tab:wild}
 \end{table}
 
@@ -412,9 +413,9 @@ terms taken from the source record, matched against what the coordinator actuall
 wrote, with each pattern checked against its own record so a drifted annotation
 fails loudly rather than scoring zero in our favor.
 
-Removing the invitation changes nothing ($99\%\!\to\!100\%$): the over-sharing is
-the models', not the prompt's. Instructing the agent does not fix it either.
-Naming the forbidden categories explicitly leaves $79\%$; handing the model the
+Removing the invitation changes nothing ($94\%\!\to\!97\%$): the over-sharing is
+the models', not the prompt's. Instructing the agent helps, and the shape of the
+help is the finding. Naming the forbidden categories explicitly leaves $79\%$; handing the model the
 record's actual policy---owner, permitted recipient, purpose, and the fact that
 this recipient is \emph{not} permitted---leaves $73\%$, and even the frontier model
 under the strongest condition still leaks in $36\%$ of hand-offs
@@ -684,8 +685,11 @@ to $0.88$ (best inferred $F1{=}0.82$) with recall still at $0.78$. Capability, n
 merely ``being an LLM'', is what closes the gap: a deployer cannot assume that
 swapping in any local model buys inference coverage.
 \texttt{AuditSession.observe} wires it in so a deployer supplies only text plus
-policy. Tagger recall is exactly the residual surface identified above (an
-adversarial sender can under-tag), which attestation closes.
+policy. Two different things limit the tagger and only one of them is closed by
+attestation: a \emph{dishonest} sender that suppresses tags is caught because its
+report is not signed by the pinned build, but an \emph{honest} tagger that simply
+cannot name a category leaves a gap no signature can see. The latter is the recall
+ceiling measured below.
 
 \subsection{An author-independent benchmark}
 Our 48-scenario benchmark scores 1.0, but we wrote both the detectors and the
@@ -701,7 +705,10 @@ backend can still manufacture false positives end-to-end, so perfect precision i
 property of the auditor, not a guarantee of the deployed pipeline.
 
 \paragraph{Where the recall actually goes.} It would be easy to attribute this gap
-to taxonomy coverage and move on; we tested the attribution instead. Scoring one
+to taxonomy coverage and move on; we tested the attribution instead, on a fresh pool
+and with the LLM tagger moved to a different model family (Mistral-7B) than the
+author, so that one model is not both writing and grading the scenarios---which is
+why its absolute numbers differ from the pool above. Scoring one
 pool of $99$ author-generated scenarios under progressively more generous taggers
 bounds what any tagger fix can buy (Table~\ref{tab:ceiling}), and the result
 corrects us in two places.
@@ -829,7 +836,7 @@ get them off it. The auditor keys on the metadata pattern instead---a sensitive 
 crossing a boundary, or converging inferred-category fragments---and so is
 indifferent to which end of the curve a deployment happens to sit on.
 
-\paragraph{What we have not established.} Four limits, in the order we would
+\paragraph{What we have not established.} Five limits, in the order we would
 attack them.
 
 \emph{The roster.} Seven models, one of them frontier. The frontier arm did
