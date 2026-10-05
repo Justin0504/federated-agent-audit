@@ -195,6 +195,10 @@ def main(argv=None) -> int:
     ap.add_argument("--reader-model", default="", help="served model for the reader; "
                     "must differ from the attacker's family")
     ap.add_argument("--tagger-model", default="", help="served model for the LLM tagger")
+    ap.add_argument("--judge-base-url", default="", help="OpenAI-compatible endpoint "
+                    "serving the reader and the LLM tagger, when the attacker is served "
+                    "elsewhere (e.g. attacker on a remote vLLM, judges on local Ollama); "
+                    "defaults to the attacker's endpoint")
     ap.add_argument("--runs", type=int, default=2)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--log", default="")
@@ -206,10 +210,16 @@ def main(argv=None) -> int:
     served = M.BY_ID[a.attacker].served
     reader = a.reader_model or served
     tagger_model = a.tagger_model or served
+    if a.judge_base_url and not (a.reader_model and a.tagger_model):
+        raise SystemExit("--judge-base-url needs --reader-model and --tagger-model")
     if reader == served:
         print(f"  WARNING: reader and attacker are both {served!r}; pass --reader-model")
 
-    client = M._openai_client("local")
+    if a.judge_base_url:
+        from openai import OpenAI
+        client = OpenAI(base_url=a.judge_base_url, api_key="EMPTY")
+    else:
+        client = M._openai_client("local")
     taggers = {"lexical": PrivacyTagger(),
                "llm": PrivacyTagger(llm=llm_tagger(model=tagger_model, client=client))}
     log = open(a.log, "a") if a.log else None

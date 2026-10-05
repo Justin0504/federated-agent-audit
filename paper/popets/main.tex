@@ -648,6 +648,24 @@ ablated mechanism admits evasion at the full attainable gain ($0.90$).}
 \label{tab:evasion}
 \end{table*}
 
+\paragraph{Attacking the tagger instead.} The study above assumes honest tags;
+the tagger is the one component that reads content, so we attack it directly. An
+attacking model is given the protected fact and, in the white-box arm, the lexical
+tagger's entire 141-term lexicon with the instruction to avoid every term. A
+hand-off \emph{evades} only if a reader model from a different family, shown the
+hand-off alone, judges the fact conveyed \emph{and} the auditor fires no
+content-derived violation---saying nothing is not evasion. Across three attackers
+(7B to 32B) and 432 hand-offs, the lexical tagger is evaded $58\%$ of the time
+black-box and $64\%$ white-box; against the 32B attacker it catches none of 48
+white-box hand-offs. The LLM tagger, facing the same hand-offs, is evaded $2\%$
+$[0,5]$ black-box and $5\%$ $[0,10]$ white-box (cluster bootstrap over facts), and
+black-box evasion does not rise with attacker strength. Avoiding the vocabulary
+also costs the attacker the message: conveyance falls from $94\%$ to $85\%$. This
+is the thesis on the defender's side---a token list fails against any sender able
+to follow ``avoid these words,'' while a tagger that judges meaning does not. The
+attacker here optimizes against the lexicon it was shown, not with query access to
+the LLM tagger; that stronger attack is open.
+
 \subsection{What the audit costs, and what actually crosses}\label{sec:cost}
 Lemma~\ref{lem:blind} says the center's view of a message is a hash plus a
 categorical label, so its size cannot depend on the message. That is a claim about
