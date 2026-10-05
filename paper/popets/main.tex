@@ -53,8 +53,11 @@ about the person ($40\%\!\to\!36\%$); pooled across all seven, $73\%$ of hand-of
 still leak. Models learn not to paste the account number and go on writing the
 diagnosis.
 Compliance does not track capability, exposure does not decay along a relay chain,
-and compositional inference \emph{rises} with capability. The safeguard has to be
-structural.
+and compositional inference \emph{rises} with capability. Privacy here is a
+property of what the recipient can \emph{infer}, not of which tokens a message
+contains---and every token-level defense we test, from the agent's own redaction to
+Presidio and Llama Guard, fails in the same way. The safeguard has to be built at
+the level of inference.
 
 Building one is hard because no party may read the evidence. Classical
 information-flow control assumes a trusted runtime that inspects every value it
@@ -113,7 +116,12 @@ who owns it, what it may be used for, or which agent may receive it. A2A provide
 free-form \texttt{metadata}, an \texttt{extensions} array, and a loosely-specified
 \texttt{tenant} field that routes but does not govern.
 
-We close this gap. Our contributions:
+We close this gap. One idea runs through everything that follows: privacy is a
+property of what the recipient can \emph{infer}, not of which tokens a message
+contains, so both the threat and the defense have to be understood at that level.
+Agents that redact still disclose; scanners that match still miss; the one
+component that works accumulates evidence across messages rather than inspecting
+any one of them. Our contributions:
 \begin{enumerate}
 \item \textbf{Instructions buy redaction, not privacy.} Hand the model the
 record's own policy---owner, permitted recipient, purpose, and the fact that this
@@ -148,7 +156,10 @@ multi-tenant agent-privacy benchmark, validated against the external AgentLeak s
 and a properly configured Presidio baseline. Because grading our own detector with our
 own tagger would be circular, the measurement above is scored against literal ground
 truth taken from the source records; by that standard our own recall is $0.77$, so the
-rates we report are lower bounds rather than estimates.
+rates we report are lower bounds rather than estimates. Throughout, we bound our own
+numbers from both sides---the auditor's recall from below, the attribute ground
+truth from above, the tagger from an oracle ceiling---so a reader knows which way
+each one can be wrong.
 \end{enumerate}
 \noindent One implementation serves both the research setting and a deployable
 product: set every principal equal and the multi-tenant model collapses to the
@@ -837,7 +848,11 @@ reasonable: the weak model pastes the identifier outright, and the strong one do
 not need it. Aligning models better moves a defender along this curve; it does not
 get them off it. The auditor keys on the metadata pattern instead---a sensitive tag
 crossing a boundary, or converging inferred-category fragments---and so is
-indifferent to which end of the curve a deployment happens to sit on.
+indifferent to which end of the curve a deployment happens to sit on. That is the
+same observation as the instruction result, seen from the defender's side: the
+leak was never in the tokens, so neither redaction nor pattern-matching could
+remove it, and only a detector that reasons about what the recipient can now
+infer has anything to key on.
 
 \paragraph{What we have not established.} Five limits, in the order we would
 attack them.
