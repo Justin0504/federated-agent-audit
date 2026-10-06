@@ -877,6 +877,20 @@ two of the three attackers. (iv) A frontier attacker (Claude Opus 4.8) was
 planned and did not run — the API account ran out of credit before the first
 call; the strongest attacker here is a 32B open-weight model.
 
+**Ablation on limit (iii): a tagger from a third family.** Same 32B attacker and
+reader, LLM tagger swapped to llama3.1:8b (shares a family with neither):
+
+| mode | conveyed | lexical evaded | LLM (llama3.1:8b) evaded | LLM (qwen2.5:14b) evaded |
+|---|---|---|---|---|
+| black-box | 94% | 60% [46, 73] | 8% [3, 20] | 0% [0, 7] |
+| white-box | 90% | 85% [73, 93] | 12% [6, 25] | 6% [2, 17] |
+
+The family confound is not what holds the LLM row down — a smaller tagger from an
+unrelated family is still evaded an order of magnitude less often than the
+lexicon — but the LLM-tagger number is a property of the tagger's strength, not a
+constant: 8B lets through roughly twice what 14B does. Trace:
+`traces/attack_qwen2_5_32b_tagger_llama3_1_8b.jsonl`.
+
 Traces: `traces/attack_{qwen2_5_7b,mistral_7b,qwen2_5_32b}.jsonl`. The 32B
 attacker was served with vLLM on an A100; the judges ran on local Ollama
 (`--judge-base-url`), so they are byte-identical across arms.

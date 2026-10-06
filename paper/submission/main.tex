@@ -656,7 +656,9 @@ content-derived violation---saying nothing is not evasion. Across three attacker
 black-box and $64\%$ white-box; against the 32B attacker it catches none of 48
 white-box hand-offs. The LLM tagger, facing the same hand-offs, is evaded $2\%$
 $[0,5]$ black-box and $5\%$ $[0,10]$ white-box (cluster bootstrap over facts), and
-black-box evasion does not rise with attacker strength. Avoiding the vocabulary
+black-box evasion does not rise with attacker strength; swapping in a smaller
+tagger from a third family (8B) raises evasion to $8\%$ and $12\%$, so the figure
+tracks tagger strength rather than a shared lineage. Avoiding the vocabulary
 also costs the attacker the message: conveyance falls from $94\%$ to $85\%$. This
 is the thesis on the defender's side---a token list fails against any sender able
 to follow ``avoid these words,'' while a tagger that judges meaning does not. The
