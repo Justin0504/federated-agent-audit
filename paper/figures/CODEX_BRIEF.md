@@ -33,6 +33,7 @@ Four figures already exist. Do **not** restate any of them:
 | Fig 2 `fig_example.tex` | a worked example with verbatim system output |
 | Fig 3 `fig_gain.tex` | the inference threshold curve |
 | Fig 4 `fig_trends.tex` | two opposing trends across model capability |
+| Fig 5 `fig_redaction.tex` | per-model dumbbells: policy removes identifiers, not attributes, across 8 models by size |
 
 **Your figure is the deployment architecture** — what actually runs where, which
 Fig 1 deliberately abstracts away. A reader who wants to deploy this cannot tell
@@ -74,7 +75,7 @@ cross-tenant inference.
 drawn crossing the trust boundary. That is the paper's central claim and a figure
 that blurs it is worse than no figure.
 
-### (a2) The paper's sharpest result has no picture — second priority
+### (a2) The paper's sharpest result — now drawn, raise it
 
 Contribution 1 turns on one contrast, and it is currently a row in a table:
 
@@ -84,12 +85,13 @@ Contribution 1 turns on one contrast, and it is currently a row in a table:
 | frontier (Claude Opus 4.8) | **44% → 1%** | **40% → 36%** |
 
 The point is the *asymmetry*: instructions nearly eliminate the identifier line and
-leave the attribute line standing. One small figure — two paired bars or two
-slopes per model group, identifiers in `figrose`, attributes in `figindigo` with a
-dash pattern so it survives greyscale — would carry the claim better than the
-table does. If you draw it, name it `fig_redaction.tex`, add it to `export.py`'s
-`FIGURES` list, and take every number from `benchmarks/a2a_mt/RESULTS.md`
-Experiment 9c. Column-width; use plain `figure`, not `widefigure`.
+leave the attribute line standing. `fig_redaction.tex` now draws it as eight
+per-model dumbbell pairs ordered by size (identifiers `figrose` solid, attributes
+`figindigo` dashed, open dot = permissive, filled = policy). It is a first pass:
+the eye should land on the Opus row and on the *lengths* of rose vs indigo
+segments, and currently both read as equal weight. Numbers are from
+`benchmarks/a2a_mt/RESULTS.md` Experiments 9, 9c, 9d — do not change them.
+Column-width; plain `figure`, not `widefigure`.
 
 ### (b) Raise the four that exist
 

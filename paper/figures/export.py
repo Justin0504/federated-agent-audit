@@ -24,7 +24,7 @@ import sys
 
 HERE = pathlib.Path(__file__).parent
 OUT = HERE / "export"
-FIGURES = ["fig_pipeline", "fig_example", "fig_gain", "fig_trends"]
+FIGURES = ["fig_pipeline", "fig_example", "fig_gain", "fig_trends", "fig_redaction"]
 
 PREAMBLE = r"""\documentclass[crop,border=3pt]{standalone}
 \usepackage{amsmath,amssymb}

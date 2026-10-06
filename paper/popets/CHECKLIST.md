@@ -27,15 +27,11 @@ mandatory sections present.** Page limit is 12 (main body) — we have wide marg
       (verified; the only "yuan" hit is *Chi**yuan** Zhang* in a citation).
 - [x] Own prior work, if cited, is referenced in the third person. (No self-cites
       currently — fine.)
-- [ ] **Create the anonymized artifact repo and update the link.** Open Science
-      section points to `https://anonymous.4open.science/r/a2a-mt-audit` — this URL
-      **does not exist yet**. You must:
-      1. Go to https://anonymous.4open.science, connect the GitHub repo.
-      2. Ensure the repo has **no author-identifying content** (README author
-         lines, LICENSE with your name, git email in committed files, USC refs).
-      3. Paste the real anonymized URL into the `openscience` block in `main.tex`.
-- [ ] Double-check the PDF metadata doesn't carry your name (tectonic usually
-      doesn't embed it; `pdfinfo main.pdf` to confirm Author field is empty).
+- [x] **Repo link withheld during review.** The Open Science section states the
+      public repo is withheld to preserve double-blind review and released with the
+      camera-ready (PoPETs allows this with an explanation). If an anonymized
+      snapshot is wanted instead, create it at https://anonymous.4open.science with
+      id `a2a-mt-audit` and restore the `\url` line.
 
 ## C. Mandatory statements — DRAFTED, review the content
 - [x] **Ethics**: no human subjects, synthetic data, public AgentLeak, defensive
@@ -59,7 +55,7 @@ mandatory sections present.** Page limit is 12 (main body) — we have wide marg
 - [ ] **Register the submission** on the PoPETs HotCRP by the abstract/registration
       step (title, abstract, topics) — do this a few days before 08-31, not at the
       wire.
-- [ ] Create the anonymous.4open.science repo (§B) and paste the URL.
+- [x] Repo link withheld during review (§B); no anonymous snapshot needed.
 - [ ] Final read-through of the compiled PDF for tone/claims you want to stand behind.
 - [ ] Upload `main.pdf` before 2026-08-31 AoE.
 - [ ] (Optional) Post the arXiv version — PoPETs *discourages* preprints during

@@ -125,7 +125,7 @@ not to include identifiers, it complies almost perfectly
 ($44\%\!\to\!\mathbf{1\%}$), and barely changes what it discloses \emph{about the
 person} ($40\%\!\to\!36\%$). ``Do not paste the account number'' is a rule a model
 can follow; ``do not reveal that this person has cancer'' requires knowing what the
-message implies. Three other escapes close with it: the permissive phrasing in our
+message implies. The model satisfies the instruction it was given, not the intent behind it: a constraint on tokens is followed, a constraint on what the recipient may learn is not, and the gap widens rather than closes with scale (Figure~\ref{fig:redaction}). Three other escapes close with it: the permissive phrasing in our
 prompt is not the cause (removing it changes $94\%$ to $97\%$), compliance does not
 track capability, and exposure does not decay along a relay chain.
 \item \textbf{Auditing when no party may read the content.} The premise classical
@@ -436,7 +436,7 @@ the diagnosis, a redaction-shaped reflex rather than an understanding of what is
 sensitive. Compliance does not track capability either---Llama-3.1-8B complies
 markedly better than the larger Qwen2.5-14B under the policy condition, and the
 frontier model's compliance is almost entirely confined to identifiers---so neither a better prompt nor a better model is the fix.
-This is the evidence the structural claim needed.
+Figure~\ref{fig:redaction} shows the split model by model, ordered by size: what grows with scale is the redaction of identifiers, not the protection of attributes. This is the evidence the structural claim needed.
 
 The same experiment costs us a number we would rather not report. Against this
 independent ground truth our own auditor's recall is $0.77$ ($403$ misses in
@@ -469,6 +469,8 @@ a permitted one---leaves most hand-offs leaking, and suppresses identifiers far
 more than it suppresses sensitive attributes.}
 \label{tab:instr}
 \end{table}
+
+\input{figures/fig_redaction}
 
 \subsection{What survives a relay chain}\label{sec:relay}
 Two things the design rests on had only ever been tested against paraphrases we
@@ -868,6 +870,21 @@ leak was never in the tokens, so neither redaction nor pattern-matching could
 remove it, and only a detector that reasons about what the recipient can now
 infer has anything to key on.
 
+\paragraph{Literal compliance.} The instruction result is, read one way, an
+instruction-following success: every model did more of what it was told as the
+telling got more explicit, and the frontier model did it almost perfectly. The
+failure is in what the instruction could express. ``Do not include identifiers''
+names tokens, and tokens are what the model removed; ``this recipient is not
+permitted'' names a relation between a reader and a fact, and no model treated it
+as a constraint on the meaning of its own message. Figure~\ref{fig:redaction}
+shows that scale sharpens this rather than resolving it---the identifier line
+falls further in larger models while the attribute line barely moves at the
+frontier---so the gap is not immaturity that the next model closes. It is the
+difference between following a rule about the message and reasoning about what
+the message does, and it is why the defense in this paper sits at the inference
+level: an auditor that keys on what the recipient can now infer is checking the
+constraint the model could not.
+
 \paragraph{What we have not established.} Five limits, in the order we would
 attack them.
 
@@ -1006,9 +1023,7 @@ The full system---the \ext{} extension, the center-blind auditor and its four
 detectors, the local tagger, the attestation layer---and the A2A-MT benchmark
 generator are implemented and will be released under an open-source license upon
 publication, together with scripts that reproduce every quantitative result in
-Section~\ref{sec:eval}. For double-blind review we provide an anonymized snapshot at
-\url{https://anonymous.4open.science/r/a2a-mt-audit} with identifying information
-removed. The benchmark is exported as a versioned, shareable artifact so results are
+Section~\ref{sec:eval}. The repository is public today under the authors' names, so to preserve double-blind review we withhold the link rather than publish a scrubbed copy; it is released with the camera-ready, and every number in this paper can be regenerated from the versioned traces it contains. The benchmark is exported as a versioned, shareable artifact so results are
 reproducible independently of our implementation, and we intend to submit it for
 artifact evaluation.
 

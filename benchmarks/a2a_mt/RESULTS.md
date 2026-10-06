@@ -875,7 +875,7 @@ search for its blind spots, and this experiment does not measure that. (ii) One
 reader, one LLM tagger. (iii) The LLM tagger (qwen2.5:14b) shares a family with
 two of the three attackers. (iv) A frontier attacker (Claude Opus 4.8) was
 planned and did not run — the API account ran out of credit before the first
-call; the strongest attacker here is a 32B open-weight model.
+call; the strongest attacker here is a 32B open-weight model. A Gemini 3 Flash arm was attempted on the free tier and stopped at 11 of 96 attacker calls by the 20-requests-per-day quota (0 LLM-tagger evasions in those 11); the partial trace was discarded.
 
 **Ablation on limit (iii): a tagger from a third family.** Same 32B attacker and
 reader, LLM tagger swapped to llama3.1:8b (shares a family with neither):
