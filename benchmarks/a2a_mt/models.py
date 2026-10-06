@@ -19,6 +19,7 @@ capability-scaling story reads cleanly across the roster.
 
 from __future__ import annotations
 
+import json
 import os
 import time
 from dataclasses import dataclass
@@ -125,6 +126,9 @@ def chat(model_id: str, system: str, user: str,
     """
     m = BY_ID[model_id]
     last = None
+    # Free-tier endpoints (e.g. Gemini's OpenAI-compatible API) rate-limit at a
+    # few requests per minute; let a sweep wait them out instead of dying.
+    retries = int(os.environ.get("CHAT_RETRIES", retries))
     for attempt in range(retries):
         try:
             if m.provider == "anthropic":
@@ -132,7 +136,7 @@ def chat(model_id: str, system: str, user: str,
             return _chat_openai(m, system, user, temperature, max_tokens)
         except Exception as e:  # noqa: BLE001 - providers raise heterogeneous errors
             last = e
-            time.sleep(min(2 ** attempt, 8) + 0.1 * attempt)
+            time.sleep(min(2 ** attempt, 30) + 0.1 * attempt)
     raise RuntimeError(f"{model_id}: chat failed after {retries} tries: {last}")
 
 
@@ -147,8 +151,12 @@ def _chat_anthropic(m: Model, system: str, user: str, max_tokens: int) -> str:
 
 def _chat_openai(m: Model, system: str, user: str, temperature: float, max_tokens: int) -> str:
     client = _openai_client(m.provider)
+    # Served thinking models spend max_tokens on reasoning and return truncated
+    # text; LOCAL_EXTRA_BODY='{"reasoning_effort":"none"}' turns that off without
+    # changing the budget every other model gets.
+    extra = json.loads(os.environ.get("LOCAL_EXTRA_BODY", "{}")) if m.provider == "local" else {}
     r = client.chat.completions.create(
         model=m.served, temperature=temperature, max_tokens=max_tokens,
         messages=[{"role": "system", "content": system},
-                  {"role": "user", "content": user}])
+                  {"role": "user", "content": user}], **extra)
     return (r.choices[0].message.content or "").strip()
