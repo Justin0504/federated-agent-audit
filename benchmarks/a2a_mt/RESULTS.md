@@ -880,3 +880,31 @@ call; the strongest attacker here is a 32B open-weight model.
 Traces: `traces/attack_{qwen2_5_7b,mistral_7b,qwen2_5_32b}.jsonl`. The 32B
 attacker was served with vLLM on an A100; the judges ran on local Ollama
 (`--judge-base-url`), so they are byte-identical across arms.
+
+## Experiment 9d — a 32B open-weight model on the instruction sweep
+
+The open-weight arm of Experiment 9 tops out at 14B; the frontier arm is one
+closed model. To see whether the gap between them is scale or lineage, we ran the
+identical sweep (24 workflows × 3 runs × 4 conditions = 288 trials, same literal
+ground truth, `--rescore`d from the trace) on Qwen2.5-32B-Instruct (AWQ, vLLM on
+an A100). Recorded separately; **the 7-model pooled numbers in the paper are
+unchanged.**
+
+| condition | leak | 95% CI (Wilson) | identifiers | attributes | auditor caught |
+|---|---|---|---|---|---|
+| permissive | 100% | [95, 100] | 83% | 93% | 76% |
+| neutral | 100% | [95, 100] | 90% | 93% | 76% |
+| instructed | 86% | [76, 92] | **19%** | 86% | 51% |
+| policy | 74% | [62, 82] | **26%** | 64% | 57% |
+
+Same shape as every other model, in the open-weight range: instructions cut the
+identifier line (83% → 19–26%) and leave most of the attribute line standing
+(93% → 64–86%). The 32B model sits between the 14B (identifiers 85% → 51% pooled
+open-weight) and Opus (44% → 1%): scale buys better redaction, and the attribute
+half moves far less. Auditor recall on this model's hand-offs is 0.66 (precision
+0.91), below the 0.77 reported for the 7-model pool — a larger model paraphrases
+more, which the literal patterns and the tagger both see less of.
+
+Trace: `traces/prompt_conditions_32b/qwen2_5_32b.jsonl`; the policy condition was
+rerun after an SSH-tunnel drop killed the first pass at 7/72, and the partial rows
+were discarded before the rerun.
