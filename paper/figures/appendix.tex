@@ -122,6 +122,7 @@ Claude Opus 4.8    & permissive & 67\% & [49, 83] & 44\% & 40\% \\
 \bottomrule
 \end{tabular}
 \caption{The instruction sweep, per model ($72$ trials per cell), ordered by size; every cell re-derived from the saved hand-offs under the final ground truth by \texttt{a2a\_pool.py}. Intervals are cluster bootstraps over the 24 workflows (Wilson where a cell is at $0$ or $72$). The three largest open-weight models were served with vLLM (Phi-4 in bf16, the other two AWQ-INT4), the rest with Ollama Q4. Read down the identifier column under \emph{policy}: it falls with size ($47\%$ at 3.8B, $21$--$26\%$ at 14--32B, $1\%$ at the frontier) while the attribute column does not ($71\%$, $64$--$71\%$, $36\%$).}
+\label{tab:permodel}
 \label{tab:app-permodel}
 \end{table}
 
@@ -147,9 +148,13 @@ components they depend on. Open-weight models are served locally, so the whole
 open-weight roster runs without an API key.
 
 \begin{itemize}
-\item instruction sweep --- \texttt{run\_prompt\_conditions.sh 3} (six families);
-re-score saved traces after an annotation change, with no model calls, via
-\texttt{a2a\_prompt\_conditions.py -{}-rescore <dir>}
+\item instruction sweep --- \texttt{run\_prompt\_conditions.sh 3} (the Ollama
+roster); the three larger open-weight models run the same script against a vLLM
+endpoint (\texttt{VLLM\_BASE\_URL}, \texttt{VLLM\_MODEL}); pool every model and
+regenerate Table~\ref{tab:permodel}, with no model calls, via
+\texttt{a2a\_pool.py <dirs> -{}-latex}
+\item tagger attack --- \texttt{a2a\_tagger\_attack.py -{}-runs 2}; add
+\texttt{-{}-oracle-rounds 3} for the query-access arm
 \item relay chain --- \texttt{a2a\_relay\_chain.py -{}-runs 2 -{}-hops 4}
 \item adaptive evasion --- \texttt{a2a\_adaptive.py -{}-trials 20000}
 \item baselines against Presidio --- \texttt{a2a\_baseline\_compare.py}
