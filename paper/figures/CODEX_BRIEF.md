@@ -16,7 +16,7 @@ auditable. We add that typing (`a2a.privacy/v1`), and audit it from a central
 service that **never sees message content** — each agent desensitizes locally and
 ships only a one-way hash plus labels. The measured result that motivates all of
 it: across ten models and 2,880 hand-offs, agents put the subject's regulated
-identifiers into messages bound for an outside company 96% of the time, and
+identifiers or sensitive attributes into messages bound for an outside company 96% of the time, and
 instructing them buys *redaction, not privacy*: handed the record's own policy, the
 frontier model stops pasting identifiers almost perfectly (44% → 1%) and barely
 changes what it says about the person (40% → 36%). Pooled, 74% still leak.

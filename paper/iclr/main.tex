@@ -74,8 +74,7 @@ in regulated settings---healthcare schedulers, financial assistants, HR
 copilots---increasingly delegate to third-party agents, and a single over-shared
 identifier (an SSN, a diagnosis, an account number) crossing that organizational
 boundary is a concrete privacy harm under regimes such as HIPAA and GDPR. It is
-also the common case rather than the exception: across ten models and $2{,}880$ realistic hand-offs, agents put the subject's regulated identifiers into
-a message bound for an outside company in $96\%$ of them. Our aim is a
+also the common case rather than the exception: across ten models and $2{,}880$ realistic hand-offs, agents put the subject's regulated identifiers or sensitive attributes into a message bound for an outside company in $96\%$ of them. Our aim is a
 deployable safeguard for exactly these interactions---one that runs today and sees
 no raw content.
 
@@ -114,8 +113,7 @@ not to include identifiers, it complies almost perfectly
 person} ($40\%\!\to\!36\%$). ``Do not paste the account number'' is a rule a model
 can follow; ``do not reveal that this person has cancer'' requires knowing what the
 message implies. The model satisfies the instruction it was given, not the intent behind it: a constraint on tokens is followed, a constraint on what the recipient may learn is not, and the gap widens rather than closes with scale (Figure~\ref{fig:redaction}). Three other escapes close with it: the permissive phrasing in our
-prompt is not the cause (removing it changes $96\%$ to $98\%$), capability buys better
-redaction and no less disclosure, and exposure does not decay along a relay chain.
+prompt is not the cause (removing it changes $96\%$ to $98\%$), scale makes the identifier line fall further under instruction and the attribute line little further, and exposure does not decay along a relay chain.
 \item \textbf{Auditing when no party may read the content.} The premise classical
 information-flow control rests on~\cite{denning76,sabelfeld03,taintdroid}---a runtime
 trusted to see everything---is exactly the one this setting removes, and we show the
@@ -375,11 +373,8 @@ under the strongest condition still leaks in $36\%$ of hand-offs
 The breakdown is sharper than the totals. Instructions suppress hard identifiers
 markedly more effectively than sensitive attributes ($79\!\to\!38\%$ against $88\!\to\!65\%$): models learn not to paste the account number and go on writing
 the diagnosis, a redaction-shaped reflex rather than an understanding of what is
-sensitive. Nor is a bigger model the fix: capability moves the identifier line---Llama-3.1-8B
-already beats the larger Qwen2.5-14B on it, and the frontier model drives it to
-$1\%$---while the attribute line barely follows, so neither a better prompt nor a
-better model closes the gap.
-Figure~\ref{fig:redaction} shows the split model by model, ordered by size: what grows with scale is the redaction of identifiers, not the protection of attributes. This is the evidence the structural claim needed.
+sensitive. Nor is a bigger model the fix: the three largest open-weight models drive the identifier line to $21$--$26\%$ and the frontier model to $1\%$, while under the same instruction the attribute line moves far less and at the frontier barely at all ($40\!\to\!36\%$), so neither a better prompt nor a better model closes the gap.
+Figure~\ref{fig:redaction} shows the split model by model, ordered by size: what grows with scale is how completely the instruction removes identifiers, not how much it removes of what is said about the person. This is the evidence the structural claim needed.
 
 The same experiment costs us a number we would rather not report. Against this
 independent ground truth our own auditor's recall is $0.75$ ($639$ misses in $2{,}880$), so the rates in Table~\ref{tab:wild} are \emph{lower bounds} on
@@ -403,10 +398,10 @@ categories forbidden & 82\% & [78, 86] & 38\% & 80\% & 60\% \\
 \bottomrule
 \end{tabular}
 \caption{Sweeping the coordinator's instruction, pooled over ten models
-($504$ trials per row). Scored against ground truth independent of our
+($720$ trials per row). Scored against ground truth independent of our
 auditor. Intervals are a bootstrap over \emph{workflows}, not over trials: the three
 runs of one record under one prompt are not independent draws, and a trial-level
-Wilson interval is about $45\%$ too narrow here (measured design effect $2.1$). Telling the agent the rule---even spelling out that the recipient is not
+Wilson interval is about $50\%$ too narrow here (measured design effect $2.1$--$2.4$). Telling the agent the rule---even spelling out that the recipient is not
 a permitted one---leaves most hand-offs leaking, and suppresses identifiers far
 more than it suppresses sensitive attributes.}
 \label{tab:instr}
@@ -578,12 +573,10 @@ hand-off \emph{evades} only if a reader model from a different family, shown the
 hand-off alone, judges the fact conveyed \emph{and} the auditor fires no
 content-derived violation---saying nothing is not evasion. Across five attackers (7B to 32B) and 480 hand-offs, the lexical tagger is evaded $55\%$ of the time black-box and $66\%$ white-box; against the 32B attacker it catches none of 48
 white-box hand-offs. The LLM tagger, facing the same hand-offs, is evaded $2\%$ $[0,5]$ black-box and $8\%$ $[2,14]$ white-box (cluster bootstrap over facts), and
-black-box evasion does not rise with attacker strength; swapping in a smaller
-tagger from a third family (8B) raises evasion to $8\%$ and $12\%$, so the figure
-tracks tagger strength rather than a shared lineage. Avoiding the vocabulary
+black-box evasion does not rise with attacker strength; against the 32B attacker, swapping in a smaller tagger from a third family (8B) raises its evasion from $0\%$ and $6\%$ to $8\%$ and $12\%$, so the figure tracks tagger strength rather than a shared lineage. Avoiding the vocabulary
 also costs the attacker the message: conveyance falls from $87\%$ to $82\%$. This
 is the thesis on the defender's side---a token list fails against any sender able
-to follow ``avoid these words,'' while a tagger that judges meaning does not. Query access is the stronger attack, and we ran it: handed the LLM tagger's verdict and three rewrites, two attackers raise evasion to $16\%$ $[7,26]$---and lower conveyance to $60\%$, because what passes the tagger increasingly fails to say the thing. The tagger is not unbeatable; it is expensive to beat, and the price is the message.
+to follow ``avoid these words,'' while a tagger that judges meaning does not. Table~\ref{tab:frontier}'s lexical row is therefore the wrong one to deploy against a sender who is trying; the LLM tagger ($F1=0.90$ there) is the configuration the attack leaves standing. Query access is the stronger attack, and we ran it: handed the LLM tagger's verdict and three rewrites, two attackers raise evasion to $16\%$ $[7,26]$---and lower conveyance to $60\%$, because what passes the tagger increasingly fails to say the thing. The tagger is not unbeatable; it is expensive to beat, and the price is the message.
 
 \subsection{What the audit costs, and what actually crosses}\label{sec:cost}
 Lemma~\ref{lem:blind} says the center's view of a message is a hash plus a
@@ -712,8 +705,7 @@ remove it, and only a detector that reasons about what the recipient can now
 infer has anything to key on.
 
 \paragraph{Literal compliance.} The instruction result is, read one way, an
-instruction-following success: every model did more of what it was told as the
-telling got more explicit, and the frontier model did it almost perfectly. The
+instruction-following success: every model removed more of the named categories once told to, and the frontier model did it almost perfectly. The
 failure is in what the instruction could express. ``Do not include identifiers''
 names tokens, and tokens are what the model removed; ``this recipient is not
 permitted'' names a relation between a reader and a fact, and no model treated it
@@ -726,10 +718,9 @@ the message does, and it is why the defense in this paper sits at the inference
 level: an auditor that keys on what the recipient can now infer is checking the
 constraint the model could not.
 
-\paragraph{What we have not established.} Five limits, in the order we would
-attack them.
+\paragraph{What we have not established.} Six limits, in the order we would attack them.
 
-\emph{The roster.} Ten models, one of them frontier. The frontier arm did
+\emph{The roster.} Ten models, one of them frontier---and on the attacking side none: the strongest attacker we could run against the tagger is a 32B open-weight model, judged by one reader and one LLM tagger, and the oracle it queries returns only a verdict. The frontier arm did
 partly overturn our first phrasing and we have changed it: ``instructions do not
 work'' is false as stated---they work very well on identifiers---and what survives
 is the narrower, sharper claim that they buy redaction rather than privacy. We have

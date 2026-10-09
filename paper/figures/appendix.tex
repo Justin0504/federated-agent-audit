@@ -121,7 +121,7 @@ Claude Opus 4.8    & permissive & 67\% & [49, 83] & 44\% & 40\% \\
                    & policy & 36\% & [21, 53] & 1\% & 36\% \\
 \bottomrule
 \end{tabular}
-\caption{The instruction sweep, per model ($72$ trials per cell), ordered by size; every cell re-derived from the saved hand-offs under the final ground truth by \texttt{a2a\_pool.py}. Intervals are cluster bootstraps over the 24 workflows (Wilson where a cell is at $0$ or $72$). The three largest open-weight models were served with vLLM (Phi-4 in bf16, the other two AWQ-INT4), the rest with Ollama Q4. Read down the identifier column under \emph{policy}: it falls with size ($47\%$ at 3.8B, $21$--$26\%$ at 14--32B, $1\%$ at the frontier) while the attribute column does not ($71\%$, $64$--$71\%$, $36\%$).}
+\caption{The instruction sweep, per model ($72$ trials per cell), ordered by size; every cell re-derived from the saved hand-offs under the final ground truth by \texttt{a2a\_pool.py}. Intervals are cluster bootstraps over the 24 workflows (Wilson where a cell is at $0$ or $72$). The three largest open-weight models were served with vLLM (Phi-4 in bf16, the other two AWQ-INT4), the rest with Ollama Q4. Read down the identifier column under \emph{policy}: the three largest open-weight models reach $21$--$26\%$ and the frontier $1\%$, while the attribute column stays at $64$--$72\%$ for every model from 14B up and $36\%$ at the frontier.}
 \label{tab:permodel}
 \label{tab:app-permodel}
 \end{table}
