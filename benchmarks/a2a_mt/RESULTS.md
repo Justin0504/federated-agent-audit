@@ -844,8 +844,17 @@ are cluster bootstrap over the 24 facts.
 | | white-box | 79% | 54% [40, 67] | 6% [2, 17] |
 | qwen2.5-32B (AWQ) | black-box | 94% | 60% [46, 73] | 0% [0, 7] |
 | | white-box | 81% | **81% [68, 90]** | 6% [2, 17] |
-| **pooled (432 hand-offs)** | black-box | 94% | 58% [42, 74] | **2% [0, 5]** |
-| | white-box | 85% | 64% [51, 76] | **5% [0, 10]** |
+| phi-4 (14B) | black-box | 94% | 56% [42, 69] | 4% [1, 14] |
+| | white-box | 90% | 75% [61, 85] | 10% [5, 22] |
+| Mistral-Small-24B (AWQ) | black-box | 58% | 44% [31, 58] | 2% [0, 11] |
+| | white-box | 69% | 62% [48, 75] | 12% [6, 25] |
+| **pooled, 5 attackers (480 hand-offs)** | black-box | 87% | 55% [40, 69] | **2% [0, 5]** |
+| | white-box | 82% | 66% [55, 76] | **8% [2, 14]** |
+
+(First three attackers pooled, as first reported: lexical 58% / 64%, LLM 2% [0, 5] /
+5% [0, 10]. Mistral-Small shares a family with the mistral:7b reader, which is the
+likely reason its conveyance is low — the reader is strict with its own family's
+phrasing — so its evasion rows are conservative.)
 
 **What it shows.**
 
@@ -869,9 +878,26 @@ enhance their performance" as a PIP). We count them as evasions as scored. Wheth
 they are reader false positives is not something this experiment can settle, and
 we do not adjust for it.
 
-**Limits.** (i) The attacker optimizes against the *lexical* tagger it was shown,
-not against the LLM tagger; an attacker with query access to the LLM tagger could
-search for its blind spots, and this experiment does not measure that. (ii) One
+**Query access to the LLM tagger (`--oracle-rounds 3`).** The attack above
+optimizes against the lexicon; the stronger attacker learns the LLM tagger's
+verdict. In this arm the attacker writes black-box, is told when the LLM tagger
+caught the draft, and gets up to three rewrites; the final draft is scored as
+before. Two attackers, 96 hand-offs:
+
+| attacker | conveyed | lexical evaded | LLM tagger evaded | drafts still caught after 3 rounds |
+|---|---|---|---|---|
+| phi-4 | 60% | 35% [23, 50] | **21% [12, 34]** | 32/48 |
+| Mistral-Small-24B | 60% | 42% [29, 56] | 10% [5, 22] | 36/48 |
+| pooled | 60% | 39% [26, 52] | **16% [7, 26]** | 68/96 |
+
+Query access roughly quadruples LLM-tagger evasion (black-box 2–4% → 16%), and it
+does so by sacrificing the message: conveyance falls from ~94% to 60%, and 68 of
+96 final drafts are still caught after three rounds. The tagger is beatable with
+feedback, at the price of most messages no longer saying the thing. This is the
+honest ceiling on the LLM tagger in this paper and it is in the text.
+
+**Limits.** (i) The oracle arm gives the attacker a binary verdict, not the
+tagger's reasoning or tags; a richer oracle is stronger still. (ii) One
 reader, one LLM tagger. (iii) The LLM tagger (qwen2.5:14b) shares a family with
 two of the three attackers. (iv) A frontier attacker (Claude Opus 4.8) was
 planned and did not run — the API account ran out of credit before the first
@@ -891,7 +917,8 @@ lexicon — but the LLM-tagger number is a property of the tagger's strength, no
 constant: 8B lets through roughly twice what 14B does. Trace:
 `traces/attack_qwen2_5_32b_tagger_llama3_1_8b.jsonl`.
 
-Traces: `traces/attack_{qwen2_5_7b,mistral_7b,qwen2_5_32b}.jsonl`. The 32B
+Traces: `traces/attack_{qwen2_5_7b,mistral_7b,qwen2_5_32b,phi_4,mistral_small_24b}.jsonl`,
+oracle arm `traces/attack_{phi_4,mistral_small_24b}_oracle3.jsonl`. The 32B
 attacker was served with vLLM on an A100; the judges ran on local Ollama
 (`--judge-base-url`), so they are byte-identical across arms.
 
@@ -922,3 +949,41 @@ more, which the literal patterns and the tagger both see less of.
 Trace: `traces/prompt_conditions_32b/qwen2_5_32b.jsonl`; the policy condition was
 rerun after an SSH-tunnel drop killed the first pass at 7/72, and the partial rows
 were discarded before the rerun.
+
+
+## Experiment 9e — the roster grows to ten, and the paper re-pools
+
+phi-4 (14B, bf16) and Mistral-Small-24B (AWQ-INT4) ran the identical sweep on the
+A100 (vLLM); with the 32B arm (9d) that is three more open-weight models in two new
+families' sizes. Per model:
+
+| model | permissive | policy | identifiers | attributes |
+|---|---|---|---|---|
+| phi-4 | 100% | 75% [60, 88] | 76% → **21%** | 96% → 71% |
+| Mistral-Small-24B | 100% | 75% [62, 86] | 75% → **26%** | 93% → 64% |
+| (Qwen2.5-32B, 9d) | 100% | 74% [58, 86] | 83% → 26% | 93% → 64% |
+
+Same shape, three more times. At this point keeping "7 pooled + 3 recorded
+separately" was a bookkeeping accident rather than a design, so the paper now
+pools all ten (`a2a_pool.py`, which reproduces the 7-model table exactly before
+adding anything):
+
+| condition | leak | cluster 95% CI | identifiers | attributes | auditor |
+|---|---|---|---|---|---|
+| permissive | 96% | [93, 98] | 79% | 88% | 77% |
+| neutral | 98% | [96, 99] | 83% | 88% | 77% |
+| instructed | 82% | [78, 86] | 38% | 80% | 60% |
+| policy | **74%** | [69, 78] | **38%** | **65%** | 75% |
+
+Auditor vs literal ground truth over 2,880 trials: recall **0.75** (639 misses),
+precision 0.90 (199 firings without a literal match). Open-weight (9 models):
+identifiers 83% → 42%, attributes 93% → 68%; frontier: 44% → 1%, 40% → 36%.
+
+What moved and what did not: the headline went 94% → 96% permissive and 73% →
+74% under policy; the identifier/attribute split widened (79→38 vs 88→65, was
+79→44 vs 86→64) because the three larger models redact identifiers well and
+attributes poorly; recall fell 0.77 → 0.75 because larger models paraphrase more.
+The appendix per-model table was regenerated from the same traces — its previous
+version predated the ground-truth tightening and disagreed with the body by a few
+points per cell. Serving differs (vLLM bf16/AWQ for the three large models,
+Ollama Q4 for the rest); prompts, ground truth and scoring are identical.

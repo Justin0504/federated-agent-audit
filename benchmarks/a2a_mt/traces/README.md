@@ -22,6 +22,9 @@ format-valid but non-real identifiers. No real personal data was ever collected.
 | path | what |
 |---|---|
 | `prompt_conditions/<model>.jsonl` | the instruction sweep — 288 trials per model (24 workflows × 3 runs × 4 conditions) |
+| `prompt_conditions_32b/`, `prompt_conditions_more/` | the same sweep for Qwen2.5-32B, phi-4 and Mistral-Small-24B, served with vLLM on an A100; pooled with the seven above by `a2a_pool.py` |
+| `attack_<attacker>.jsonl` | the tagger attack — 192 rows per attacker (24 facts × 2 runs × 2 modes × 2 taggers); `_tagger_llama3_1_8b` = third-family tagger ablation; `_oracle3` = query-access arm |
+| `attack.out` | the printed summaries of every attack run, in order |
 | `relay_<model>.jsonl` | the relay chain — 48 chains per model, four hops each |
 | `ceiling_pool.json` | the 99 author-generated scenarios used for the tagger-ceiling ablation |
 | `human_eval_sheet.csv` | the blinded annotation sample (100 rows) |
@@ -35,6 +38,8 @@ expensive part and the ground-truth annotation has been corrected once already:
 
 ```sh
 python benchmarks/a2a_mt/a2a_prompt_conditions.py --rescore benchmarks/a2a_mt/traces/prompt_conditions
+# all ten models, with the paper's cluster intervals and the appendix table
+python benchmarks/a2a_mt/a2a_pool.py benchmarks/a2a_mt/traces/prompt_conditions{,_32b,_more} --latex
 ```
 
 ## A caveat on one re-run

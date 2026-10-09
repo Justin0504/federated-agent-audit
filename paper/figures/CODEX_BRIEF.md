@@ -15,11 +15,11 @@ receive it, so cross-boundary privacy leakage is not even expressible, let alone
 auditable. We add that typing (`a2a.privacy/v1`), and audit it from a central
 service that **never sees message content** — each agent desensitizes locally and
 ships only a one-way hash plus labels. The measured result that motivates all of
-it: across seven models and 2,016 hand-offs, agents put the subject's regulated
-identifiers into messages bound for an outside company 94% of the time, and
+it: across ten models and 2,880 hand-offs, agents put the subject's regulated
+identifiers into messages bound for an outside company 96% of the time, and
 instructing them buys *redaction, not privacy*: handed the record's own policy, the
 frontier model stops pasting identifiers almost perfectly (44% → 1%) and barely
-changes what it says about the person (40% → 36%). Pooled, 73% still leak.
+changes what it says about the person (40% → 36%). Pooled, 74% still leak.
 
 ## 2. The work, in priority order
 
@@ -33,7 +33,7 @@ Four figures already exist. Do **not** restate any of them:
 | Fig 2 `fig_example.tex` | a worked example with verbatim system output |
 | Fig 3 `fig_gain.tex` | the inference threshold curve |
 | Fig 4 `fig_trends.tex` | two opposing trends across model capability |
-| Fig 5 `fig_redaction.tex` | per-model dumbbells: policy removes identifiers, not attributes, across 8 models by size |
+| Fig 5 `fig_redaction.tex` | per-model dumbbells: policy removes identifiers, not attributes, across 10 models by size |
 
 **Your figure is the deployment architecture** — what actually runs where, which
 Fig 1 deliberately abstracts away. A reader who wants to deploy this cannot tell
@@ -81,11 +81,11 @@ Contribution 1 turns on one contrast, and it is currently a row in a table:
 
 | | identifiers, permissive → policy | attributes, permissive → policy |
 |---|---|---|
-| open-weight (6 families) | 85% → 51% | 93% → 69% |
+| open-weight (9 models, 5 families) | 83% → 42% | 93% → 68% |
 | frontier (Claude Opus 4.8) | **44% → 1%** | **40% → 36%** |
 
 The point is the *asymmetry*: instructions nearly eliminate the identifier line and
-leave the attribute line standing. `fig_redaction.tex` now draws it as eight
+leave the attribute line standing. `fig_redaction.tex` now draws it as ten
 per-model dumbbell pairs ordered by size (identifiers `figrose` solid, attributes
 `figindigo` dashed, open dot = permissive, filled = policy). It is a first pass:
 the eye should land on the Opus row and on the *lengths* of rose vs indigo

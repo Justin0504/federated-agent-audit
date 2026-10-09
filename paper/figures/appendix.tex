@@ -70,42 +70,58 @@ credit score, the diagnosis. The full table is in the artifact
 \toprule
 Model & condition & leak & 95\% CI & ident. & attrib. \\
 \midrule
-Qwen2.5-7B   & permissive & 100\% & [95, 100] & 97\% & 96\% \\
-             & no invitation & 100\% & [95, 100] & 93\% & 94\% \\
-             & categories & 96\% & [88, 99] & 69\% & 92\% \\
-             & policy & 96\% & [88, 99] & 79\% & 88\% \\
+Phi-3.5-3.8B       & permissive & 93\% & [83, 100] & 71\% & 86\% \\
+                   & no invitation & 100\% & [95, 100] & 78\% & 88\% \\
+                   & categories & 92\% & [83, 97] & 56\% & 86\% \\
+                   & policy & 83\% & [69, 94] & 47\% & 71\% \\
 \addlinespace
-Llama-3.1-8B & permissive & 96\% & [88, 99] & 81\% & 92\% \\
-             & no invitation & 99\% & [93, 100] & 79\% & 92\% \\
-             & categories & 47\% & [36, 59] & 26\% & 43\% \\
-             & \textbf{policy} & \textbf{44\%} & [34, 56] & 28\% & 40\% \\
+Mistral-7B         & permissive & 100\% & [95, 100] & 89\% & 96\% \\
+                   & no invitation & 100\% & [95, 100] & 88\% & 96\% \\
+                   & categories & 96\% & [88, 100] & 64\% & 96\% \\
+                   & policy & 97\% & [93, 100] & 72\% & 86\% \\
 \addlinespace
-Qwen2.5-14B  & permissive & 100\% & [95, 100] & 86\% & 93\% \\
-             & no invitation & 100\% & [95, 100] & 92\% & 93\% \\
-             & categories & 90\% & [81, 95] & 62\% & 86\% \\
-             & policy & 79\% & [68, 87] & 36\% & 71\% \\
+Qwen2.5-7B         & permissive & 100\% & [95, 100] & 92\% & 96\% \\
+                   & no invitation & 100\% & [95, 100] & 99\% & 94\% \\
+                   & categories & 94\% & [85, 100] & 67\% & 89\% \\
+                   & policy & 94\% & [85, 100] & 71\% & 90\% \\
 \addlinespace
-Mistral-7B   & permissive & 100\% & [95, 100] & 89\% & 96\% \\
-             & no invitation & 100\% & [95, 100] & 88\% & 96\% \\
-             & categories & 96\% & [88, 99] & 64\% & 96\% \\
-             & policy & 97\% & [90, 99] & 72\% & 86\% \\
+Llama-3.1-8B       & permissive & 97\% & [92, 100] & 81\% & 93\% \\
+                   & no invitation & 99\% & [96, 100] & 83\% & 89\% \\
+                   & categories & 46\% & [31, 60] & 22\% & 46\% \\
+                   & policy & 47\% & [33, 62] & 36\% & 42\% \\
 \addlinespace
-Gemma2-9B    & permissive & 99\% & [93, 100] & 92\% & 94\% \\
-             & no invitation & 100\% & [95, 100] & 88\% & 94\% \\
-             & categories & 86\% & [76, 92] & 49\% & 86\% \\
-             & policy & 74\% & [62, 82] & 42\% & 54\% \\
+Gemma2-9B          & permissive & 99\% & [96, 100] & 92\% & 94\% \\
+                   & no invitation & 100\% & [95, 100] & 88\% & 94\% \\
+                   & categories & 86\% & [74, 96] & 49\% & 86\% \\
+                   & policy & 74\% & [58, 88] & 42\% & 54\% \\
 \addlinespace
-Phi-3.5-3.8B & permissive & 93\% & [85, 97] & 71\% & 86\% \\
-             & no invitation & 100\% & [95, 100] & 78\% & 88\% \\
-             & categories & 92\% & [83, 96] & 56\% & 86\% \\
-             & policy & 83\% & [73, 90] & 47\% & 71\% \\
+Qwen2.5-14B        & permissive & 100\% & [95, 100] & 88\% & 93\% \\
+                   & no invitation & 100\% & [95, 100] & 90\% & 92\% \\
+                   & categories & 92\% & [82, 99] & 60\% & 86\% \\
+                   & policy & 81\% & [67, 92] & 38\% & 72\% \\
+\addlinespace
+Phi-4-14B          & permissive & 100\% & [95, 100] & 76\% & 96\% \\
+                   & no invitation & 100\% & [95, 100] & 76\% & 96\% \\
+                   & categories & 93\% & [83, 100] & 21\% & 93\% \\
+                   & policy & 75\% & [60, 88] & 21\% & 71\% \\
+\addlinespace
+Mistral-Small-24B  & permissive & 100\% & [95, 100] & 75\% & 93\% \\
+                   & no invitation & 100\% & [95, 100] & 83\% & 90\% \\
+                   & categories & 92\% & [81, 100] & 19\% & 90\% \\
+                   & policy & 75\% & [62, 86] & 26\% & 64\% \\
+\addlinespace
+Qwen2.5-32B        & permissive & 100\% & [95, 100] & 83\% & 93\% \\
+                   & no invitation & 100\% & [95, 100] & 90\% & 93\% \\
+                   & categories & 86\% & [74, 96] & 19\% & 86\% \\
+                   & policy & 74\% & [58, 86] & 26\% & 64\% \\
+\addlinespace
+Claude Opus 4.8    & permissive & 67\% & [49, 83] & 44\% & 40\% \\
+                   & no invitation & 78\% & [62, 92] & 51\% & 47\% \\
+                   & categories & 46\% & [28, 64] & 0\% & 46\% \\
+                   & policy & 36\% & [21, 53] & 1\% & 36\% \\
 \bottomrule
 \end{tabular}
-\caption{The instruction sweep, per model ($72$ trials per cell). Llama-3.1-8B is
-the only model that meaningfully complies, and it is the second-smallest in the
-roster --- instruction-following on privacy is a per-model property, not a
-capability one. Every model keeps writing attributes after it has stopped writing
-identifiers.}
+\caption{The instruction sweep, per model ($72$ trials per cell), ordered by size; every cell re-derived from the saved hand-offs under the final ground truth by \texttt{a2a\_pool.py}. Intervals are cluster bootstraps over the 24 workflows (Wilson where a cell is at $0$ or $72$). The three largest open-weight models were served with vLLM (Phi-4 in bf16, the other two AWQ-INT4), the rest with Ollama Q4. Read down the identifier column under \emph{policy}: it falls with size ($47\%$ at 3.8B, $21$--$26\%$ at 14--32B, $1\%$ at the frontier) while the attribute column does not ($71\%$, $64$--$71\%$, $36\%$).}
 \label{tab:app-permodel}
 \end{table}
 

@@ -1,63 +1,57 @@
 % Figure -- instructions buy redaction, not privacy, across model scale.
-% Each model gets two dumbbells: how far the record's own policy moves the
-% identifier line (rose, solid) and the attribute line (indigo, dashed), from the
-% permissive prompt to the policy prompt. Models are ordered by parameter count,
-% so the reader can see that the identifier line falls further as models grow
-% while the attribute line mostly does not. Every number is from
-% benchmarks/a2a_mt/RESULTS.md (Experiments 9, 9c, 9d); the 32B row is recorded
-% separately there and is not part of the pooled figures in the text.
+% One column per model, ordered by parameter count; two vertical dumbbells per
+% model: how far the record's own policy moves the identifier line (rose, solid)
+% and the attribute line (indigo, dashed), from the permissive prompt (open dot)
+% to the policy prompt (filled dot). The reader should see the rose segments get
+% longer to the right while the indigo ones mostly do not. Every number is from
+% benchmarks/a2a_mt/RESULTS.md (Experiments 9, 9c, 9d, 9e).
 \begin{figure}[t]\centering
 \resizebox{\linewidth}{!}{%
-\begin{tikzpicture}[x=0.62mm, y=1mm]
-% rows: model / identifiers permissive->policy / attributes permissive->policy
-% y positions descend; two thin rows per model
+\begin{tikzpicture}[x=11.5mm, y=0.42mm]
+% model / identifiers permissive->policy / attributes permissive->policy / column
 \def\rows{
-  {phi-3.5 3.8B}/71/47/86/71/0,
-  {Mistral 7B}/89/72/96/86/1,
-  {Qwen2.5 7B}/92/71/96/90/2,
-  {Llama 3.1 8B}/81/36/93/42/3,
-  {Gemma 2 9B}/92/42/94/54/4,
-  {Qwen2.5 14B}/88/38/93/72/5,
-  {Qwen2.5 32B}/83/26/93/64/6,
-  {Opus 4.8}/44/1/40/36/7}
-\pgfmathsetmacro{\rowh}{8.2}
-\pgfmathsetmacro{\sub}{2.6}
+  {phi-3.5\\3.8B}/71/47/86/71/0,
+  {Mistral\\7B}/89/72/96/86/1,
+  {Qwen\\7B}/92/71/96/90/2,
+  {Llama\\8B}/81/36/93/42/3,
+  {Gemma\\9B}/92/42/94/54/4,
+  {Qwen\\14B}/88/38/93/72/5,
+  {phi-4\\14B}/76/21/96/71/6,
+  {Mistral\\24B}/75/26/93/64/7,
+  {Qwen\\32B}/83/26/93/64/8,
+  {Opus\\4.8}/44/1/40/36/9}
+\pgfmathsetmacro{\off}{0.17}
 % grid + axis
-\foreach \x in {0,25,50,75,100} {
-  \draw[figgrid] (\x,-1) -- (\x,{-8*\rowh+1});
-  \node[figticklabel, anchor=north] at (\x,{-8*\rowh+0.5}) {\x};
+\foreach \y in {0,25,50,75,100} {
+  \draw[figgrid] (-0.5,\y) -- (9.5,\y);
+  \node[figticklabel, anchor=east] at (-0.55,\y) {\y};
 }
-\node[figaxislabel, anchor=north] at (50,{-8*\rowh-3.5}) {\% of hand-offs that leak, permissive $\rightarrow$ policy};
+\node[figaxislabel, anchor=south, rotate=90] at (-1.25,50) {\% of hand-offs that leak};
 \foreach \name/\ia/\ib/\aa/\ab/\i in \rows {
-  \pgfmathsetmacro{\yi}{-\i*\rowh - 2}
-  \pgfmathsetmacro{\ya}{\yi - \sub}
-  \node[figticklabel, anchor=east] at (-3,{(\yi+\ya)/2}) {\name};
-  % identifiers
-  \draw[figseries=figrose] (\ia,\yi) -- (\ib,\yi);
-  \filldraw[figdot=figrose] (\ia,\yi) circle (1.2pt);
-  \filldraw[fill=figrose, draw=figrose] (\ib,\yi) circle (1.2pt);
+  \node[figticklabel, align=center, anchor=north] at (\i,-4) {\name};
+  % identifiers: permissive (open) -> policy (filled)
+  \draw[figseries=figrose] (\i-\off,\ia) -- (\i-\off,\ib);
+  \filldraw[figdot=figrose] (\i-\off,\ia) circle (1.3pt);
+  \filldraw[fill=figrose, draw=figrose] (\i-\off,\ib) circle (1.3pt);
   % attributes
-  \draw[figseries=figindigo, dash pattern=on 2pt off 1.4pt] (\aa,\ya) -- (\ab,\ya);
-  \filldraw[figdot=figindigo] (\aa,\ya) circle (1.2pt);
-  \filldraw[fill=figindigo, draw=figindigo] (\ab,\ya) circle (1.2pt);
+  \draw[figseries=figindigo, dash pattern=on 2pt off 1.4pt] (\i+\off,\aa) -- (\i+\off,\ab);
+  \filldraw[figdot=figindigo] (\i+\off,\aa) circle (1.3pt);
+  \filldraw[fill=figindigo, draw=figindigo] (\i+\off,\ab) circle (1.3pt);
 }
-% call out the frontier row's numbers: the sharpest instance of the asymmetry
-\node[font=\scriptsize, text=figrose, anchor=west] at (47,{-7*\rowh-2}) {$44\to1$};
-\node[font=\scriptsize, text=figindigo, anchor=west] at (43,{-7*\rowh-2-\sub}) {$40\to36$};
-% in-place legend, top-right, where no dumbbell lives
-\node[figseriestag=figrose, anchor=east] at (24,-1.5) {identifiers};
-\node[figseriestag=figindigo, anchor=east] at (24,-4.5) {attributes};
-\node[font=\scriptsize, text=figslate, anchor=west] at (102,-2) {open $\circ$};
-\node[font=\scriptsize, text=figslate, anchor=west] at (102,-5) {permissive};
-\node[font=\scriptsize, text=figslate, anchor=west] at (102,-9) {filled $\bullet$};
-\node[font=\scriptsize, text=figslate, anchor=west] at (102,-12) {policy};
+% the frontier column carries the sharpest instance; label its endpoints
+\node[font=\scriptsize, text=figrose, anchor=east] at (9-\off-0.08,1) {1};
+\node[font=\scriptsize, text=figindigo, anchor=west] at (9+\off+0.08,36) {36};
+% in-place legend along the empty top strip: series on the left, markers right
+\node[figseriestag=figrose, anchor=west, align=left] at (-0.4,118) {identifiers};
+\node[figseriestag=figindigo, anchor=west, align=left] at (-0.4,108) {attributes};
+\node[font=\scriptsize, text=figslate, anchor=east] at (9.5,118) {$\circ$ permissive};
+\node[font=\scriptsize, text=figslate, anchor=east] at (9.5,108) {$\bullet$ policy};
 \end{tikzpicture}}
-\caption{What the record's own policy removes, per model, ordered by size.
-Open dot: permissive prompt; filled dot: policy prompt. The identifier line
-(solid) moves further as models grow and vanishes at the frontier; the attribute
-line (dashed) moves less in seven of eight models and barely at the frontier.
-Redaction scales with capability; what the message still says about the person
-does not. Literal ground truth, 72 trials per cell (Experiments 9, 9c, 9d in the
-artifact).}
+\caption{What the record's own policy removes, per model, ordered by size
+($72$ trials per cell). Open dot: permissive prompt; filled: policy prompt. The
+identifier segment (solid) lengthens with scale and reaches $1\%$ at the
+frontier; the attribute segment (dashed) is shorter in nine of ten models and
+barely moves at the frontier. Redaction scales with capability; what the message
+still says about the person does not.}
 \label{fig:redaction}
 \end{figure}
