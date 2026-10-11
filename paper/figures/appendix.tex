@@ -115,13 +115,18 @@ Qwen2.5-32B        & permissive & 100\% & [95, 100] & 83\% & 93\% \\
                    & categories & 86\% & [74, 96] & 19\% & 86\% \\
                    & policy & 74\% & [58, 86] & 26\% & 64\% \\
 \addlinespace
+GPT-4o             & permissive & 99\% & [96, 100] & 72\% & 96\% \\
+                   & no invitation & 99\% & [96, 100] & 74\% & 96\% \\
+                   & categories & 78\% & [62, 90] & 15\% & 78\% \\
+                   & policy & 14\% & [4, 25] & 0\% & 14\% \\
+\addlinespace
 Claude Opus 4.8    & permissive & 67\% & [49, 83] & 44\% & 40\% \\
                    & no invitation & 78\% & [62, 92] & 51\% & 47\% \\
                    & categories & 46\% & [28, 64] & 0\% & 46\% \\
                    & policy & 36\% & [21, 53] & 1\% & 36\% \\
 \bottomrule
 \end{tabular}
-\caption{The instruction sweep, per model ($72$ trials per cell), ordered by size; every cell re-derived from the saved hand-offs under the final ground truth by \texttt{a2a\_pool.py}. Intervals are cluster bootstraps over the 24 workflows (Wilson where a cell is at $0$ or $72$). The three largest open-weight models were served with vLLM (Phi-4 in bf16, the other two AWQ-INT4), the rest with Ollama Q4. Read down the identifier column under \emph{policy}: the three largest open-weight models reach $21$--$26\%$ and the frontier $1\%$, while the attribute column stays at $64$--$72\%$ for every model from 14B up and $36\%$ at the frontier.}
+\caption{The instruction sweep, per model ($72$ trials per cell), ordered by size; every cell re-derived from the saved hand-offs under the final ground truth by \texttt{a2a\_pool.py}. Intervals are cluster bootstraps over the 24 workflows (Wilson where a cell is at $0$ or $72$). The three largest open-weight models were served with vLLM (Phi-4 in bf16, the other two AWQ-INT4), the rest with Ollama Q4. Read down the identifier column under \emph{policy}: the three largest open-weight models reach $21$--$26\%$ and both frontier models $\le\!1\%$, while the attribute column stays at $64$--$72\%$ for every open-weight model from 14B up and $36\%$ for Opus; GPT-4o, at $14\%$, is the exception discussed in \S\ref{sec:instr}.}
 \label{tab:permodel}
 \label{tab:app-permodel}
 \end{table}

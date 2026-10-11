@@ -19,11 +19,12 @@
   {phi-4\\14B}/76/21/96/71/6,
   {Mistral\\24B}/75/26/93/64/7,
   {Qwen\\32B}/83/26/93/64/8,
-  {Opus\\4.8}/44/1/40/36/9}
+  {GPT-4o\\}/72/0/96/14/9,
+  {Opus\\4.8}/44/1/40/36/10}
 \pgfmathsetmacro{\off}{0.17}
 % grid + axis
 \foreach \y in {0,25,50,75,100} {
-  \draw[figgrid] (-0.5,\y) -- (9.5,\y);
+  \draw[figgrid] (-0.5,\y) -- (10.5,\y);
   \node[figticklabel, anchor=east] at (-0.55,\y) {\y};
 }
 \node[figaxislabel, anchor=south, rotate=90] at (-1.25,50) {\% of hand-offs that leak};
@@ -38,16 +39,18 @@
   \filldraw[figdot=figindigo] (\i+\off,\aa) circle (1.3pt);
   \filldraw[fill=figindigo, draw=figindigo] (\i+\off,\ab) circle (1.3pt);
 }
-% the frontier column carries the sharpest instance; label its endpoints
-\node[font=\scriptsize, text=figrose, anchor=east] at (9-\off-0.08,1) {1};
-\node[font=\scriptsize, text=figindigo, anchor=west] at (9+\off+0.08,36) {36};
+% the frontier columns carry the sharpest instances; label their endpoints
+\node[font=\scriptsize, text=figrose, anchor=east] at (9-\off-0.08,0) {0};
+\node[font=\scriptsize, text=figindigo, anchor=west] at (9+\off+0.08,14) {14};
+\node[font=\scriptsize, text=figrose, anchor=east] at (10-\off-0.08,1) {1};
+\node[font=\scriptsize, text=figindigo, anchor=west] at (10+\off+0.08,36) {36};
 % in-place legend along the empty top strip: series on the left, markers right
 \node[figseriestag=figrose, anchor=west, align=left] at (-0.4,118) {identifiers};
 \node[figseriestag=figindigo, anchor=west, align=left] at (-0.4,108) {attributes};
-\node[font=\scriptsize, text=figslate, anchor=east] at (9.5,118) {$\circ$ permissive};
-\node[font=\scriptsize, text=figslate, anchor=east] at (9.5,108) {$\bullet$ policy};
+\node[font=\scriptsize, text=figslate, anchor=east] at (10.5,118) {$\circ$ permissive};
+\node[font=\scriptsize, text=figslate, anchor=east] at (10.5,108) {$\bullet$ policy};
 \end{tikzpicture}}
 \caption{What the record's own policy removes, per model, ordered by size
-($72$ trials per cell). Open dot: permissive prompt; filled: policy prompt. The identifier segment (solid) ends at $21$--$26\%$ for the three largest open-weight models and at $1\%$ for the frontier; the attribute segment (dashed) is shorter in nine of ten models and at the frontier almost vanishes ($40\!\to\!36$). Scale improves the redaction; it does not make the policy bite on what the message says about the person.}
+($72$ trials per cell). Open dot: permissive prompt; filled: policy prompt. The identifier segment (solid) ends at $21$--$26\%$ for the three largest open-weight models and at $\le\!1\%$ for both frontier models; the attribute segment (dashed) is shorter in nine of eleven. The two frontier models split on it: Opus's almost vanishes ($40\!\to\!36$) while GPT-4o's is the longest in the figure ($96\!\to\!14$)---the one case where the policy, rather than the category list, bit.}
 \label{fig:redaction}
 \end{figure}

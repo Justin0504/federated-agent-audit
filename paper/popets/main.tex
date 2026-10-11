@@ -43,14 +43,10 @@ Multi-Tenant Agent Privacy}
 Autonomous agents increasingly delegate work to one another across organizational
 boundaries, and protocols such as A2A now standardize how they do so---while
 carrying no notion of whom a datum concerns or who may receive it. We begin by
-measuring what crosses. Across ten models and $2{,}880$ realistic hand-offs,
+measuring what crosses. Across eleven models and $3{,}168$ realistic hand-offs,
 agents put a subject's regulated identifiers or sensitive attributes into messages bound for an outside company in $96\%$ of them, and \emph{instructing them buys redaction rather than
 privacy}. Handed the record's own policy---owner, permitted recipient, and the
-fact that this recipient is not permitted---the frontier model stops pasting
-identifiers almost perfectly ($44\%\!\to\!1\%$) and barely changes what it says
-about the person ($40\%\!\to\!36\%$); pooled across all ten, $74\%$ of hand-offs
-still leak. Models learn not to paste the account number and go on writing the
-diagnosis.
+fact that this recipient is not permitted---Claude Opus~4.8 stops pasting identifiers almost perfectly ($44\%\!\to\!1\%$) and barely changes what it says about the person ($40\%\!\to\!36\%$); pooled across all eleven, $68\%$ of hand-offs still leak. Models learn not to paste the account number and go on writing the diagnosis. The one exception sharpens the rule: GPT-4o, told which categories to omit, does the same as every other model ($96\%\!\to\!78\%$ on attributes), and withholds only when told the recipient is not permitted ($\to\!14\%$)---the instruction that works names the recipient, not the tokens.
 With scale, instructions remove identifiers ever more completely and attributes barely more; exposure does not decay
 along a relay chain; and compositional inference \emph{rises} with capability. Privacy here is a
 property of what the recipient can \emph{infer}, not of which tokens a message
@@ -69,7 +65,7 @@ $418$ bytes across a $1024\times$ range of message size; against an adversary th
 knows the detector, $20{,}000$ randomized evasion strategies yield none that learns
 more than the policy already permits. We report where it fails as carefully as
 where it works: scored against ground truth we do not control, our own recall is
-$0.75$, so the rates above are lower bounds.
+$0.74$, so the rates above are lower bounds.
 \end{abstract}
 
 \keywords{multi-tenant agents, agent-to-agent protocols, privacy auditing,
@@ -89,7 +85,7 @@ in regulated settings---healthcare schedulers, financial assistants, HR
 copilots---increasingly delegate to third-party agents, and a single over-shared
 identifier (an SSN, a diagnosis, an account number) crossing that organizational
 boundary is a concrete privacy harm under regimes such as HIPAA and GDPR. It is
-also the common case rather than the exception: across ten models and $2{,}880$ realistic hand-offs, agents put the subject's regulated identifiers or sensitive attributes into a message bound for an outside company in $96\%$ of them. Our aim is a
+also the common case rather than the exception: across eleven models and $3{,}168$ realistic hand-offs, agents put the subject's regulated identifiers or sensitive attributes into a message bound for an outside company in $96\%$ of them. Our aim is a
 deployable safeguard for exactly these interactions---one that runs today and sees
 no raw content.
 
@@ -122,10 +118,7 @@ any one of them. Our contributions:
 \begin{enumerate}
 \item \textbf{Instructions buy redaction, not privacy.} Hand the model the
 record's own policy---owner, permitted recipient, purpose, and the fact that this
-recipient is \emph{not} permitted---and $74\%$ of hand-offs still leak (ten models, $2{,}880$ trials). The frontier model shows why in its sharpest form: told
-not to include identifiers, it complies almost perfectly
-($44\%\!\to\!\mathbf{1\%}$), and barely changes what it discloses \emph{about the
-person} ($40\%\!\to\!36\%$). ``Do not paste the account number'' is a rule a model
+recipient is \emph{not} permitted---and $68\%$ of hand-offs still leak (eleven models, $3{,}168$ trials). Claude Opus~4.8 shows why in its sharpest form: told not to include identifiers, it complies almost perfectly ($44\%\!\to\!\mathbf{1\%}$), and barely changes what it discloses \emph{about the person} ($40\%\!\to\!36\%$). GPT-4o is the exception that sharpens the rule: told which categories to omit it does the same ($96\%\!\to\!78\%$), and only the policy's statement that the recipient is \emph{not} permitted makes it withhold ($\to\!14\%$). ``Do not paste the account number'' is a rule a model
 can follow; ``do not reveal that this person has cancer'' requires knowing what the
 message implies. The model satisfies the instruction it was given, not the intent behind it: a constraint on tokens is followed, a constraint on what the recipient may learn is not, and the gap widens rather than closes with scale (Figure~\ref{fig:redaction}). Three other escapes close with it: the permissive phrasing in our
 prompt is not the cause (removing it changes $96\%$ to $98\%$), scale makes the identifier line fall further under instruction and the attribute line little further, and exposure does not decay along a relay chain.
@@ -150,7 +143,7 @@ there is nothing for a content-blind center to reason over.
 multi-tenant agent-privacy benchmark, validated against the external AgentLeak suite
 and a properly configured Presidio baseline. Because grading our own detector with our
 own tagger would be circular, the measurement above is scored against literal ground
-truth taken from the source records; by that standard our own recall is $0.75$, so the
+truth taken from the source records; by that standard our own recall is $0.74$, so the
 rates we report are lower bounds rather than estimates. Throughout, we bound our own
 numbers from both sides---the auditor's recall from below, the attribute ground
 truth from above, the tagger from an oracle ceiling---so a reader knows which way
@@ -405,7 +398,7 @@ Qwen2.5-14B  & mid (open)   & 78\% (94/120) & \textbf{0} \\
 $=120$ trials each, same set). Over-sharing falls with capability/alignment but stays
 high; the auditor catches all at zero content egress. These are detections by our
 own auditor and therefore \emph{lower bounds}: measured against independent ground
-truth (\S\ref{sec:instr}) its recall is $0.75$.}
+truth (\S\ref{sec:instr}) its recall is $0.74$.}
 \label{tab:wild}
 \end{table}
 
@@ -415,7 +408,7 @@ The measurement above invites an obvious objection: our coordinator prompt ends
 suspect the leak is our wording rather than the model's behavior. It also leaves
 this paper's central claim---that the safeguard has to be structural---as an
 assertion. We test both by sweeping the instruction alone, over the same 24
-workflows, ten models---nine open-weight models from five families and a frontier model---and $2{,}880$ trials. Ground truth here is
+workflows, eleven models---nine open-weight models from five families and two frontier models---and $3{,}168$ trials. Ground truth here is
 deliberately \emph{independent of our auditor}: literal identifiers and attribute
 terms taken from the source record, matched against what the coordinator actually
 wrote, with each pattern checked against its own record so a drifted annotation
@@ -425,19 +418,19 @@ Removing the invitation changes nothing ($96\%\!\to\!98\%$): the over-sharing is
 the models', not the prompt's. Instructing the agent helps, and the shape of the
 help is the finding. Naming the forbidden categories explicitly leaves $82\%$; handing the model the
 record's actual policy---owner, permitted recipient, purpose, and the fact that
-this recipient is \emph{not} permitted---leaves $74\%$, and even the frontier model
-under the strongest condition still leaks in $36\%$ of hand-offs
-(Table~\ref{tab:instr}).
+this recipient is \emph{not} permitted---leaves $68\%$; Claude Opus~4.8 under the strongest condition still leaks in $36\%$ of hand-offs, and GPT-4o is the one model that mostly withholds ($14\%$), to which we return below (Table~\ref{tab:instr}).
 
 The breakdown is sharper than the totals. Instructions suppress hard identifiers
-markedly more effectively than sensitive attributes ($79\!\to\!38\%$ against $88\!\to\!65\%$): models learn not to paste the account number and go on writing
+markedly more effectively than sensitive attributes ($78\!\to\!35\%$ against $89\!\to\!60\%$): models learn not to paste the account number and go on writing
 the diagnosis, a redaction-shaped reflex rather than an understanding of what is
-sensitive. Nor is a bigger model the fix: the three largest open-weight models drive the identifier line to $21$--$26\%$ and the frontier model to $1\%$, while under the same instruction the attribute line moves far less and at the frontier barely at all ($40\!\to\!36\%$), so neither a better prompt nor a better model closes the gap.
+sensitive. Nor is a bigger model the fix: the three largest open-weight models drive the identifier line to $21$--$26\%$ and both frontier models to $\le\!1\%$, while under the same instruction the attribute line moves far less---for Opus barely at all ($40\!\to\!36\%$)---so neither a better prompt nor a better model closes the gap.
 Figure~\ref{fig:redaction} shows the split model by model, ordered by size: what grows with scale is how completely the instruction removes identifiers, not how much it removes of what is said about the person. This is the evidence the structural claim needed.
 
+\paragraph{The exception.} GPT-4o is the one model that does not fit, and how it does not fit is the sharpest result in the sweep. Told which categories to omit, it behaves like every other model: identifiers $72\!\to\!15\%$, attributes $96\!\to\!78\%$. Told that the recipient is not permitted, it withholds: $55$ of $72$ hand-offs open with ``I'm unable to share specific details'' and then hand off a request with no who and no what, and attribute leakage falls to $14\%$. Opus~4.8 opens the same way in $60$ of $72$ and then describes the person anyway. Withholding is the compliant behavior here---the policy says this recipient may not receive the record, so no hand-off to it can be both compliant and useful---and the instruction that produced it is the one phrased as a relation between a reader and a fact, not as a list of tokens. That is the thesis from the other side. It also means the frontier is not one point: two frontier models handed the same policy split, and a third would say whether GPT-4o's withholding is where alignment training is going or one lab's choice.
+
 The same experiment costs us a number we would rather not report. Against this
-independent ground truth our own auditor's recall is $0.75$ ($639$ misses in $2{,}880$), so the rates in Table~\ref{tab:wild} are \emph{lower bounds} on
-over-sharing, not estimates of it. Precision is $0.90$; the 199 firings without a literal match are
+independent ground truth our own auditor's recall is $0.74$ ($716$ misses in $3{,}168$), so the rates in Table~\ref{tab:wild} are \emph{lower bounds} on
+over-sharing, not estimates of it. Precision is $0.90$; the 224 firings without a literal match are
 largely paraphrased disclosures the literal patterns cannot see. Both measures
 are lower bounds on different things and neither dominates the other.
 
@@ -446,18 +439,17 @@ are lower bounds on different things and neither dominates the other.
 \toprule
 Coordinator instruction & leak & 95\% CI & ident. & attrib. & auditor \\
 \midrule
-permissive (as \S\ref{sec:eval}) & 96\% & [93, 98] & 79\% & 88\% & 77\% \\
-invitation removed & 98\% & [96, 99] & 83\% & 88\% & 77\% \\
-categories forbidden & 82\% & [78, 86] & 38\% & 80\% & 60\% \\
-\textbf{full policy stated} & \textbf{74\%} & [69, 78] & \textbf{38\%} & \textbf{65\%} & 75\% \\
+permissive (as \S\ref{sec:eval}) & 96\% & [93, 98] & 78\% & 89\% & 77\% \\
+invitation removed & 98\% & [96, 99] & 82\% & 89\% & 76\% \\
+categories forbidden & 82\% & [78, 86] & 36\% & 80\% & 58\% \\
+\textbf{full policy stated} & \textbf{68\%} & [63, 73] & \textbf{35\%} & \textbf{60\%} & 70\% \\
 \midrule
 \multicolumn{6}{l}{\emph{frontier model alone (Claude Opus~4.8), permissive $\to$ policy}} \\
 \quad identifiers & \multicolumn{5}{l}{$44\%\ \to\ \mathbf{1\%}$ \quad (obeys almost perfectly)} \\
 \quad attributes & \multicolumn{5}{l}{$40\%\ \to\ 36\%$ \quad (barely moves)} \\
 \bottomrule
 \end{tabular}
-\caption{Sweeping the coordinator's instruction, pooled over ten models
-($720$ trials per row). Scored against ground truth independent of our
+\caption{Sweeping the coordinator's instruction, pooled over eleven models ($792$ trials per row). Scored against ground truth independent of our
 auditor. Intervals are a bootstrap over \emph{workflows}, not over trials: the three
 runs of one record under one prompt are not independent draws, and a trial-level
 Wilson interval is about $50\%$ too narrow here (measured design effect $2.1$--$2.4$). Telling the agent the rule---even spelling out that the recipient is not
@@ -646,10 +638,8 @@ attacking model is given the protected fact and, in the white-box arm, the lexic
 tagger's entire 141-term lexicon with the instruction to avoid every term. A
 hand-off \emph{evades} only if a reader model from a different family, shown the
 hand-off alone, judges the fact conveyed \emph{and} the auditor fires no
-content-derived violation---saying nothing is not evasion. Across five attackers (7B to 32B) and 480 hand-offs, the lexical tagger is evaded $55\%$ of the time black-box and $66\%$ white-box; against the 32B attacker it catches none of 48
-white-box hand-offs. The LLM tagger, facing the same hand-offs, is evaded $2\%$ $[0,5]$ black-box and $8\%$ $[2,14]$ white-box (cluster bootstrap over facts), and
-black-box evasion does not rise with attacker strength; against the 32B attacker, swapping in a smaller tagger from a third family (8B) raises its evasion from $0\%$ and $6\%$ to $8\%$ and $12\%$, so the figure tracks tagger strength rather than a shared lineage. Avoiding the vocabulary
-also costs the attacker the message: conveyance falls from $87\%$ to $82\%$. This
+content-derived violation---saying nothing is not evasion. Across six attackers (7B open-weight to GPT-4o) and 576 hand-offs, the lexical tagger is evaded $55\%$ of the time black-box and $70\%$ white-box; against the 32B attacker it catches none of 48 white-box hand-offs, against GPT-4o two. The LLM tagger, facing the same hand-offs, is evaded $4\%$ $[1,7]$ black-box and $7\%$ $[2,13]$ white-box (cluster bootstrap over facts), and
+black-box evasion does not rise with attacker strength; against the 32B attacker, swapping in a smaller tagger from a third family (8B) raises its evasion from $0\%$ and $6\%$ to $8\%$ and $12\%$, so the figure tracks tagger strength rather than a shared lineage. For the open-weight attackers, avoiding the vocabulary costs the message (conveyance $87\%\!\to\!82\%$); GPT-4o hedges instead, conveying the fact in only $62\%$ of its black-box hand-offs. This
 is the thesis on the defender's side---a token list fails against any sender able
 to follow ``avoid these words,'' while a tagger that judges meaning does not. Table~\ref{tab:frontier}'s lexical row is therefore the wrong one to deploy against a sender who is trying; the LLM tagger ($F1=0.90$ there) is the configuration the attack leaves standing. Query access is the stronger attack, and we ran it: handed the LLM tagger's verdict and three rewrites, two attackers raise evasion to $16\%$ $[7,26]$---and lower conveyance to $60\%$, because what passes the tagger increasingly fails to say the thing. The tagger is not unbeatable; it is expensive to beat, and the price is the message.
 
@@ -860,7 +850,7 @@ remove it, and only a detector that reasons about what the recipient can now
 infer has anything to key on.
 
 \paragraph{Literal compliance.} The instruction result is, read one way, an
-instruction-following success: every model removed more of the named categories once told to, and the frontier model did it almost perfectly. The
+instruction-following success: every model removed more of the named categories once told to, and both frontier models did it almost perfectly. The
 failure is in what the instruction could express. ``Do not include identifiers''
 names tokens, and tokens are what the model removed; ``this recipient is not
 permitted'' names a relation between a reader and a fact, and no model treated it
@@ -870,12 +860,11 @@ falls further in larger models while the attribute line barely moves at the
 frontier---so the gap is not immaturity that the next model closes. It is the
 difference between following a rule about the message and reasoning about what
 the message does, and it is why the defense in this paper sits at the inference
-level: an auditor that keys on what the recipient can now infer is checking the
-constraint the model could not.
+level: an auditor that keys on what the recipient can now infer is checking the constraint the model could not. GPT-4o's exception (\S\ref{sec:instr}) says the same thing from the other side: the one instruction that made a model withhold was the one that named the recipient rather than the tokens.
 
 \paragraph{What we have not established.} Six limits, in the order we would attack them.
 
-\emph{The roster.} Ten models, one of them frontier---and on the attacking side none: the strongest attacker we could run against the tagger is a 32B open-weight model, judged by one reader and one LLM tagger, and the oracle it queries returns only a verdict. The frontier arm did
+\emph{The roster.} Eleven models, two of them frontier---and the two disagree under the policy, so the frontier is one disagreement rather than one point---and on the attacking side one: the strongest attackers we could run against the tagger are GPT-4o and a 32B open-weight model, judged by one reader and one LLM tagger, and the oracle it queries returns only a verdict. The frontier arm did
 partly overturn our first phrasing and we have changed it: ``instructions do not
 work'' is false as stated---they work very well on identifiers---and what survives
 is the narrower, sharper claim that they buy redaction rather than privacy. We have
