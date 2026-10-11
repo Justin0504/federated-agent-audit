@@ -9,7 +9,11 @@ so your first figure looks like it came from the same hand as the existing ones.
 Everything is in this repository. Nothing in this brief requires an API key, a GPU,
 or a model call: every number you will draw is already measured and lives in
 `figure_data.json` (this folder) with its source line in
-`benchmarks/a2a_mt/RESULTS.md`. **Never retype a number from memory; never change
+`benchmarks/a2a_mt/RESULTS.md`. `check_data.py` (this folder) recomputes every
+trace-derived number in that file from the raw traces and exits non-zero on any
+mismatch — run it first, and again before you call a figure done. `snapshots/`
+holds PNGs of the five existing figures as they are today, so you can see the
+starting point without compiling anything. **Never retype a number from memory; never change
 one.** If a number you need is missing from `figure_data.json`, it is in
 `RESULTS.md`; if it is not there either, it does not exist and you must not invent
 it.
@@ -208,6 +212,27 @@ cross-tenant inference.
 
 **Form.** `widefigure`, roughly 2 : 1. Left two-thirds: two tenants stacked; right
 third: the centre. One dashed `figbound` down the middle. Label: `\label{fig:deploy}`.
+
+```
+┌─ tenant:hospital ────────────────────────────┐ ┊ ┌─ audit service (center) ──────────────┐
+│  agents  ──content──▶ ┌─ pinned build B ───┐ │ ┊ │ A2AVerifier ──σ ok? (fingerprint of B) │
+│  (app)                │ PrivacyTagger       │ │ ┊ │      │                                  │
+│                       │ A2AAuditor (local)  │─┼─┊─▶ metadata graph  ──▶ 4 detectors ──▶ violations
+│                       │ A2AAttestor  🔑k_B  │ │ ┊ │ (h, label, principals; no content)  store ⊘content
+│                       └─────────────────────┘ │ ┊ │                                          │
+└───────────────────────────────────────────────┘ ┊ │   inference detector accumulates         │
+┌─ tenant:clinic ───────────── (same) ─────────┐ ┊ │   fragments ACROSS tenants per subject   │
+│  … ──▶ [ pinned build B ] ──(h, ℓ, σ)────────┼─┊─▶                                          │
+└───────────────────────────────────────────────┘ ┊ └──────────────────────────────────────────┘
+      rose lane (content) ends HERE ▲            trust boundary (figbound)
+  inset: single tenant = all principals equal → one org auditing its own agents
+```
+
+**Wiring.** `\input{figures/fig_deploy}` right after the four-detector `enumerate`
+in §Auditor (the list ending "…we ground this in the bound below."), and add one
+sentence there: *"Figure~\ref{fig:deploy} shows what runs where in a deployment."*
+In `paper/submission/main.tex` that list is in `\section{The center-blind auditor
+and detectors}`; the same anchor text exists in all four builds.
 Suggested caption opening: *"What runs where. The only component that reads content
 is the build-pinned tagger/auditor inside each tenant; what leaves it is a hash, a
 label and a signature …"*
@@ -241,6 +266,24 @@ the bottom: *A1, A2 defeated by construction (detectors key on labels, not text)
 A3 closed by forced-embed attestation (Prop. 1), residual = key exfiltration (TEE
 closes it) and sub-threshold leakage.* `\label{fig:threat}`. Budget: ≤ 60 mm tall.
 
+```
+            ┌──────────── Part ────────────┐
+ subject ◯──│ "…oncology infusion…"        │──◯ owning principal (tenant:hospital)
+ (whom)     └──────────────────────────────┘      (who controls it)
+                        │ routed to
+                        ▼
+            agent principal (AgentCard)  ── of another tenant ──▶  ADVERSARY
+                                              A1 reads + infers   A2 paraphrases/splits/re-routes   A3 mislabels own Parts
+ trust: T1 centre-blind · T2 honest-but-curious peers · T3 transport given
+ ─────────────────────────────────────────────────────────────────────────────
+ A1, A2: defeated by construction (detectors key on labels, not text)
+ A3: closed by forced-embed attestation (Prop. 1); residual = k_B exfiltration (TEE) · sub-threshold leakage
+```
+
+**Wiring.** `\input{figures/fig_threat}` immediately before
+`\paragraph{Closing A3 with forced-embed attestation.}`; reference it from the
+Principals paragraph: *"(Figure~\ref{fig:threat})"* after "three roles".
+
 ### Figure 8 — `fig_label.tex` — anatomy of a privacy label
 
 Column width, small. One `Part` with its `metadata["a2a.privacy/v1"]` drawn as a
@@ -253,6 +296,25 @@ subject/owner/allowed_recipients → **disclosure**; purpose (+ `AgentClearance`
 central: `inferred_categories` (computed locally; only the tag travels) and
 `provenance_id` (survives re-wording; a content hash would not). Values shown are
 opaque ids: `subject:alice`, `tenant:hospital`. `\label{fig:label}`. ≤ 55 mm tall.
+
+```
+ Part.metadata["a2a.privacy/v1"]                         detector it feeds
+ ┌───────────────────────────────────────┐
+ │ subject: subject:alice                │──┐
+ │ owner: tenant:hospital                │──┼──▶ cross-tenant disclosure
+ │ allowed_recipients: [tenant:hospital] │──┘
+ │ sensitivity: 4                        │──▶ (threshold τ for disclosure)
+ │ category: [health]                    │
+ │ purpose: [care]        + AgentClearance ──▶ purpose limitation
+ │ ttl_hops: 2            ┐              │
+ │ provenance_id: d-7f3a  ┘──────────────│──▶ hop/TTL   (survives re-wording; a hash would not)
+ │ inferred_categories: [health]  ★      │──▶ cross-tenant inference (computed locally; only the tag travels)
+ └───────────────────────────────────────┘
+```
+
+**Wiring.** `\input{figures/fig_label}` after the sentence ending "(a content hash
+breaks the moment a relay rephrases)." at the end of §Extension; add
+*"Figure~\ref{fig:label} shows which field feeds which detector."*
 
 ### Figure 9 — `fig_attack.tex` — the tagger-attack protocol (Exp 19)
 
@@ -360,13 +422,33 @@ Design-system preview pages for review already exist in `designsystem/`
 
 ---
 
-## 7. Acceptance checklist (run it per figure, then once at the end)
+## 7. Pitfalls we have already hit (so you do not)
+
+- `\citep` exists only in the natbib builds (popets, iclr); submission and sp use
+  `\cite`. Figures should not cite at all — put citations in the caption text of
+  the body, not in TikZ nodes.
+- acmart does not accept `itemize[...]` options; `enumerate[leftmargin=…]` is fine.
+- A `\begin{figure*}` must be matched by `\end{figure*}`; use `widefigure`, which
+  does that per build.
+- The `_preview.tex` harness defines `\ext` and a fake `lem:blind`; a figure that
+  references another label (`\ref{prop:attest}`) will show `??` in preview and be
+  fine in the paper — do not "fix" it in the figure.
+- `\foreach` over a `\def`-ed list with `\\` inside braces works (see
+  `fig_redaction.tex`); a bare `\\` inside a `\foreach` list does not.
+- Overfull boxes under 15 pt are tolerated (acmart tables already have a few);
+  anything larger is yours to fix.
+- The PoPETs page count is checked by where the ethics heading lands, not by
+  total pages (appendix and references do not count).
+- `export.py` needs `tectonic` and `pdf2svg`; `icons/build_icons.py` needs
+  `rsvg-convert` (`brew install librsvg`).
+
+## 8. Acceptance checklist (run it per figure, then once at the end)
 
 - [ ] Nothing content-bearing crosses the trust boundary anywhere
 - [ ] Colours from `figstyle.tex` only, with their established meanings; new
       styles/icons live in `figstyle.tex` / `icons/`, not inline
 - [ ] Icons 4–6 mm; no new visual language invented
-- [ ] Every number matches `figure_data.json` / `RESULTS.md`
+- [ ] Every number matches `figure_data.json` / `RESULTS.md`; `python codex_pack/check_data.py` says ALL GOOD
 - [ ] Compiles clean in all four builds; no unresolved refs; no overfull > 15 pt
 - [ ] Legible in greyscale (print one page to grey and look)
 - [ ] PoPETs body still ends on or before page 12
@@ -380,7 +462,7 @@ Design-system preview pages for review already exist in `designsystem/`
 
 ---
 
-## 8. Where to read more
+## 9. Where to read more
 
 - `paper/figures/README.md` — the figure system
 - `paper/submission/main.tex` — the arXiv build (one column, easiest to read);

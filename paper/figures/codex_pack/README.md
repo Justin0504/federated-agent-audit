@@ -8,6 +8,8 @@ the order it gives."*
 |---|---|
 | `BRIEF.md` | the complete brief: context, design system, constraints, the twelve figures and three demo graphics, acceptance checklist |
 | `figure_data.json` | every number any figure may show, with its source in `RESULTS.md` |
+| `check_data.py` | recomputes every trace-derived number in `figure_data.json` from the raw traces; must print ALL GOOD |
+| `snapshots/*.png` | the five existing figures as rendered today |
 | `../figstyle.tex`, `../icons/` | the design system (palette, styles, icon macro, icon SVGs) |
 | `../fig_*.tex` | the five existing figures |
 | `../export/*.svg|pdf` | cropped exports of the five, for Figma |
