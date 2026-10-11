@@ -15,7 +15,9 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
+# works both inside the repository and inside the extracted zip: walk up until
+# the directory that holds benchmarks/a2a_mt/traces
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "benchmarks" / "a2a_mt" / "traces").is_dir())
 sys.path.insert(0, str(ROOT / "benchmarks" / "a2a_mt"))
 from a2a_pool import load  # noqa: E402
 

@@ -18,8 +18,14 @@ the order it gives."*
 | `../../../benchmarks/a2a_mt/RESULTS.md` | the authority for every number |
 | `../../popets/main.pdf` | the submitted PDF, to see figures in situ |
 
-The zip is rebuilt with:
+Zip layout (self-contained; `check_data.py` runs from the extracted root):
 
-```sh
-cd paper/figures && zip -r codex_pack.zip codex_pack figstyle.tex icons fig_*.tex _preview.tex export designsystem appendix.tex README.md ../popets/main.pdf ../../benchmarks/a2a_mt/RESULTS.md -x "icons/pdf/*"
 ```
+codex_figure_pack/
+  BRIEF.md  figure_data.json  check_data.py  snapshots/   ← this folder
+  paper/figures/   figstyle.tex icons/ fig_*.tex _preview.tex export/ designsystem/ appendix.tex README.md
+  paper/popets/main.pdf
+  benchmarks/a2a_mt/   RESULTS.md a2a_pool.py a2a_prompt_conditions.py a2a_measurement.py traces/
+```
+
+Rebuild: `bash paper/figures/codex_pack/make_zip.sh` → `~/Downloads/codex_figure_pack.zip`.
