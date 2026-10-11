@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../../.."
 S=$(mktemp -d)/codex_figure_pack
 mkdir -p "$S/paper/figures" "$S/paper/popets" "$S/benchmarks/a2a_mt"
-cp paper/figures/codex_pack/{BRIEF.md,README.md,figure_data.json,check_data.py} "$S/"
+cp paper/figures/codex_pack/{BRIEF.md,README.md,figure_data.json,check_data.py,gt.json} "$S/"
 cp -R paper/figures/codex_pack/snapshots "$S/"
 cp paper/figures/{figstyle.tex,_preview.tex,appendix.tex,README.md,export.py} paper/figures/fig_*.tex "$S/paper/figures/"
 cp -R paper/figures/icons paper/figures/export paper/figures/designsystem "$S/paper/figures/"

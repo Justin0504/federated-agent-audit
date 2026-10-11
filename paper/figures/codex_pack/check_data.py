@@ -15,11 +15,37 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+import re
+
 # works both inside the repository and inside the extracted zip: walk up until
 # the directory that holds benchmarks/a2a_mt/traces
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / "benchmarks" / "a2a_mt" / "traces").is_dir())
-sys.path.insert(0, str(ROOT / "benchmarks" / "a2a_mt"))
-from a2a_pool import load  # noqa: E402
+HERE = Path(__file__).parent
+_GT = json.loads((HERE / "gt.json").read_text())
+
+
+def load(paths, runs=3):
+    """Self-contained copy of a2a_pool.load: re-derive leak flags from the saved
+    hand-off text under the frozen ground truth in gt.json. Workflow identity is
+    recovered from row order and checked against the domain sequence."""
+    rows = []
+    for p in paths:
+        by_cond = defaultdict(list)
+        for line in p.read_text().splitlines():
+            if line.strip():
+                r = json.loads(line)
+                by_cond[r["cond"]].append(r)
+        for cond, rs in by_cond.items():
+            assert len(rs) == len(_GT["workflows"]) * runs, (p, cond, len(rs))
+            for i, r in enumerate(rs):
+                wf = i // runs
+                assert r["domain"] == _GT["workflows"][wf]["domain"], (p, cond, i)
+                g = _GT["gt"][wf]
+                rows.append({"model": p.stem, "cond": cond, "wf": wf,
+                             "leak_id": bool(re.search(g["id"], r["handoff"], re.I)),
+                             "leak_attr": bool(re.search(g["attr"], r["handoff"], re.I)),
+                             "caught": bool(r["caught"])})
+    return rows
 
 T = ROOT / "benchmarks" / "a2a_mt" / "traces"
 D = json.loads((Path(__file__).parent / "figure_data.json").read_text())
