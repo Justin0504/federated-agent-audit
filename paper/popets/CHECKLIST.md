@@ -1,13 +1,15 @@
-# PoPETs 2027.2 pre-submission checklist
+# PoPETs 2027.3 pre-submission checklist
 
-Target issue: **PoPETs 2027.2 — paper deadline 2026-08-31 (firm)**, notification
-2026-11-01. Double-blind. Template: `acmart` (`sigconf,anonymous,review`) +
+Target issue: **PoPETs 2027.3 — paper deadline 2026-11-30 AoE**, notification
+2027-02-01. Double-blind. Template: `acmart` (`sigconf,anonymous,review`) +
 `popets.sty` (already set up in this directory — do **not** modify the template
 files: `acmart.cls`, `popets.sty`, `ACM-Reference-Format.bst`).
 
-Build: `make` (→ `main.pdf`). Current state: **7 pp main body + refs, compiles
-clean, zero overfull, all refs/citations resolve, author anonymized, all three
-mandatory sections present.** Page limit is 12 (main body) — we have wide margin.
+Build: `make` (→ `main.pdf`). Final state (2026-10-11, commit 6d7a889+): **11 pp
+main body** (ethics section begins on p. 11; limit 12), 13 pp total, compiles
+clean, 0 errors, all refs/citations resolve, no author metadata in the PDF, all
+three mandatory sections present, repo link withheld. Eleven models / 3,168
+trials; two frontier models; six-attacker tagger attack incl. query-access arm.
 
 ## A. Desk-review compliance (auto-reject if wrong) — mostly DONE
 - [x] Uses the official PoPETs 2027 template, `[sigconf,anonymous,review]`.
@@ -52,27 +54,16 @@ mandatory sections present.** Page limit is 12 (main body) — we have wide marg
       and expand any initials. Not required for the initial submission.
 
 ## E. Only-you actions (I can't do these)
-- [ ] **Register the submission** on the PoPETs HotCRP by the abstract/registration
-      step (title, abstract, topics) — do this a few days before 08-31, not at the
-      wire.
+- [ ] **Register the submission** on the PoPETs HotCRP (https://submit.petsymposium.org,
+      issue 2027.3): title, abstract, topics, conflicts — do it days before 11-30.
 - [x] Repo link withheld during review (§B); no anonymous snapshot needed.
 - [ ] Final read-through of the compiled PDF for tone/claims you want to stand behind.
-- [ ] Upload `main.pdf` before 2026-08-31 AoE.
-- [ ] (Optional) Post the arXiv version — PoPETs *discourages* preprints during
-      review but the PC explicitly *ignores* external identity info, so it's not a
-      desk-reject risk. Your call; if you post, use the `paper/submission/` build.
+- [ ] Upload `paper/popets/main.pdf` before **2026-11-30 AoE**.
+- [ ] (Optional) Post the arXiv version (`paper/submission/arxiv_submission.zip`) —
+      PoPETs *discourages* preprints during review but does not forbid them; the
+      PC ignores external identity info. Your call.
 
-## F. Optional strengthening before 08-31 (we have 5 pp of headroom)
-Not required to submit, but raises the odds. Pick what's feasible:
-- [ ] Multi-model inference study beyond GPT (only OpenAI key on hand — at least add
-      gpt-4o vs gpt-4o-mini spread, already partially present).
-- [ ] Bigger held-out / author-independent benchmark run (more scenarios, tighter CIs).
-- [ ] Expand the threat model + attestation into a fuller formal subsection (the
-      TEE/forced-embed argument is currently compressed).
-- [ ] A short "deployment/integration" paragraph making the in-container product
-      concrete (ties to PoPETs' real-world-relevance requirement in §A).
-
----
-**One-line status:** the PoPETs PDF is submission-shaped and desk-review-clean
-today; the only hard blockers before 08-31 are the anonymized repo link (§B) and
-registering/uploading on HotCRP (§E). Everything else is polish.
+## F. Strengthening — DONE
+Everything in the earlier list that was feasible has been run and is in the paper;
+the one open arm (Claude Opus as tagger attacker, `run_frontier.sh`) needs
+Anthropic credit and is optional.
