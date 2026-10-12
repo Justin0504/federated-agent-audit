@@ -29,3 +29,12 @@ codex_figure_pack/
 ```
 
 Rebuild: `bash paper/figures/codex_pack/make_zip.sh` → `~/Downloads/codex_figure_pack.zip`.
+
+## Status (2026-10-12)
+
+Delivered and integrated (commit d8b917e): `fig_deploy`, `fig_threat`, `fig_label`
+in the body; `fig_attack`, `fig_relay`, `fig_conditions` in `revision_appendix.tex`;
+`fig_pipeline`, `fig_example`, `fig_gain`, `fig_redaction` redrawn. `fig_trends`
+kept its original design. Captions were edited after delivery so that no caption
+argues against the paper's own results; the paper text is owned by the authors,
+not by the figure pass. Remaining from the brief: the Figma demo graphics (D1–D3).
