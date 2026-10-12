@@ -1,0 +1,44 @@
+{
+  "kind": "deterministic counterexamples",
+  "model_calls": 0,
+  "unique_authored_fragments": 2,
+  "assumptions": {
+    "prior": 0.1,
+    "lambda": 3,
+    "gain_threshold": 0.3
+  },
+  "scope": "Configured inference alerts, not observed human inference or population recall",
+  "auditor_sha256": "9bb37c961211280f5d446ddcd7a4c1da30dca094d28fbec0e50ebced00f2d9ef",
+  "results": [
+    {
+      "case": "joint_report",
+      "inference_alerts": 1,
+      "expected": 1
+    },
+    {
+      "case": "split_reports_same_auditor",
+      "inference_alerts": 0,
+      "expected": 0
+    },
+    {
+      "case": "explicit_report_union",
+      "inference_alerts": 1,
+      "expected": 1
+    },
+    {
+      "case": "subject_aliases",
+      "inference_alerts": 0,
+      "expected": 0
+    },
+    {
+      "case": "missing_inference_tags",
+      "inference_alerts": 0,
+      "expected": 0
+    },
+    {
+      "case": "replayed_single_fragment",
+      "inference_alerts": 0,
+      "expected": 0
+    }
+  ]
+}

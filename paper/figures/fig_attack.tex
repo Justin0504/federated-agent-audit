@@ -1,0 +1,52 @@
+% Shared, editable TikZ. Data: codex_pack/figure_data.json.
+\begin{widefigure}[t]\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm,y=1mm]
+\node[figtitle, anchor=west] at (0,67) {MEASURE CONVEYANCE AND DETECTION SEPARATELY};
+\draw[draw=figrose!50, fill=figrose!3, rounded corners=1mm, line width=.6pt] (0,40) rectangle (38,58);
+\node[figlabel, anchor=center] at (6,52) {\icon{agent}{rose}{4mm}};
+\node[figtitle, anchor=west] at (12,52) {Attacker};
+\node[figlabel, anchor=west] at (3,44) {Writes a hand-off};
+\draw[figflow] (39,49) -- (53,49);
+\draw[draw=figamber!50, fill=figamber!3, rounded corners=1mm, line width=.6pt] (54,40) rectangle (101,58);
+\node[figtitle, anchor=west] at (58,52) {Same hand-off};
+\node[figlabel, anchor=west] at (58,44) {Two separate checks};
+\draw[figflow] (102,53) -- (114,58);
+\draw[figflow] (102,44) -- (114,38);
+\node[figlabel, anchor=west] at (117,59) {Reader: fact conveyed?};
+\node[figlabel, anchor=west] at (117,38) {Auditor: content-derived alert?};
+\node[figlabel, anchor=west] at (0,32) {Evasion rate (\%); evasion $=$ conveyed $\wedge$ not caught; empty or uninformative messages do not count.};
+\node[figlabel, anchor=west] at (0,22) {Black-box};
+\draw[figseries=figrose] (77.0,22) -- (91.0,22);
+\filldraw[figmark=figrose] (84.5,22) circle (1.7pt);
+\node[figlabel,text=figrose, anchor=west] at (109,22) {55\%};
+\draw[figseries=figindigo] (123.5,22) -- (126.5,22);
+\filldraw[figmark=figindigo] (125.0,22) circle (1.7pt);
+\node[figlabel,text=figindigo, anchor=west] at (163,22) {4\%};
+\node[figlabel, anchor=west] at (0,13) {White-box (lexicon)};
+\draw[figseries=figrose] (86.5,13) -- (96.5,13);
+\filldraw[figmark=figrose] (92.0,13) circle (1.7pt);
+\node[figlabel,text=figrose, anchor=west] at (109,13) {70\%};
+\draw[figseries=figindigo] (124.0,13) -- (129.5,13);
+\filldraw[figmark=figindigo] (126.5,13) circle (1.7pt);
+\node[figlabel,text=figindigo, anchor=west] at (163,13) {7\%};
+\node[figlabel, anchor=west] at (0,4) {Oracle (up to 3 rewrites)};
+\draw[figseries=figrose] (70.0,4) -- (83.0,4);
+\filldraw[figmark=figrose] (76.5,4) circle (1.7pt);
+\node[figlabel,text=figrose, anchor=west] at (109,4) {39\%};
+\draw[figseries=figindigo] (126.5,4) -- (136.0,4);
+\filldraw[figmark=figindigo] (131.0,4) circle (1.7pt);
+\node[figlabel,text=figindigo, anchor=west] at (163,4) {16\%};
+\node[fignote, anchor=west] at (57,-11) {Lexical tagger};
+\node[fignote, anchor=west] at (123,-11) {LLM tagger};
+\node[fignote, anchor=west] at (0,-19) {Oracle feedback: auditor verdict returns to attacker; fact conveyance remains independently scored.};
+\draw[figtick] (57.0,-1)--(57.0,-2);\node[fignote,anchor=north] at (57.0,-2) {0};
+\draw[figtick] (82.0,-1)--(82.0,-2);\node[fignote,anchor=north] at (82.0,-2) {50};
+\draw[figtick] (107.0,-1)--(107.0,-2);\node[fignote,anchor=north] at (107.0,-2) {100};
+\draw[figtick] (123.0,-1)--(123.0,-2);\node[fignote,anchor=north] at (123.0,-2) {0};
+\draw[figtick] (148.0,-1)--(148.0,-2);\node[fignote,anchor=north] at (148.0,-2) {50};
+\draw[figtick] (173.0,-1)--(173.0,-2);\node[fignote,anchor=north] at (173.0,-2) {100};
+\draw[figflow,draw=figindigo,dashed] (154,35) -- (154,28) -- (-3,28) -- (-3,49) -- (-0.4,49);
+\end{tikzpicture}}
+\caption{Attack protocol and evasion rates with the stored cluster-bootstrap intervals. Black- and white-box results pool six attackers (576 hand-offs total); oracle feedback uses two attackers (96 hand-offs). The reader is an automated judge from a different family than the attacker in five of the six arms (Mistral-Small shares a family with it).}\label{fig:attack}
+\end{widefigure}

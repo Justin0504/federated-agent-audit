@@ -1,56 +1,113 @@
-% Figure -- instructions buy redaction, not privacy, across model scale.
-% One column per model, ordered by parameter count; two vertical dumbbells per
-% model: how far the record's own policy moves the identifier line (rose, solid)
-% and the attribute line (indigo, dashed), from the permissive prompt (open dot)
-% to the policy prompt (filled dot). The reader should see the rose segments get
-% longer to the right while the indigo ones mostly do not. Every number is from
-% benchmarks/a2a_mt/RESULTS.md (Experiments 9, 9c, 9d, 9e).
-\begin{figure}[t]\centering
+% Shared, editable TikZ. Data: codex_pack/figure_data.json.
+\begin{widefigure}[t]\centering
 \resizebox{\linewidth}{!}{%
-\begin{tikzpicture}[x=11.5mm, y=0.42mm]
-% model / identifiers permissive->policy / attributes permissive->policy / column
-\def\rows{
-  {phi-3.5\\3.8B}/71/47/86/71/0,
-  {Mistral\\7B}/89/72/96/86/1,
-  {Qwen\\7B}/92/71/96/90/2,
-  {Llama\\8B}/81/36/93/42/3,
-  {Gemma\\9B}/92/42/94/54/4,
-  {Qwen\\14B}/88/38/93/72/5,
-  {phi-4\\14B}/76/21/96/71/6,
-  {Mistral\\24B}/75/26/93/64/7,
-  {Qwen\\32B}/83/26/93/64/8,
-  {GPT-4o\\}/72/0/96/14/9,
-  {Opus\\4.8}/44/1/40/36/10}
-\pgfmathsetmacro{\off}{0.17}
-% grid + axis
-\foreach \y in {0,25,50,75,100} {
-  \draw[figgrid] (-0.5,\y) -- (10.5,\y);
-  \node[figticklabel, anchor=east] at (-0.55,\y) {\y};
-}
-\node[figaxislabel, anchor=south, rotate=90] at (-1.25,50) {\% of hand-offs that leak};
-\foreach \name/\ia/\ib/\aa/\ab/\i in \rows {
-  \node[figticklabel, align=center, anchor=north] at (\i,-4) {\name};
-  % identifiers: permissive (open) -> policy (filled)
-  \draw[figseries=figrose] (\i-\off,\ia) -- (\i-\off,\ib);
-  \filldraw[figdot=figrose] (\i-\off,\ia) circle (1.3pt);
-  \filldraw[fill=figrose, draw=figrose] (\i-\off,\ib) circle (1.3pt);
-  % attributes
-  \draw[figseries=figindigo, dash pattern=on 2pt off 1.4pt] (\i+\off,\aa) -- (\i+\off,\ab);
-  \filldraw[figdot=figindigo] (\i+\off,\aa) circle (1.3pt);
-  \filldraw[fill=figindigo, draw=figindigo] (\i+\off,\ab) circle (1.3pt);
-}
-% the frontier columns carry the sharpest instances; label their endpoints
-\node[font=\scriptsize, text=figrose, anchor=east] at (9-\off-0.08,0) {0};
-\node[font=\scriptsize, text=figindigo, anchor=west] at (9+\off+0.08,14) {14};
-\node[font=\scriptsize, text=figrose, anchor=east] at (10-\off-0.08,1) {1};
-\node[font=\scriptsize, text=figindigo, anchor=west] at (10+\off+0.08,36) {36};
-% in-place legend along the empty top strip: series on the left, markers right
-\node[figseriestag=figrose, anchor=west, align=left] at (-0.4,118) {identifiers};
-\node[figseriestag=figindigo, anchor=west, align=left] at (-0.4,108) {attributes};
-\node[font=\scriptsize, text=figslate, anchor=east] at (10.5,118) {$\circ$ permissive};
-\node[font=\scriptsize, text=figslate, anchor=east] at (10.5,108) {$\bullet$ policy};
+\begin{tikzpicture}[x=1mm,y=1mm]
+\node[figtitle, anchor=west] at (0,82) {POLICY CHANGES IDENTIFIERS AND ATTRIBUTES DIFFERENTLY};
+\node[figtitle, anchor=west] at (42,74) {Identifiers};
+\node[figtitle, anchor=west] at (112,74) {Sensitive attributes};
+\draw[draw=figamber!50, fill=figamber!3, rounded corners=1mm, line width=.6pt] (0,1) rectangle (178,13);
+\draw[figgrid] (43.0,3) -- (43.0,68);
+\node[fignote, anchor=north] at (43.0,0) {0};
+\draw[figgrid] (57.0,3) -- (57.0,68);
+\node[fignote, anchor=north] at (57.0,0) {25};
+\draw[figgrid] (71.0,3) -- (71.0,68);
+\node[fignote, anchor=north] at (71.0,0) {50};
+\draw[figgrid] (85.0,3) -- (85.0,68);
+\node[fignote, anchor=north] at (85.0,0) {75};
+\draw[figgrid] (99.0,3) -- (99.0,68);
+\node[fignote, anchor=north] at (99.0,0) {100};
+\draw[figgrid] (113.0,3) -- (113.0,68);
+\node[fignote, anchor=north] at (113.0,0) {0};
+\draw[figgrid] (127.0,3) -- (127.0,68);
+\node[fignote, anchor=north] at (127.0,0) {25};
+\draw[figgrid] (141.0,3) -- (141.0,68);
+\node[fignote, anchor=north] at (141.0,0) {50};
+\draw[figgrid] (155.0,3) -- (155.0,68);
+\node[fignote, anchor=north] at (155.0,0) {75};
+\draw[figgrid] (169.0,3) -- (169.0,68);
+\node[fignote, anchor=north] at (169.0,0) {100};
+\node[figlabel, anchor=west] at (1,66) {Phi-3.5 / 3.8B};
+\draw[figseries=figrose] (82.76,66) -- (69.32,66);
+\filldraw[figdot=figrose] (82.76,66) circle (1.3pt);
+\filldraw[fill=figrose,draw=figrose] (69.32,66) circle (1.3pt);
+\draw[figseries=figindigo,dashed] (161.16,66) -- (152.76,66);
+\filldraw[figdot=figindigo] (161.16,66) circle (1.3pt);
+\filldraw[fill=figindigo,draw=figindigo] (152.76,66) circle (1.3pt);
+\node[figlabel, anchor=west] at (1,60) {Mistral / 7B};
+\draw[figseries=figrose] (92.84,60) -- (83.32,60);
+\filldraw[figdot=figrose] (92.84,60) circle (1.3pt);
+\filldraw[fill=figrose,draw=figrose] (83.32,60) circle (1.3pt);
+\draw[figseries=figindigo,dashed] (166.76,60) -- (161.16,60);
+\filldraw[figdot=figindigo] (166.76,60) circle (1.3pt);
+\filldraw[fill=figindigo,draw=figindigo] (161.16,60) circle (1.3pt);
+\node[figlabel, anchor=west] at (1,54) {Qwen2.5 / 7B};
+\draw[figseries=figrose] (94.52,54) -- (82.76,54);
+\filldraw[figdot=figrose] (94.52,54) circle (1.3pt);
+\filldraw[fill=figrose,draw=figrose] (82.76,54) circle (1.3pt);
+\draw[figseries=figindigo,dashed] (166.76,54) -- (163.4,54);
+\filldraw[figdot=figindigo] (166.76,54) circle (1.3pt);
+\filldraw[fill=figindigo,draw=figindigo] (163.4,54) circle (1.3pt);
+\node[figlabel, anchor=west] at (1,48) {Llama3.1 / 8B};
+\draw[figseries=figrose] (88.36,48) -- (63.16,48);
+\filldraw[figdot=figrose] (88.36,48) circle (1.3pt);
+\filldraw[fill=figrose,draw=figrose] (63.16,48) circle (1.3pt);
+\draw[figseries=figindigo,dashed] (165.08,48) -- (136.52,48);
+\filldraw[figdot=figindigo] (165.08,48) circle (1.3pt);
+\filldraw[fill=figindigo,draw=figindigo] (136.52,48) circle (1.3pt);
+\node[figlabel, anchor=west] at (1,42) {Gemma2 / 9B};
+\draw[figseries=figrose] (94.52,42) -- (66.52,42);
+\filldraw[figdot=figrose] (94.52,42) circle (1.3pt);
+\filldraw[fill=figrose,draw=figrose] (66.52,42) circle (1.3pt);
+\draw[figseries=figindigo,dashed] (165.64,42) -- (143.24,42);
+\filldraw[figdot=figindigo] (165.64,42) circle (1.3pt);
+\filldraw[fill=figindigo,draw=figindigo] (143.24,42) circle (1.3pt);
+\node[figlabel, anchor=west] at (1,36) {Qwen2.5 / 14B};
+\draw[figseries=figrose] (92.28,36) -- (64.28,36);
+\filldraw[figdot=figrose] (92.28,36) circle (1.3pt);
+\filldraw[fill=figrose,draw=figrose] (64.28,36) circle (1.3pt);
+\draw[figseries=figindigo,dashed] (165.08,36) -- (153.32,36);
+\filldraw[figdot=figindigo] (165.08,36) circle (1.3pt);
+\filldraw[fill=figindigo,draw=figindigo] (153.32,36) circle (1.3pt);
+\node[figlabel, anchor=west] at (1,30) {Phi-4 / 14B};
+\draw[figseries=figrose] (85.56,30) -- (54.76,30);
+\filldraw[figdot=figrose] (85.56,30) circle (1.3pt);
+\filldraw[fill=figrose,draw=figrose] (54.76,30) circle (1.3pt);
+\draw[figseries=figindigo,dashed] (166.76,30) -- (152.76,30);
+\filldraw[figdot=figindigo] (166.76,30) circle (1.3pt);
+\filldraw[fill=figindigo,draw=figindigo] (152.76,30) circle (1.3pt);
+\node[figlabel, anchor=west] at (1,24) {Mistral Small / 24B};
+\draw[figseries=figrose] (85.0,24) -- (57.56,24);
+\filldraw[figdot=figrose] (85.0,24) circle (1.3pt);
+\filldraw[fill=figrose,draw=figrose] (57.56,24) circle (1.3pt);
+\draw[figseries=figindigo,dashed] (165.08,24) -- (148.84,24);
+\filldraw[figdot=figindigo] (165.08,24) circle (1.3pt);
+\filldraw[fill=figindigo,draw=figindigo] (148.84,24) circle (1.3pt);
+\node[figlabel, anchor=west] at (1,18) {Qwen2.5 / 32B};
+\draw[figseries=figrose] (89.48,18) -- (57.56,18);
+\filldraw[figdot=figrose] (89.48,18) circle (1.3pt);
+\filldraw[fill=figrose,draw=figrose] (57.56,18) circle (1.3pt);
+\draw[figseries=figindigo,dashed] (165.08,18) -- (148.84,18);
+\filldraw[figdot=figindigo] (165.08,18) circle (1.3pt);
+\filldraw[fill=figindigo,draw=figindigo] (148.84,18) circle (1.3pt);
+\node[figlabel, anchor=west] at (1,12) {GPT-4o};
+\draw[figseries=figrose] (83.32,12) -- (43.0,12);
+\filldraw[figdot=figrose] (83.32,12) circle (1.3pt);
+\filldraw[fill=figrose,draw=figrose] (43.0,12) circle (1.3pt);
+\node[figlabel,text=figrose, anchor=south west] at (44.0,13.4) {0};
+\draw[figseries=figindigo,dashed] (166.76,12) -- (120.84,12);
+\filldraw[figdot=figindigo] (166.76,12) circle (1.3pt);
+\filldraw[fill=figindigo,draw=figindigo] (120.84,12) circle (1.3pt);
+\node[figlabel,text=figindigo, anchor=south west] at (121.84,13.4) {14};
+\node[figlabel, anchor=west] at (1,6) {Opus 4.8};
+\draw[figseries=figrose] (67.64,6) -- (43.56,6);
+\filldraw[figdot=figrose] (67.64,6) circle (1.3pt);
+\filldraw[fill=figrose,draw=figrose] (43.56,6) circle (1.3pt);
+\node[figlabel,text=figrose, anchor=south west] at (44.56,7.4) {1};
+\draw[figseries=figindigo,dashed] (135.4,6) -- (133.16,6);
+\filldraw[figdot=figindigo] (135.4,6) circle (1.3pt);
+\filldraw[fill=figindigo,draw=figindigo] (133.16,6) circle (1.3pt);
+\node[figlabel,text=figindigo, anchor=south west] at (134.16,7.4) {36};
+\node[fignote, anchor=west] at (43,-7) {$\circ$ permissive prompt\qquad $\bullet$ full recipient policy\qquad Rates (\%)};
 \end{tikzpicture}}
-\caption{What the record's own policy removes, per model, ordered by size
-($72$ trials per cell). Open dot: permissive prompt; filled: policy prompt. The identifier segment (solid) ends at $21$--$26\%$ for the three largest open-weight models and at $\le\!1\%$ for both frontier models; the attribute segment (dashed) is shorter in nine of eleven. The two frontier models split on it: Opus's almost vanishes ($40\!\to\!36$) while GPT-4o's is the longest in the figure ($96\!\to\!14$)---the one case where the policy, rather than the category list, bit.}
-\label{fig:redaction}
-\end{figure}
+\caption{Matched prompt conditions across eleven models (72 hand-offs per model per condition). Open markers show permissive prompts; filled markers show the record-specific recipient policy. Identifier and attribute rates are plotted separately: the two highlighted API models nearly eliminate identifier matches but retain different attribute rates. Models are ordered by size; the two frontier models are highlighted.}\label{fig:redaction}
+\end{widefigure}

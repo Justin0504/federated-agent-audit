@@ -235,3 +235,50 @@ the `owner_principal`/`origin_principal`/subject three-way split, attestation,
 and the AgentLeak generation/scoring harness. The new work is the **A2A privacy
 type**, the **multi-tenant formalization**, the **A2A-MT benchmark**, and the
 **cross-tenant inference detector**.
+
+## Research update — 2026-10-12: audit evidence in persistent workflows
+
+Recent primary-source reading changes the novelty claim. AIM (arXiv:2609.12320)
+handles privacy-aware multi-user memory with ownership-filtered retrieval; CoSec
+(arXiv:2609.34790) evaluates persistent communities and evolving authorization;
+CIPL (arXiv:2609.21686) separates internal exposure from attacker recovery.
+Generic multi-user privacy, dynamic authorization, and semantic leakage are not
+sufficient differentiators. These are related works, not baselines we have run.
+
+The narrower research question is whether a content-omitting audit view preserves
+the evidence necessary for cross-event policy decisions, at what metadata cost.
+The new deterministic artifact `benchmarks/a2a_mt/a2a_evidence_boundary.py` checks
+six transformations of two authored fragments. Joint evidence alerts; isolated
+report calls, subject aliases, and missing inference tags do not. Explicit union
+restores the alert; replay of a single fragment does not cause one. This is an
+implementation counterexample, not an empirical security result or a new general
+theorem. It exposes missing persistent state; no production fix is claimed.
+
+Next experiment (proposed, not executed): freeze a stateful workload with retrieval,
+handoff, delayed report delivery, membership revocation, and memory deletion. Pair
+each violating workflow with a legitimate task and independently specify the
+active policy at each event. Compare a full-trace policy oracle, the current
+per-report auditor, an explicit-window aggregation baseline, and a versioned-policy
+variant on exactly the same events. Keep labeler and policy inputs matched; report
+oracle-label and extracted-label tracks separately. Vary window length, report
+loss/reordering, subject-link failures, and policy-update delay. Measure violation
+recall, false positives on benign tasks, task completion, bytes retained, stable
+identity linkability, and detection delay. Do not equate lower metadata volume
+with a formal privacy guarantee. Dynamic-policy support and persistent aggregation
+must first be implemented and validated; the current preprint does not claim them.
+
+Decision: preserve this as an evidence-focused preprint; stronger novelty requires
+that controlled stateful study and comparison with recent work. More model names
+alone would not resolve the contribution gap.
+
+### Follow-through: retention baseline implemented, live workload pending
+
+The first part of the proposed study now exists as `a2a_window_eval.py` and
+`window_audit.py`: 3,840 transport/label conditions over eight synthetic templates,
+five paired baselines, no model calls. It isolates a retention/detection tradeoff
+and missing-evidence failures. It does not yet exercise live memory retrieval,
+policy revocation, natural tagger errors or task completion. The deployment target
+and staged workload are specified in `deploy/DEPLOY.md`: a closed Jetstream2
+multi-tenant support/project workbench with multiple agents sharing one application
+container, tenant-filtered memory, and a separate report-only audit service.
+No remote deployment has been performed. Telegram is a later input channel.

@@ -678,3 +678,48 @@ def test_raw_leak_allows_word_chunks_of_declared_values():
     r2 = A2AAuditor(clearances=clr).audit([msg2])
     blob = " ".join(e.model_dump_json() for e in r2.center_view)
     assert "ZQXJV_NOVEL_TOKEN" not in blob and r2.raw_leaks == 0
+
+
+def test_service_composes_inference_across_separate_reports():
+    """The center keeps a retention-bounded metadata graph per workspace, so two
+    fragments about one subject that arrive in two reports still trigger the
+    cross-tenant inference detector -- the case a stateless center misses."""
+    import pytest
+    pytest.importorskip("fastapi")
+    from fastapi.testclient import TestClient
+
+    from federated_agent_audit.a2a import A2AAuditor, AgentClearance
+    from federated_agent_audit.a2a.service import create_app
+
+    clr = [AgentClearance(agent_id="specialist", principal="tenant:external",
+                          purposes=["external_task"])]
+    client = TestClient(create_app(clearances=clr))
+
+    def fragment(mid: str, text: str) -> list[dict]:
+        lbl = PrivacyLabel(data_subject="subject:one", owning_principal="org:clinic",
+                           sensitivity=1, category=["schedule"],
+                           inferred_categories=["health"], inference_lambda={"health": 3.0},
+                           purpose=["care"], allowed_recipients=["org:clinic"], ttl_hops=10)
+        msg = _msg(text, lbl, to="specialist", tp="tenant:external")
+        msg.message_id = mid
+        res = A2AAuditor(clearances=clr).audit([msg])
+        return [e.model_dump() for e in res.center_view]
+
+    first = client.post("/api/v1/a2a/report", json={
+        "edges": fragment("m1", "Standing appointment every Tuesday afternoon for 8 weeks.")}).json()
+    assert first["accepted"] and not any(v["type"] == "cross_tenant_inference" for v in first["violations"])
+
+    second = client.post("/api/v1/a2a/report", json={
+        "edges": fragment("m2", "Can only meet somewhere near the oncology center.")}).json()
+    assert any(v["type"] == "cross_tenant_inference" for v in second["violations"])
+
+    # re-sending the same report does not re-report the same violation
+    again = client.post("/api/v1/a2a/report", json={
+        "edges": fragment("m2", "Can only meet somewhere near the oncology center.")}).json()
+    assert not any(v["type"] == "cross_tenant_inference" for v in again["violations"])
+
+    # a different workspace starts from nothing
+    other = client.post("/api/v1/a2a/report", json={
+        "workspace": "w2",
+        "edges": fragment("m2", "Can only meet somewhere near the oncology center.")}).json()
+    assert not any(v["type"] == "cross_tenant_inference" for v in other["violations"])

@@ -1,0 +1,31 @@
+% Shared, editable TikZ. Data: codex_pack/figure_data.json.
+\begin{widefigure}[t]\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm,y=1mm]
+\node[figtitle, anchor=west] at (0,55) {REWORDING DOES NOT RESET PROVENANCE};
+\node[figlabel, anchor=center] at (12,37) {\icon{agent}{ink}{5mm}};
+\node[figlabel, anchor=center] at (12,29) {Hop 1};
+\node[figmono, anchor=center] at (12,22) {\texttt{d-7f3a}};
+\draw[figflow,draw=figrose] (19,37) -- (51,37);
+\node[figlabel, anchor=center] at (60,37) {\icon{agent}{ink}{5mm}};
+\node[figlabel, anchor=center] at (60,29) {Hop 2};
+\node[figmono, anchor=center] at (60,22) {\texttt{d-7f3a}};
+\draw[figflow,draw=figrose] (67,37) -- (99,37);
+\node[figlabel, anchor=center] at (108,37) {\icon{agent}{ink}{5mm}};
+\node[figlabel, anchor=center] at (108,29) {Hop 3};
+\node[figmono, anchor=center] at (108,22) {\texttt{d-7f3a}};
+\draw[figflow,draw=figrose] (115,37) -- (147,37);
+\node[figlabel, anchor=center] at (156,37) {\icon{agent}{ink}{5mm}};
+\node[figlabel, anchor=center] at (156,29) {Hop 4};
+\node[figmono, anchor=center] at (156,22) {\texttt{d-7f3a}};
+\begin{scope}[on background layer]\draw[draw=figemerald!50, fill=figemerald!3, rounded corners=1mm, line width=.6pt] (100,16) rectangle (178,46);
+\end{scope}
+\node[figlabel,text=figemerald, anchor=center] at (139,11) {TTL $=2$: over budget from hop 3};
+\node[figtitle, anchor=west] at (0,1) {Exposure by hop};
+\node[figlabel, anchor=west] at (0,-7) {Qwen2.5-7B / Mistral-7B};
+\node[figlabel,text=figrose, anchor=west] at (72,-7) {100\% \quad $\rightarrow$ \quad 100\% \quad $\rightarrow$ \quad 100\% \quad $\rightarrow$ \quad 100\%};
+\node[figlabel, anchor=west] at (0,-15) {Llama3.1-8B};
+\node[figlabel,text=figindigo, anchor=west] at (72,-15) {94\% \quad $\rightarrow$ \quad 88\% \quad $\rightarrow$ \quad 81\% \quad $\rightarrow$ \quad 79\%};
+\end{tikzpicture}}
+\caption{Four-hop controlled relay experiment (144 chains). Stable provenance and TTL alerts are reported in 144/144 chains; exposure remains high after rewording. \texttt{provenance\_id} is preserved by forwarders by protocol; exposure is scored with the literal ground truth of \S\ref{sec:instr}.}\label{fig:relay}
+\end{widefigure}

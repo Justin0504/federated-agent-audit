@@ -169,6 +169,9 @@ agent's AgentCard identity). Governance is defined over principals, not agents: 
 datum owned by $P$ may reach an agent of $Q$ only if $Q$ is an allowed recipient for
 $P$'s stated purpose.
 
+Figure~\ref{fig:threat} separates identities and the business and audit paths.
+\input{figures/fig_threat}
+
 \paragraph{Adversary.} We consider a receiving or forwarding agent of a different
 tenant with three capabilities: (A1) it reads every Part routed to it and may
 \emph{infer} beyond what is stated; (A2) it may \emph{paraphrase, split, or re-route}
@@ -186,14 +189,13 @@ attacks) by construction, because the detectors key on labels and principals, no
 text (\S\ref{sec:eval}); A3 is the residual the baseline does not close.
 
 \paragraph{Closing A3 with forced-embed attestation.} We remove the honest-labeler
-assumption with a downloaded, build-pinned component. The labeler and auditor ship as
-a fixed build $B$ whose signing key $k_B$ is confined to $B$; a report is
+assumption with a downloaded, build-pinned component. The labeler and auditor ship as a fixed build $B$ provisioned with a per-build MAC key $k_B$ that the verifier also holds and that is confined to $B$ on the tenant side; a report is
 $R=(\mathcal{E},\sigma)$ with $\sigma=\mathrm{Sign}_{k_B}(h(\mathcal{E}))$ over the
 center-view edge set $\mathcal{E}$, and the center accepts $R$ only if it verifies
 under $B$'s published fingerprint.
 
 \begin{proposition}[Attestation soundness]\label{prop:attest}
-If the signature scheme is \textup{EUF-CMA}-secure and $k_B$ is confined to $B$, then
+If the MAC is \textup{EUF-CMA}-secure and $k_B$ is confined to $B$, then
 every report the center accepts equals $B$'s output on the sender's actual inputs,
 except with negligible probability. Hence a modified labeler that suppresses a tag or
 forges a subject id yields a report signed by an untrusted build (wrong fingerprint)
@@ -238,6 +240,9 @@ origin and preserved by forwarders even when they re-word the data, so hop/TTL
 tracking follows a datum across paraphrasing (a content hash breaks the moment a
 relay rephrases).
 
+Figure~\ref{fig:label} maps the implemented fields to their policy checks.
+\input{figures/fig_label}
+
 \section{The center-blind auditor and detectors}\label{sec:auditor}
 These labels are exactly what the auditor reads, and the content is exactly what
 it does not. The auditor desensitizes each labeled \texttt{Part} into a
@@ -280,6 +285,9 @@ recipient principal accumulates converging \texttt{inferred\_categories}
 fragments about one subject, letting it infer a sensitive category it was never
 authorized for (Figure~\ref{fig:desens}); we ground this in the bound below.
 \end{enumerate}
+Figure~\ref{fig:deploy} shows the report-only deployment and its authentication boundary. One property of the deployment matters for the fourth detector: fragments about one subject arrive in separate reports from separate agents, so a center that forgot every edge after answering could only compose what one report happened to bundle. The service therefore keeps a retention-bounded metadata graph per workspace (edges, never content) and runs the detectors over the retained graph plus each new report, reporting each violation once; retention is a policy knob---a longer window composes more and holds more metadata---and the cross-report case is exercised at the HTTP entry point in the test suite.
+\input{figures/fig_deploy}
+
 
 
 \paragraph{A formal inference-gain bound.} We model what a recipient infers about
@@ -320,7 +328,7 @@ relative to a real LLM recipient, because the tagger, not the bound, is the
 binding constraint. The bound is thus a calibrated design tool, not a tight
 guarantee.
 
-\input{figures/fig_gain}
+
 
 \section{The A2A-MT benchmark}
 AgentLeak and Sum-Leaks are single-tenant---the vault belongs to one system and
@@ -833,7 +841,7 @@ revealing content. That is a property of these risks, not a general result. A
 harm that lives only in the wording of a message, with no governance correlate,
 would be invisible to this design, and we would not know.
 
-\input{figures/fig_trends}
+
 
 The two trends in Figure~\ref{fig:trends} are why we think the safeguard cannot be
 behavioral, and they are worth reading as one statement rather than two. Explicit
@@ -916,7 +924,7 @@ backend our attestation admits) closes it.
 
 \section{Related work}
 
-\noindent\textbf{Privacy leakage in LLM-agent systems.} AgentLeak~\cite{agentleak}
+\noindent\textbf{Privacy leakage in LLM-agent systems.} Concurrent work studies privacy-aware shared memory for multi-user agent systems~\citep{aim2026}, agent security in persistent communities~\citep{cosec2026}, and channel-aware recovery of leaked information~\citep{cipl2026}; none audits across organizations without reading content. AgentLeak~\cite{agentleak}
 and Sum-Leaks~\cite{sumleaks} measure and mitigate \emph{single-tenant}
 compositional leakage; privacy-theory work for agents~\cite{dpagents,itlimits}
 analyzes when local privacy fails to compose. LLMs also memorize and regurgitate
@@ -1015,4 +1023,5 @@ output of all AI-based tools.
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
 
+\input{figures/revision_appendix}
 \end{document}

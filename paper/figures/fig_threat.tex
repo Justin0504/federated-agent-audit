@@ -1,0 +1,31 @@
+% Shared, editable TikZ. Data: codex_pack/figure_data.json.
+\begin{figure}[t]\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm,y=1mm]
+\node[figtitle, anchor=west] at (0,55) {THREE IDENTITIES, TWO DATA PATHS};
+\draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (0,35) rectangle (27,50);
+\node[figlabel, anchor=west] at (2,46) {About whom?};
+\node[figmono, anchor=west] at (2,40) {\texttt{subject:s}};
+\draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (30,35) rectangle (57,50);
+\node[figlabel, anchor=west] at (32,46) {Controlled by?};
+\node[figmono, anchor=west] at (32,40) {\texttt{tenant:P}};
+\draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (60,35) rectangle (87,50);
+\node[figlabel, anchor=west] at (62,46) {Which process?};
+\node[figmono, anchor=west] at (62,40) {\texttt{agent:a}};
+\node[figlabel, anchor=west] at (0,29) {A1  Read + infer};
+\node[figlabel, anchor=west] at (43,29) {A2  Rephrase + relay};
+\node[figlabel, anchor=west] at (0,22) {A3  Suppress tags / alias subjects};
+\node[figlabel, anchor=center] at (4,12) {\icon{agent}{rose}{4mm}};
+\node[figlabel, anchor=west] at (9,12) {Sender};
+\draw[figflow,draw=figrose] (25,12) -- (56,12);
+\node[fignote, anchor=south] at (40,15) {A2A content};
+\node[figlabel, anchor=center] at (61,12) {\icon{agent}{rose}{4mm}};
+\node[figlabel, anchor=west] at (66,12) {Recipient};
+\draw[figcross] (25,9) -- (56,-1);
+\node[figlabel, anchor=west] at (60,-1) {Auditor};
+\node[fignote, anchor=west] at (23,-3) {labels + hash};
+\node[fignote, anchor=west] at (0,-10) {Coverage relies on observed events, truthful labels};
+\node[fignote, anchor=west] at (0,-14) {and stable identities. A report MAC does not enforce these.};
+\end{tikzpicture}}
+\caption{The subject, owner and agent are distinct identities. Content flows to the business recipient; metadata reports flow to the audit service. A1 and A2 are defeated by construction---the detectors key on labels and principals, not text---and A3 is closed by forced-embed attestation under the key-confinement assumption of Proposition~\ref{prop:attest}.}\label{fig:threat}
+\end{figure}

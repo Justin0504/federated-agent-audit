@@ -17,6 +17,8 @@ No raw content is ever sent or stored — only desensitized governance metadata.
 
 from __future__ import annotations
 
+import time
+
 from pydantic import BaseModel
 
 from .attest import A2AAttestation, A2AVerifier
@@ -25,6 +27,8 @@ from .privacy import AgentClearance
 
 
 class Report(BaseModel):
+    workspace: str = "default"       # retention scope; a trusted caller sets it
+
     """An agent's desensitized A2A report posted to the center."""
 
     edges: list[dict]                       # desensitized center-view edges
@@ -33,7 +37,18 @@ class Report(BaseModel):
 
 
 def create_app(trusted_builds: dict | None = None,
-               clearances: list[AgentClearance] | None = None):
+               clearances: list[AgentClearance] | None = None,
+               retention_seconds: float = 24 * 3600.0,
+               max_edges_per_workspace: int = 100_000):
+    """Build the center.
+
+    ``retention_seconds`` / ``max_edges_per_workspace`` bound the metadata graph
+    the center keeps per workspace between reports. The cross-tenant inference
+    detector composes fragments, and fragments about one subject arrive in
+    separate reports from separate agents; a center that forgot every edge after
+    answering could only ever see what one report happened to bundle. Retention
+    is a policy knob: a longer window composes more and holds more metadata.
+    """
     try:
         from fastapi import FastAPI
         from fastapi.responses import HTMLResponse
@@ -47,6 +62,9 @@ def create_app(trusted_builds: dict | None = None,
     require_attestation = bool(trusted_builds)
     auditor = A2AAuditor(clearances=clearances)
     store: list[dict] = []           # recorded violations (desensitized only)
+    # retained center view per workspace: (receive_time, edge), newest last
+    history: dict[str, list[tuple[float, _Edge]]] = {}
+    seen: set[tuple] = set()         # violations already recorded, by identity
 
     app = FastAPI(title="A2A Privacy Audit Service", version="1.0")
 
@@ -96,10 +114,24 @@ def create_app(trusted_builds: dict | None = None,
             if not verdict.ok:
                 return {"accepted": False, "reasons": verdict.reasons}
 
-        # 2. authoritative detection on the desensitized edges
-        violations = [v.model_dump() for v in auditor.detect(edges)]
-        for v in violations:
-            store.append({**v, "agent_id": r.agent_id})
+        # 2. authoritative detection over the retained graph plus this report:
+        #    evidence that arrives in separate reports still composes
+        now = time.monotonic()
+        kept = [(t, e) for t, e in history.get(r.workspace, [])
+                if now - t <= retention_seconds]
+        kept += [(now, e) for e in edges]
+        kept = kept[-max_edges_per_workspace:]
+        history[r.workspace] = kept
+        violations = []
+        for v in auditor.detect([e for _, e in kept]):
+            key = (r.workspace, v.type, v.message_id, v.part_index,
+                   v.data_subject, v.recipient_principal)
+            if key in seen:
+                continue                 # already reported on an earlier call
+            seen.add(key)
+            d = v.model_dump()
+            violations.append(d)
+            store.append({**d, "agent_id": r.agent_id, "workspace": r.workspace})
         return {"accepted": True, "violations": violations}
 
     @app.get("/api/v1/a2a/violations")

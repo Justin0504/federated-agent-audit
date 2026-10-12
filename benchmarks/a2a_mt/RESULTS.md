@@ -1057,3 +1057,53 @@ frontier attribute mean is now pulled down entirely by GPT-4o (Opus 40 → 36,
 GPT-4o 96 → 14).
 
 Trace: `traces/prompt_conditions_more/gpt_4o.jsonl`. Cost: about $3.
+
+### Evidence continuity check (2026-10-12)
+
+`python -m benchmarks.a2a_mt.a2a_evidence_boundary` runs without model calls.
+Two authored messages use fixed tags with assumed lambda=3, prior=0.1 and gain
+threshold=0.3. Output: `evidence_boundary_results.json` (includes source hash).
+Inference-alert counts: joint report 1; two separate calls on the same auditor 0;
+explicit caller-side union 1; changed subject aliases 0; removed inference tags 0;
+replay of one fragment 0. Six deterministic checks are **not six independent
+security trials**. The result documents per-call scope and label/link dependence;
+it neither estimates real-world recall nor validates the assumed posterior.
+
+**Follow-up (2026-10-12, same day).** The "two separate calls → 0 alerts" case is
+the bare `A2AAuditor`, which is stateless by design. The deployed center was the
+same: `/api/v1/a2a/report` ran `detect()` on each report alone, so fragments that
+arrived in different reports never composed — the inference detector was wired
+only within a report. Fixed at the real entry point: the service now keeps a
+retention-bounded metadata graph per workspace (default 24 h / 100k edges, edges
+only, never content), runs the detectors over the retained graph plus each new
+report, and reports each violation once. `test_service_composes_inference_across_separate_reports`
+posts the two fragments in two reports and expects the inference alert on the
+second, no re-report on a resend, and no alert in another workspace. Stated in
+the paper in one paragraph (§auditor, after the deployment figure). The synthetic
+retention grid below is kept as exploratory material and is not in the paper.
+
+### Receive-time retention stress grid (2026-10-12)
+
+Command: `python -m benchmarks.a2a_mt.a2a_window_eval`.
+Artifacts: `window_results/summary.json` (source/result SHA256, limitations and
+condition-level metrics) and `window_results/trials.jsonl` (all paired outcomes).
+Eight authored templates × four gaps × three report-loss probabilities × two delay
+ceilings × two label tracks × ten transport seeds = 3,840 conditions, evaluated by
+five baselines (19,200 evaluations). Zero model calls. Seeds vary delivery, not
+semantic content. This is a synthetic stress grid, not a live-agent benchmark.
+
+With authored labels and zero loss/delay, composed-inference detection is 0% for
+per-report checks, 25%/50%/75% for 5s/30s/120s windows, and 100% for all delivered
+history. The increments follow the deliberately selected 1/10/60/300s gap grid.
+Missing inference tags defeat all five baselines for the inference template.
+No false positives on the six benign templates in this grid. Do not generalize
+that to naturally occurring traffic. Retention-byte-seconds and linkable pairs
+are exposure proxies, not information-theoretic privacy. Report loss is applied
+after business events; all-delivered cannot recover missing evidence.
+
+The experimental accumulator is separate from the deployed HTTP service. It has
+receive-time expiry, trusted caller-supplied workspace partitioning, conflicting
+identity rejection, replay handling and an explicit capacity-drop counter. It is
+not a production authorization, revocation or persistent-storage implementation.
+Validation: 55 A2A/retention tests passed; the new 14-test subset was rerun after
+aligning retention integration with the final scheduled/received event +300s.

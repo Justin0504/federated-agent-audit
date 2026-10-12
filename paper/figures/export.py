@@ -3,8 +3,8 @@
 
 The LaTeX source stays the master. These exports exist so a figure can be dropped
 into slides or hand-tuned in Illustrator/Figma/PowerPoint without anyone
-reverse-engineering TikZ -- SVG imports and ungroups cleanly in Keynote and
-PowerPoint, where PDF does not.
+reverse-engineering TikZ -- SVG contains vector geometry; PDF conversion can outline text.
+Use the TikZ source to edit labels and data reliably.
 
 What it does: lifts the ``tikzpicture`` out of each figure file (dropping the
 float wrapper, the caption and the \\resizebox, none of which mean anything
@@ -24,7 +24,7 @@ import sys
 
 HERE = pathlib.Path(__file__).parent
 OUT = HERE / "export"
-FIGURES = ["fig_pipeline", "fig_example", "fig_gain", "fig_trends", "fig_redaction"]
+FIGURES = ["fig_deploy", "fig_redaction", "fig_threat", "fig_pipeline", "fig_example", "fig_trends", "fig_label", "fig_attack", "fig_gain", "fig_relay", "fig_conditions"]
 
 PREAMBLE = r"""\documentclass[crop,border=3pt]{standalone}
 \usepackage{amsmath,amssymb}
@@ -78,7 +78,7 @@ def main() -> int:
         print(f"  {name}.pdf + {name}.svg  ({kb} KB)")
 
     print(f"\nexported to {OUT}")
-    print("SVG opens editable in Illustrator, Figma, Inkscape, Keynote and PowerPoint.")
+    print("SVG contains vector paths; text may be outlined. TikZ remains the editable master.")
     return 0
 
 

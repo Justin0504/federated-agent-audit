@@ -1,0 +1,42 @@
+% Shared, editable TikZ. Data: codex_pack/figure_data.json.
+\begin{widefigure}[t]\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm,y=1mm]
+\draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (0,30) rectangle (94,53);
+\node[figtitle, anchor=west] at (3,49) {Tenant P};
+\node[figlabel, anchor=center] at (8,39) {\icon{agent}{ink}{4mm}};
+\node[figlabel, anchor=west] at (14,39) {App agents};
+\draw[figflow,draw=figrose] (32,39) -- (39,39);
+\draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (40,33) rectangle (91,46);
+\node[figlabel, anchor=west] at (43,42) {\texttt{PrivacyTagger} + \texttt{A2AAuditor}};
+\node[figlabel, anchor=west] at (43,36) {\texttt{A2AAttestor}: report MAC};
+\draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (0,4) rectangle (94,27);
+\node[figtitle, anchor=west] at (3,23) {Tenant Q};
+\node[figlabel, anchor=center] at (8,13) {\icon{agent}{ink}{4mm}};
+\node[figlabel, anchor=west] at (14,13) {App agents};
+\draw[figflow,draw=figrose] (32,13) -- (39,13);
+\draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (40,7) rectangle (91,20);
+\node[figlabel, anchor=west] at (43,16) {\texttt{PrivacyTagger} + \texttt{A2AAuditor}};
+\node[figlabel, anchor=west] at (43,10) {\texttt{A2AAttestor}: report MAC};
+\node[figtitle, anchor=west] at (0,58) {LOCAL PROCESSING};
+\node[figtitle, anchor=west] at (114,58) {AUDIT SERVICE};
+\draw[figbound] (103,2) -- (103,55);
+\node[fignote, anchor=north] at (103,0) {report boundary};
+\draw[figcross] (94,39) -- (113,39);
+\draw[figcross] (94,13) -- (113,13);
+\node[figlabel, anchor=center] at (103,45) {$E,\;\mathrm{MAC}$};
+\draw[draw=figemerald!50, fill=figemerald!3, rounded corners=1mm, line width=.6pt] (114,4) rectangle (178,53);
+\node[figlabel, anchor=center] at (120,46) {\icon{attest}{emerald}{4mm}};
+\node[figtitle, anchor=west] at (125,46) {\texttt{A2AVerifier}};
+\node[fignote, anchor=west] at (118,39) {Key + configured fingerprint; edge digest};
+\draw[figflow] (146,35) -- (146,31);
+\node[figlabel, anchor=west] at (118,27) {Four detectors re-run per submitted report};
+\node[fignote, anchor=west] at (118,20) {Disclosure / purpose / TTL / inference};
+\draw[figflow] (146,16) -- (146,13);
+\node[figlabel, anchor=center] at (120,9) {\icon{blind}{slate}{4mm}};
+\node[figlabel, anchor=west] at (125,9) {Violations store (no raw-text field)};
+\node[fignote, anchor=west] at (0,-5) {$E$: content hash + privacy label + routing principals. Local backend required for local tagging.};
+\node[fignote, anchor=west] at (0,-10) {Single organisation: set owning principals equal; purpose and hop policies still apply.};
+\end{tikzpicture}}
+\caption{Where the report-only deployment runs. Two tenants label and hash locally and send authenticated metadata reports; the center verifies and re-runs the detectors within each submitted edge set. Reports are authenticated with a MAC under a per-build key; confinement of that key to the pinned build is the assumption Proposition~\ref{prop:attest} rests on, and a TEE is what makes it hold against a hostile tenant.}\label{fig:deploy}
+\end{widefigure}
