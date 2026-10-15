@@ -1,0 +1,32 @@
+{
+  "planned": 6,
+  "recorded": 6,
+  "valid": 6,
+  "arms": {
+    "no_gate": {
+      "observed": 2,
+      "utility": 1,
+      "leaks": 1,
+      "joint": 0,
+      "unknown": 0,
+      "format_errors": 0
+    },
+    "exact_redaction": {
+      "observed": 2,
+      "utility": 1,
+      "leaks": 0,
+      "joint": 1,
+      "unknown": 0,
+      "format_errors": 0
+    },
+    "structured_release": {
+      "observed": 2,
+      "utility": 1,
+      "leaks": 0,
+      "joint": 1,
+      "unknown": 0,
+      "format_errors": 0
+    }
+  },
+  "complete": true
+}

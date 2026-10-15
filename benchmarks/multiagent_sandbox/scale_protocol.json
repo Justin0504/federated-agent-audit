@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "kind": "authored-live-multiagent-sandbox",
+  "stages": [{"groups": 2, "concurrency": 1}, {"groups": 8, "concurrency": 2}, {"groups": 32, "concurrency": 2}, {"groups": 128, "concurrency": 4}],
+  "seed": 20261015,
+  "gate": "Previous stage complete with zero infrastructure failures and <=20% format failures; do not select on task-success or privacy outcomes",
+  "roles_per_group": 4,
+  "controls": ["no_gate", "exact_redaction", "structured_release"],
+  "metrics": ["task_completion", "exact_marker_disclosure", "joint_success", "unknown", "format_error", "output_cap", "latency", "token_counts"],
+  "remote_only": true,
+  "live_telegram": false,
+  "limits": "Explicit per-stage authorization/resource budget; do not auto-launch every stage"
+}
