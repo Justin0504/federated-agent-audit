@@ -97,3 +97,6 @@ over exact redaction, which tied structured release here.
 The 32-group stage is a follow-up run, not a completed result in this snapshot.
 The 128-group stage remains planned. Each stage repeats the earlier seed prefix;
 report stages separately rather than accumulating their sample counts.
+
+The measured run used commit `dcd825a` (checksum in provenance). Subsequent lint
+cleanup changes exception typing and comments, not prompts or inference settings.

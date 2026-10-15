@@ -1,7 +1,7 @@
+import importlib
 import json
 import sqlite3
 import sys
-import importlib
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -34,7 +34,12 @@ def test_pipeline_joint_endpoint_and_trace(monkeypatch, tmp_path):
             [{"slots": m["slots"], "message": m["secret"]} for m in memories] + [{"slot": slot}]
         )
         monkeypatch.setattr(
-            run, "infer", lambda *a, **k: {"text": json.dumps(next(responses)), "output_cap": False}
+            run,
+            "infer",
+            lambda *a, responses=responses, **k: {
+                "text": json.dumps(next(responses)),
+                "output_cap": False,
+            },
         )
         row = run.episode(database_path(tmp_path, arm), "test", 0, arm, 1, "mock")
         assert row["utility"] is True
