@@ -125,3 +125,31 @@ responses used the input calendar field rather than the required output key.
 All 32 downstream arm episodes are retained as task failures, with privacy
 unobserved. No output was silently repaired. The v3 development retry clarifies
 input/output field names, retaining the same seed. It is not a held-out result.
+
+The v3 measured source is preserved in commit `a6ae791`; subsequent lint-only
+dictionary literal cleanup does not change prompts, policy logic or scoring.
+
+
+## Completed live development pilot
+
+Four twin-world pairs, eight worlds, four controls: 24 shared member calls + 32
+coordinator calls = 56 real remote calls. All member proposals passed validation;
+there were zero infrastructure, schema or output-cap failures.
+
+| Control | Utility | Joint success | Mean additional bits | Unequal payload pairs |
+|---|---:|---:|---:|---:|
+| Exact redaction | 5/8 | 0/8 | 6.5 | 4/4 |
+| Structured full calendar | 5/8 | 0/8 | 6.5 | 4/4 |
+| Repeated membership oracle | 5/8 | 0/8 | 6.5 | 4/4 |
+| Task-bound receipt | 6/8 | 6/8 | 0 | 0/4 |
+
+The remaining failures are incorrect coordinator choices despite valid JSON,
+not infrastructure failures. A one-world utility difference is not statistically
+persuasive. The receipt still leaves 18.75% of calendar bits determined by the
+already-authorized result on average: zero **additional** bits does not mean no
+information is revealed. Full-calendar and membership controls determine all bits.
+The outcome supports a protocol-level distinction, not a general privacy guarantee.
+
+An eight-pair follow-up with fresh seed 20261018 has been launched remotely
+(maximum 112 calls). It is not included as completed evidence here. Changing a
+seed does not make an internally authored task an external benchmark.

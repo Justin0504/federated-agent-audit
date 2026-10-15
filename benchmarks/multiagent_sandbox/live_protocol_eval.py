@@ -128,22 +128,24 @@ def main():
                     member_calls += len(responses)
                     member_caps += sum(r["output_cap"] for r in responses)
                     submitted.append((valid, None))
-                    raw.write(json.dumps(dict(case=case, world=world, responses=responses)) + "\n")
+                    raw.write(
+                        json.dumps({"case": case, "world": world, "responses": responses}) + "\n"
+                    )
                     raw.flush()
                 except (OSError, RuntimeError, KeyError) as exc:
                     submitted.append((False, str(exc)))
             for arm in p.ARMS:
                 for world, calendars in enumerate(worlds):
                     valid, error = submitted[world]
-                    row = dict(
-                        case=case,
-                        world=world,
-                        arm=arm,
-                        member_failure=not valid and error is None,
-                        infra_error=error,
-                        utility=None if error else False,
-                        joint=None if error else False,
-                    )
+                    row = {
+                        "case": case,
+                        "world": world,
+                        "arm": arm,
+                        "member_failure": not valid and error is None,
+                        "infra_error": error,
+                        "utility": None if error else False,
+                        "joint": None if error else False,
+                    }
                     if valid:
                         try:
                             row.update(p.run_case(calendars, arm, 8, a.endpoint))

@@ -41,7 +41,13 @@ def test_world_transcripts_and_full_release():
 
 def test_live_coordinator_utility_is_independently_scored(monkeypatch):
     def fake(*args):
-        return dict(text='{"slot":7}', output_cap=False, seconds=0, input_tokens=1, output_tokens=1)
+        return {
+            "text": '{"slot":7}',
+            "output_cap": False,
+            "seconds": 0,
+            "input_tokens": 1,
+            "output_tokens": 1,
+        }
 
     monkeypatch.setattr(p, "infer", fake)
     row = p.run_case([[0], [0], [0]], "task_bound", 8, "mock")
@@ -50,11 +56,11 @@ def test_live_coordinator_utility_is_independently_scored(monkeypatch):
 
 def test_bad_member_proposal_is_not_repaired_into_success(monkeypatch):
     live = importlib.import_module("benchmarks.multiagent_sandbox.live_protocol_eval")
-    monkeypatch.setattr(p, "infer", lambda *a: dict(text='{"slots":[7]}', output_cap=False))
+    monkeypatch.setattr(p, "infer", lambda *a: {"text": '{"slots":[7]}', "output_cap": False})
     valid, responses = live.members([[0], [1], [2]], "mock")
     assert not valid and all(not r["verified"] for r in responses)
     rows = [
-        dict(arm=arm, utility=False, joint=False, member_failure=True, infra_error=None)
+        {"arm": arm, "utility": False, "joint": False, "member_failure": True, "infra_error": None}
         for arm in p.ARMS
     ]
     summary = live.summarize(rows)
