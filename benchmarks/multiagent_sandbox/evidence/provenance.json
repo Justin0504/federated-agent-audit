@@ -1,0 +1,18 @@
+{
+  "date_utc": "2026-10-15",
+  "environment": "Jetstream CPU, loopback llama.cpp, single inference slot",
+  "model": "Qwen3-8B Q4_K_M",
+  "model_sha256": "a3de86cd1c132c822487ededd47a324c50491393e6565cd14bafa40d0b8e686f",
+  "runtime": "llama.cpp b11624",
+  "seed": 20261015,
+  "generation": {
+    "temperature": 0,
+    "seed": 0,
+    "max_tokens": 512,
+    "context": 8192,
+    "thinking": false
+  },
+  "v1_source_sha256": "d1c43adc00ebb89a97b75256de795091accec7f2d96754c6124fb80fecfd0897",
+  "v2_source_sha256": "1257a7a6c8b7723ff6e9837383c3eac4d0d432ff1bfda3da05342fadf75d1620",
+  "scope": "Development pilot; synthetic exact-marker privacy endpoint. Pilot and scale8 share tasks and must not be pooled as independent observations."
+}

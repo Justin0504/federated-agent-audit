@@ -1,0 +1,7 @@
+results/
+pilot/
+scale*/
+*.sqlite
+*.sqlite-*
+*.jsonl
+*.log
