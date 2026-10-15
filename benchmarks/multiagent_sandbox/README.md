@@ -94,7 +94,12 @@ are published in `evidence/scale8_episode_metrics.json`; no raw dialogue is incl
 These small authored tasks do not establish semantic privacy or a general advantage
 over exact redaction, which tied structured release here.
 
-The 32-group stage is a follow-up run, not a completed result in this snapshot.
+The 32-group stage completed 96 episodes / 384 real model calls, with zero
+infrastructure errors, format errors or output caps. Utility was 32/32 in every
+arm. Exact-marker leakage was 16/32 without a gate and 0/32 under either control;
+joint success was 16/32, 32/32 and 32/32. All 16 attacked groups leaked without
+a gate. This remains a single-model, single-task-family result; it does not
+establish semantic privacy or superiority over exact redaction.
 The 128-group stage remains planned. Each stage repeats the earlier seed prefix;
 report stages separately rather than accumulating their sample counts.
 
