@@ -190,3 +190,15 @@ low utility or high leakage must not suppress results. The source does not launc
 on a workstation. The initial launcher hit Python 3.10's missing file_digest API
 before inference; chunked hashing fixed that compatibility issue. The failed log
 is retained remotely. Expanded results are not yet included in this document.
+
+
+### First completed v4 smoke result (3B)
+
+Qwen2.5-3B completed all 48 strategy episodes using 36 member calls and 50
+coordinator calls (86 total); zero member/format/infrastructure/cap errors.
+Meeting and cost selection: 4/4 utility in every arm. Quorum: 4/4 for exact,
+structured and task-bound controls, 2/4 for membership queries. Both failed
+quorum actions remained wrong after the one allowed retry; they are retained as
+failures, not repaired by the scorer. Task-bound joint success was 12/12 across
+three rules. This six-pair smoke is small and has no completed matched 8B result
+yet. The expanded 3B run and queued 8B stages must be reported separately.
