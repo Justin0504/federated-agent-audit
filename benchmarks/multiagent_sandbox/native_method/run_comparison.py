@@ -19,7 +19,7 @@ PARENT = ROOT.parent
 def main():
     if socket.gethostname() != "sss":
         raise SystemExit("Jetstream only")
-    previous = PARENT / "native-diagnosis-v7"
+    previous = PARENT / "native-diagnosis-v8"
     for _ in range(600):
         if (previous / "finished.json").exists():
             break
@@ -31,7 +31,14 @@ def main():
     summary = previous / "development/results/public_summary.json"
     target = ROOT / "formal-3b"
     try:
-        prepare_comparison(PARENT / "agentdojo-schema-v6-qwen25_3b", target, summary)
+        prepare_comparison(
+            PARENT / "agentdojo-schema-v6-qwen25_3b",
+            target,
+            summary,
+            revision="native_tools",
+            reference_summary=PARENT
+            / "native-diagnosis-v7/development/results/public_summary.json",
+        )
     except ValueError as exc:
         (ROOT / "gate_failed.json").write_text(
             json.dumps({"reason": str(exc), "development": report}, indent=2)

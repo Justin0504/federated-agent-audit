@@ -102,3 +102,14 @@ Frozen v7 sources and public task manifest are in evidence/native_v7/
 development_source.tar.gz; raw conversations are excluded. This archive predates
 the new operation-scope adapter and cost instrumentation and preserves exactly
 what was executed. Summary metrics are in public_summary.json beside it.
+
+
+The v9 formal supervisor selects the native_tools recipe only after the v8
+six-case probe completes and passes validity, per-suite execution and competence
+gates. It verifies that the v7 baseline and v8 probe used identical development
+cases and weight revisions. The negative salient_v1 recipe is not promoted.
+At most160 formal3B episodes (32tasks x5controls) run with six steps each, under a
+four-hour episode-stage bound; timeout is incomplete evidence, not success.
+The v9 source includes corrected model-format/error classification and binding
+instrumentation. Other models require their own validated native API preflight
+and an identical formal manifest; the older v6 plain-text JSON runs are not pooled.
