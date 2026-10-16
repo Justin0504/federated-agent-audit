@@ -68,3 +68,56 @@ def test_bad_member_proposal_is_not_repaired_into_success(monkeypatch):
         a["privacy_observed"] == 0 and a["mean_additional_bits"] is None
         for a in summary["arms"].values()
     )
+
+
+def test_scaled_tasks_balanced_twins_and_rules():
+    s = importlib.import_module("benchmarks.multiagent_sandbox.paired_scale")
+    assert s.solve([[0, 5], [0, 5], [0, 5]], "cost_selection") == 5
+    assert s.solve([[2], [2], []], "quorum") == 2
+    assert s.solve([[2], [2], []], "meeting") is None
+    for task in s.TASKS:
+        for case in range(4):
+            a, b = s.twin(9, case, task)
+            assert s.solve(a, task) == s.solve(b, task)
+            assert (s.solve(a, task) is None) == (case % 2 == 1)
+            assert (
+                s.observe(a, task, "task_bound")["transcript"]
+                == s.observe(b, task, "task_bound")["transcript"]
+            )
+
+
+def test_bounded_repair_preserves_initial_failure(monkeypatch):
+    s = importlib.import_module("benchmarks.multiagent_sandbox.paired_scale")
+    replies = iter(['{"slot":7}', '{"slot":null}'])
+    monkeypatch.setattr(
+        s.base,
+        "infer",
+        lambda *a: {
+            "text": next(replies),
+            "seconds": 1,
+            "input_tokens": 1,
+            "output_tokens": 1,
+            "output_cap": False,
+        },
+    )
+    row = s.execute(
+        {"transcript": [{"authorized_decision": None}], "additional_bits": 0}, None, "mock"
+    )
+    assert not row["initial_utility"] and row["utility"] and row["joint"]
+    assert row["coordinator_calls"] == 2 and row["seconds"] == 2
+    assert not s.valid_action('{"slot":false}', 0)
+
+
+def test_sweep_gate_ignores_utility_but_rejects_bad_runtime():
+    sweep = importlib.import_module("benchmarks.multiagent_sandbox.remote_sweep")
+    s = {
+        "episodes": 8,
+        "complete": True,
+        "output_caps": 0,
+        "format_errors": 0,
+        "coordinator_calls": 8,
+        "groups": {"x": {"member_failures": 0, "utility": 0}},
+    }
+    assert sweep.gate(s)
+    s["format_errors"] = 3
+    assert not sweep.gate(s)

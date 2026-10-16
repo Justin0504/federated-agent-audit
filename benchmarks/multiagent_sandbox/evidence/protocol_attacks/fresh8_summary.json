@@ -1,0 +1,65 @@
+{
+  "episodes": 64,
+  "arms": {
+    "exact_redaction": {
+      "n": 16,
+      "utility": 12,
+      "joint": 0,
+      "member_failures": 0,
+      "infra_errors": 0,
+      "privacy_observed": 16,
+      "mean_additional_bits": 6.875,
+      "mean_reconstruction": 1.0,
+      "comparable_pairs": 8,
+      "different_transcript_pairs": 8,
+      "coordinator_format_errors": 0,
+      "coordinator_output_caps": 0
+    },
+    "structured_release": {
+      "n": 16,
+      "utility": 12,
+      "joint": 0,
+      "member_failures": 0,
+      "infra_errors": 0,
+      "privacy_observed": 16,
+      "mean_additional_bits": 6.875,
+      "mean_reconstruction": 1.0,
+      "comparable_pairs": 8,
+      "different_transcript_pairs": 8,
+      "coordinator_format_errors": 0,
+      "coordinator_output_caps": 0
+    },
+    "membership_oracle": {
+      "n": 16,
+      "utility": 12,
+      "joint": 0,
+      "member_failures": 0,
+      "infra_errors": 0,
+      "privacy_observed": 16,
+      "mean_additional_bits": 6.875,
+      "mean_reconstruction": 1.0,
+      "comparable_pairs": 8,
+      "different_transcript_pairs": 8,
+      "coordinator_format_errors": 0,
+      "coordinator_output_caps": 0
+    },
+    "task_bound": {
+      "n": 16,
+      "utility": 14,
+      "joint": 14,
+      "member_failures": 0,
+      "infra_errors": 0,
+      "privacy_observed": 16,
+      "mean_additional_bits": 0.0,
+      "mean_reconstruction": 0.140625,
+      "comparable_pairs": 8,
+      "different_transcript_pairs": 0,
+      "coordinator_format_errors": 0,
+      "coordinator_output_caps": 0
+    }
+  },
+  "member_calls": 48,
+  "member_output_caps": 0,
+  "planned_episodes": 64,
+  "complete": true
+}

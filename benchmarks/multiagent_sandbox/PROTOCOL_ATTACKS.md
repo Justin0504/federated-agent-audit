@@ -150,6 +150,43 @@ already-authorized result on average: zero **additional** bits does not mean no
 information is revealed. Full-calendar and membership controls determine all bits.
 The outcome supports a protocol-level distinction, not a general privacy guarantee.
 
-An eight-pair follow-up with fresh seed 20261018 has been launched remotely
-(maximum 112 calls). It is not included as completed evidence here. Changing a
-seed does not make an internally authored task an external benchmark.
+The fresh-seed eight-pair follow-up (20261018) completed all 64 episodes:
+48 member calls and 64 coordinator calls, 112 total. Member, infrastructure,
+format and cap failures were all zero. Exact redaction, structured release and
+membership queries each achieved 12/16 utility and 0/16 joint success, with
+mean 6.875 additional bits and full reconstruction. Task-bound receipts achieved
+14/16 utility/joint success, zero additional bits and 0/8 unequal protocol-payload
+pairs. Its prior reconstruction fraction was 0.140625. All wrong actions occurred
+on no-feasible-appointment tasks. Two extra successes are not evidence of a
+statistically established utility advantage. A new seed is not an external task.
+
+These bits quantify a stipulated uniform conditional adversary model. They are
+not a calibrated entropy estimate for the rejection-sampled paired-world
+generator or arbitrary real-world priors.
+
+
+## Matched task/model expansion v4
+
+`paired_scale.py` adds three authored finite decision rules: earliest common option,
+minimum-public-cost common option, and earliest option approved by two members.
+Each task has equal numbers of feasible and infeasible pairs. This is structural
+task diversity within a shared set representation, not three independent domains.
+The two model configurations share exact case-manifest hashes, source, controls,
+512-token generation budgets and context limits. Qwen2.5-3B and Qwen3-8B differ in
+model family as well as size; do not attribute differences solely to parameters.
+
+All controls receive the same strengthened receipt-execution instruction. A failed
+action is rejected, followed by at most one model retry with the already-public
+authorized decision. First-pass utility, repaired utility, joint success, repair
+counts and extra calls/tokens/latency are separate. No initial failure is erased.
+Twin-world output-string differences are now recorded separately from protocol
+payload differences; neither statistic alone is a general leakage certificate.
+
+`remote_sweep.py` runs sequentially on Jetstream with no GPU use and verifies both
+model hashes. Two pairs per task are the smoke stage; four pairs per task on a fresh
+seed are the expanded stage. Across both models this plans 288 strategy episodes,
+up to 792 model calls including retries. Runtime/format gates decide expansion;
+low utility or high leakage must not suppress results. The source does not launch
+on a workstation. The initial launcher hit Python 3.10's missing file_digest API
+before inference; chunked hashing fixed that compatibility issue. The failed log
+is retained remotely. Expanded results are not yet included in this document.
