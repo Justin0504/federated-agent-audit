@@ -42,3 +42,27 @@ statistically reliable model rankings. Qwen2.5-3B and Qwen3-8B differ in model f
 as well as size. Closed-provider coordinators and independent adaptive observers
 are planned extensions, not completed experiments; they must see only the released
 view and use the same frozen tasks and query budgets.
+
+
+\paragraph{Diagnosing failed recovery.}
+We replay all first-pass errors from the expanded stage together with one
+historically successful control per affected task/control stratum: six selected
+rows for 3B and 18 for 8B. These are diagnostic samples, not held-out estimates.
+With original history, cached and uncached executions each finish at 2/6 for 3B
+and 7/18 for 8B. A fresh retry containing only the public receipt and an explicit
+copy instruction reaches 2/6 and 18/18 respectively. Restricting the first-pass
+execution view to the receipt reaches 6/6 and 18/18 without retries. For 8B this
+uses 18 coordinator calls versus 30 with history-based recovery. Disclosure to
+the stipulated observer is held fixed; the intervention changes execution input,
+not the privacy score. Replay order is cyclic; one historically successful 8B
+control fails on replay, so historical and replay first-pass counts differ.
+
+The contrast implicates input presentation and recovery context rather than a
+transport or JSON failure; it does not identify an internal model mechanism.
+A fresh retry also changes its instruction, so its effect cannot be attributed
+solely to removing history. Receipt-only first passes preserve the original
+system instruction. Because the broker already computes the authorized result,
+a deterministic executor is the natural zero-coordinator-call reference. This
+experiment measures reliable execution, not autonomous planning. New-seed runs
+and independent native-tool tasks are separate follow-ups; their outcomes are
+not inferred from these selected replays.

@@ -63,3 +63,30 @@ from CPU seconds; remote allocation charges require actual billing data.
 The bounded supervisor owns only its own loopback CPU server. It runs sequentially,
 records progress, and does not kill unrelated inference services. Raw task traces
 stay remote; publish numeric summaries only after validating completeness.
+
+The native-task controls exercise the existing egress policy and replanning path,
+not the exact finite-calendar broker. Report this as independent application
+validation of that policy path, not a transfer result for the calendar protocol.
+Evidence that the new protocol itself transfers requires a task-specific trusted
+adapter and an independently specified authorized result for each native task.
+
+## Completed diagnostic evidence
+
+| Variant | 3B first/final (n=6) | 8B first/final (n=18) |
+|---|---:|---:|
+| History, cache on | 2 / 2 | 6 / 7 |
+| History, cache off | 2 / 2 | 6 / 7 |
+| Fresh receipt retry, cache off | 2 / 2 | 6 / 18 |
+| Receipt-only first pass, cache off | 6 / 6 | 18 / 18 |
+
+8B uses 30 coordinator requests for history recovery or fresh recovery, versus18
+for receipt-only execution. The selected sample contains11 historical failures
+and seven successful controls; one historical success fails on replay. Hence the
+12 replay errors do not equal the11 historical errors. 3B has four historical
+failures and two successful controls. This is not a model ranking or held-out
+accuracy claim. Fresh retry changes both context and system instruction; the
+receipt-only first pass preserves the original system instruction. The results
+support presentation/context sensitivity, not a discovered internal mechanism.
+Cached/uncached aggregate outcomes coincide here; this does not prove all cached
+inference is deterministic. Numeric evidence and exact source hashes are stored
+under `evidence/retry_diagnosis/`.
