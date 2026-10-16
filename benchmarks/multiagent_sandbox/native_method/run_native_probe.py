@@ -3,8 +3,8 @@
 import hashlib
 import json
 import os
-import socket
 import shutil
+import socket
 import subprocess
 import time
 import urllib.request
