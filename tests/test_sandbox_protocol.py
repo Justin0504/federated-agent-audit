@@ -186,6 +186,13 @@ def test_pair_analysis_accepts_complete_keys_and_preserves_costs():
     result = analysis.compare(d, other)
     assert result["paired_episodes"] == 8
     assert result["models"]["left"]["arms"]["task_bound"]["seconds"] == 4
+    import pytest
+
+    for field, value in (("receipt_only", True), ("no_cache", True), ("retry_mode", "fresh")):
+        changed = copy.deepcopy(other)
+        changed["protocol"][field] = value
+        with pytest.raises(ValueError, match="execution condition"):
+            analysis.compare(d, changed)
 
 
 def test_fresh_repair_only_uses_released_receipt(monkeypatch):

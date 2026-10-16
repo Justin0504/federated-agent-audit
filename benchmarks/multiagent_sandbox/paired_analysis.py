@@ -23,6 +23,17 @@ def compare(left, right):
             raise ValueError("unmatched " + field)
     if left["protocol"].get("arm_order", "fixed") != right["protocol"].get("arm_order", "fixed"):
         raise ValueError("unmatched arm order")
+    defaults = {
+        "arm_order": "fixed",
+        "retry_mode": "history",
+        "no_cache": False,
+        "receipt_only": False,
+    }
+    for field, default in defaults.items():
+        if left["protocol"].get(field, default) != right["protocol"].get(field, default):
+            raise ValueError("unmatched execution condition: " + field)
+    if left["summary"]["model"] == right["summary"]["model"]:
+        raise ValueError("duplicate model identifiers")
     left_rows = {key(r): r for r in left["rows"]}
     right_rows = {key(r): r for r in right["rows"]}
     if left_rows.keys() != right_rows.keys():
@@ -35,7 +46,8 @@ def compare(left, right):
         "manifest": left["protocol"]["case_manifest_sha256"],
         "models": {},
         "discordance": {},
-        "latency_caveat": "fixed arm order and prompt caching; descriptive observed coordinator latency only, not a causal policy speedup",
+        "execution_conditions": {k: left["protocol"].get(k, v) for k, v in defaults.items()},
+        "latency_caveat": "Observed coordinator latency is descriptive; inspect recorded order/cache conditions. Sequential model runs do not control host load.",
         "privacy_scope": "finite stipulated conditional prior; not a calibrated real-world entropy estimate",
     }
     for data in (left, right):
