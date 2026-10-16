@@ -55,7 +55,7 @@ def prepare_comparison(
     if revision == "native_tools":
         shutil.copy2(Path(__file__).with_name("native_backend.py"), target / "backend.py")
         p["systems"]["native_tools"] = "Native tool-calling interface"
-    p.update(name="native-method-v9", cases=formal["cases"], episodes=[])
+    p.update(name="native-method-v13", cases=formal["cases"], episodes=[])
     p["source_hashes"] = {
         f.name: hashlib.sha256(f.read_bytes()).hexdigest() for f in target.glob("*.py")
     }

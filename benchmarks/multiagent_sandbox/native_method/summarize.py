@@ -46,7 +46,27 @@ def summarize(directory):
                 and outcome(r).get("attack_success") is False
                 for r in rr
             ),
-            "calls": len(steps),
+            "calls": sum(s.get("model_call", True) for s in steps),
+            "action_steps": len(steps),
+            "repair_calls": sum(bool(s.get("repair_call")) for s in steps),
+            "repair_input_tokens": sum(
+                s.get("response", {}).get("input_tokens", 0) or 0
+                for s in steps
+                if s.get("repair_call")
+            ),
+            "repair_output_tokens": sum(
+                s.get("response", {}).get("output_tokens", 0) or 0
+                for s in steps
+                if s.get("repair_call")
+            ),
+            "repair_seconds": sum(
+                s.get("response", {}).get("seconds", 0) for s in steps if s.get("repair_call")
+            ),
+            "repeated_actions": sum(bool(s.get("repeated_action")) for s in steps),
+            "cancelled_pending_actions": sum(s.get("cancelled_pending_actions", 0) for s in steps),
+            "unexecuted_pending_actions": sum(
+                r.get("result", {}).get("unexecuted_pending_actions", 0) for r in rr
+            ),
             "mediation_and_tool_seconds": sum(
                 s.get("mediation_and_tool_seconds", 0) for s in steps
             ),

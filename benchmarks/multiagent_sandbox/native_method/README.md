@@ -134,3 +134,33 @@ case/weight hashes, complete known labels, format/cap validity, per-suite tool
 execution and positive development utility before preparing160 five-control
 formal episodes. v9 correctly stopped at its gate and is not resumed. These are
 in-progress stages, not reported formal evidence. All inference remains remote.
+
+### Native interface v10 outcome and bounded batch repair (2026-10-16)
+
+The six-case v10 development probe completed: utility 1/6, 26 model calls,
+85,361 input / 2,919 output tokens, 7 format errors and 1 output cap.
+Attacked utility-and-security joint success was 0/3. Zero successful attacks
+therefore does not establish useful protection. The unchanged validity gate
+blocked `native-method-v11`; no formal episodes were launched there.
+The numeric aggregate is archived in `../evidence/native_v10/public_summary.json`.
+
+Revision v12 accepts a native multi-call response as a validated action queue.
+Calls execute sequentially, with separate authorization/receipt checks. Each
+queued action consumes one of the existing six steps, not an additional free
+execution. A denial or tool failure cancels the remaining queue; a later model
+call receives the result and can repair. All actions are validated before any
+execution. Truncated responses execute nothing. The model history serializes
+completed actions and feedback; the original response remains in the on-host
+step record. This is a runner change, not an improvement in model capability.
+
+Costs distinguish actual model calls, action steps, repeated actions, repair
+calls (the next model call following an observed error/denial), repair tokens
+and latency, and proposed-but-cancelled/unexecuted actions. These operational
+repair costs do not imply a causal estimate of the benefit of retrying.
+
+Jetstream `native-diagnosis-v12` re-runs the same six development cases with
+unchanged weights, six steps, 512 output tokens, and 8192 context.
+`native-method-v13` waits for this probe and the unchanged gate before running
+32 disjoint cases across five arms. All arms use this same serialization and
+budget. Failures and caps remain visible; no passing outcome is assumed.
+The original v7/v8/v10 evidence is retained and must not be pooled with v12.

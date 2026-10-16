@@ -47,6 +47,19 @@ def parse(text):
     raise ValueError("invalid action schema")
 
 
+def unpack_actions(text):
+    """Validate the entire batch before any side effect; execution remains sequential."""
+    obj = json.loads(text)
+    if isinstance(obj, dict) and set(obj) == {"actions"}:
+        if not isinstance(obj["actions"], list) or not obj["actions"]:
+            raise ValueError("empty or invalid action batch")
+        actions = [parse(json.dumps(a)) for a in obj["actions"]]
+        if any("final" in a for a in actions):
+            raise ValueError("final answer cannot be mixed with tool calls")
+        return actions
+    return [parse(text)]
+
+
 def rpc(messages):
     ex = ROOT / "exchange"
     key = uuid4().hex
@@ -153,15 +166,27 @@ def run_case(data, suite, p):
     steps = []
     final = ""
     terminated = False
+    pending = []
+    seen = set()
+    needs_repair = False
     for i in range(p["max_steps"]):
-        response = rpc(messages)
-        step = {"response": response}
+        queued = bool(pending)
+        response = {"text": json.dumps(pending.pop(0))} if queued else rpc(messages)
+        step = {
+            "response": response,
+            "model_call": not queued,
+            "repair_call": not queued and needs_repair,
+            "queued_action": queued,
+        }
+        if not queued:
+            needs_repair = False
         steps.append(step)
         if response.get("error"):
             break
         raw = response["text"]
-        messages.append({"role": "assistant", "content": raw})
         if response.get("truncated"):
+            needs_repair = True
+            messages.append({"role": "assistant", "content": raw})
             step["cap_hit"] = True
             messages.append(
                 {
@@ -171,8 +196,15 @@ def run_case(data, suite, p):
             )
             continue
         try:
-            action = parse(raw)
+            actions = unpack_actions(raw)
+            action = actions[0]
+            if not queued:
+                pending.extend(actions[1:])
+                step["proposed_actions"] = len(actions)
+            messages.append({"role": "assistant", "content": json.dumps(action)})
         except (ValueError, TypeError) as e:
+            needs_repair = True
+            messages.append({"role": "assistant", "content": raw})
             step["format_error"] = str(e)
             messages.append(
                 {
@@ -185,6 +217,9 @@ def run_case(data, suite, p):
             final = action["final"]
             terminated = True
             break
+        signature = json.dumps(action, sort_keys=True)
+        step["repeated_action"] = signature in seen
+        seen.add(signature)
         c = FunctionCall(function=action["function"], args=action["args"])
         mediation_start = time.monotonic()
         receipt = None
@@ -227,8 +262,13 @@ def run_case(data, suite, p):
                 )
         step["mediation_and_tool_seconds"] = time.monotonic() - mediation_start
         step["feedback"] = feedback
+        if not feedback.get("executed") or feedback.get("error"):
+            needs_repair = True
+            step["cancelled_pending_actions"] = len(pending)
+            pending.clear()
         messages.append({"role": "user", "content": json.dumps(feedback, default=str)})
     return {
+        "unexecuted_pending_actions": len(pending),
         "initial": initial_score,
         "outcome": score(final),
         "initial_block": initial,

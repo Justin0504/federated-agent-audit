@@ -198,3 +198,85 @@ def test_transport_failure_is_unknown_not_safe(tmp_path):
     result = summary.summarize(tmp_path)["groups"]["native_tools"]
     assert result["unknown"] == 1 and result["unknown_attack"] == 1
     assert result["joint_attacked"] == 0
+
+
+def test_native_batch_execution_is_bounded_authorized_and_costed(monkeypatch):
+    import importlib
+    import json
+    import sys
+    from types import ModuleType, SimpleNamespace
+
+    monkeypatch.syspath_prepend(str(ROOT))
+    guard = ModuleType("guard")
+    guard.require_healthy = lambda _: None
+    monkeypatch.setitem(sys.modules, "guard", guard)
+    policy = ModuleType("policy")
+    policy.decide = lambda *a: {"status": "deny" if a[1].get("deny") else "allow"}
+    monkeypatch.setitem(sys.modules, "policy", policy)
+    executed = []
+    runtime = ModuleType("agentdojo.functions_runtime")
+    runtime.FunctionCall = lambda **kw: SimpleNamespace(**kw)
+    runtime.FunctionsRuntime = lambda _: SimpleNamespace(
+        functions={},
+        run_function=lambda env, name, args: (executed.append((name, args)), None),
+    )
+    monkeypatch.setitem(sys.modules, "agentdojo.functions_runtime", runtime)
+    runner = importlib.import_module("run")
+    environment = SimpleNamespace(model_copy=lambda **_: None)
+    suite = SimpleNamespace(
+        tools=[],
+        get_user_task_by_id=lambda _: SimpleNamespace(init_environment=lambda _: environment),
+        load_and_inject_default_environment=lambda _: None,
+        _check_user_task_utility=lambda *a: bool(executed),
+    )
+    data = {
+        "user_task_id": "t",
+        "injection_task_id": None,
+        "messages": [{"role": "user", "content": "read"}],
+    }
+    p = {"max_steps": 2, "history_chars": 100, "system": "s", "arm": "gate_replan"}
+    calls = []
+
+    def generate(_):
+        calls.append(1)
+        return {
+            "text": json.dumps(
+                {"actions": [{"function": "read", "args": {"i": i}} for i in range(3)]}
+            ),
+            "input_tokens": 10,
+            "output_tokens": 20,
+        }
+
+    monkeypatch.setattr(runner, "rpc", generate)
+    result = runner.run_case(data, suite, p)
+    assert len(executed) == 2 and len(calls) == 1
+    assert result["unexecuted_pending_actions"] == 1
+    assert sum(s["model_call"] for s in result["steps"]) == 1
+    assert all(s["verdict"]["status"] == "allow" for s in result["steps"])
+
+    executed.clear()
+    replies = iter(
+        [
+            {
+                "text": json.dumps(
+                    {
+                        "actions": [
+                            {"function": "read", "args": {"deny": True}},
+                            {"function": "write", "args": {}},
+                        ]
+                    }
+                )
+            },
+            {"text": '{"final":"unable"}'},
+        ]
+    )
+    monkeypatch.setattr(runner, "rpc", lambda _: next(replies))
+    result = runner.run_case(data, suite, p)
+    assert not executed
+    assert result["steps"][0]["cancelled_pending_actions"] == 1
+    assert result["steps"][1]["repair_call"]
+
+    import pytest
+
+    with pytest.raises(ValueError):
+        runner.unpack_actions('{"actions":[{"function":"read","args":{}},{"final":"bad"}]}')

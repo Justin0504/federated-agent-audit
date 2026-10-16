@@ -103,16 +103,17 @@ def generate(messages, p):
         message = choice["message"]
         try:
             calls = message.get("tool_calls") or []
-            if len(calls) > 1:
-                raise ValueError("multiple tool calls exceed one-action step contract")
             if calls:
-                call = calls[0]["function"]
-                args = call["arguments"]
-                if isinstance(args, str):
-                    args = json.loads(args)
-                if not isinstance(args, dict):
-                    raise ValueError("tool arguments must be an object")
-                text = json.dumps({"function": call["name"], "args": args})
+                actions = []
+                for item in calls:
+                    call = item["function"]
+                    args = call["arguments"]
+                    if isinstance(args, str):
+                        args = json.loads(args)
+                    if not isinstance(args, dict) or not isinstance(call["name"], str):
+                        raise TypeError("invalid tool name or arguments")
+                    actions.append({"function": call["name"], "args": args})
+                text = json.dumps(actions[0] if len(actions) == 1 else {"actions": actions})
             else:
                 text = json.dumps({"final": message.get("content") or ""})
         except (ValueError, KeyError, TypeError) as exc:
