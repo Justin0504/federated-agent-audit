@@ -186,3 +186,35 @@ def test_pair_analysis_accepts_complete_keys_and_preserves_costs():
     result = analysis.compare(d, other)
     assert result["paired_episodes"] == 8
     assert result["models"]["left"]["arms"]["task_bound"]["seconds"] == 4
+
+
+def test_fresh_repair_only_uses_released_receipt(monkeypatch):
+    s = importlib.import_module("benchmarks.multiagent_sandbox.paired_scale")
+    calls = []
+
+    def fake(endpoint, messages, **kwargs):
+        calls.append((messages.copy(), kwargs))
+        return {
+            "text": '{"slot":7}' if len(calls) == 1 else '{"slot":0}',
+            "seconds": 1,
+            "input_tokens": 3,
+            "output_tokens": 2,
+            "output_cap": False,
+        }
+
+    monkeypatch.setattr(s.base, "infer", fake)
+    row = s.execute(
+        {
+            "transcript": [{"authorized_decision": 0}, {"query": 7, "answer": True}],
+            "additional_bits": 2,
+        },
+        0,
+        "mock",
+        retry_mode="fresh",
+        cache_prompt=False,
+    )
+    assert row["repair_success"] and not row["joint"]
+    assert len(calls[1][0]) == 2 and "query" not in calls[1][0][1]["content"]
+    assert calls[1][0][1]["content"] == '{"authorized_decision": 0}'
+    assert calls[1][1] == {"cache_prompt": False}
+    assert row["retry_seconds"] == 1 and row["retry_output_tokens"] == 2
