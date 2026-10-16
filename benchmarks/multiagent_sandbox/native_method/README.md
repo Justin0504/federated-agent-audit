@@ -1,0 +1,104 @@
+# Native task repair and action-bound method comparison
+
+Experimental adapter, not production support or a semantic privacy guarantee.
+All inference and native mock tools run on Jetstream, with Delta allowed only after
+allocation/authentication. No real Slack/email/tool calls and no local inference.
+
+## Stage A: diagnose without changing truth
+
+The frozen v6 preflight failed0/6 utility with0syntax errors. The new development
+run uses exactly those six cases, baseline and salient_v1 each, alternating order
+by case. It preserves native utility/security checkers, schemas, six-step and
+512-output budgets and the same authorized destinations. Differences: original
+request is placed after the tool catalog; instructions explicitly require actual
+tool success before claiming actions, retrieving required evidence, and repairing
+failed arguments. An error feedback hint discourages repeating the same invalid
+arguments. These are bundled harness changes, not an isolated causal ablation.
+
+No forced tool call, hardcoded expected action, ground-truth answer, or benchmark
+security label is inserted into the model prompt. Early finals still count as
+failures when the native checker says so. A refused task is not a safe success.
+Native security predicates cover their specified attacks, not all privacy leaks.
+
+Jetstream directory: /media/volume/jin2/faa-research-20261013/native-diagnosis-v7
+Independent CPU server port18089, four threads; older v6 server18088 untouched.
+Runtime b11624; exact3B weights verified. Selected development cases are excluded
+from the32 formal tasks. Max12episodes/72model requests. Raw messages stay remote.
+
+## Stage B: fair method controls
+
+prepare_comparison.py refuses to prepare formal runs unless the development run
+is complete with known labels, no syntax/cap errors, tools executed in all three
+suites, at least one task success, and no utility regression versus baseline.
+This declared development selection rule is not a held-out outcome filter.
+A fail remains reported; it does not justify editing the native scoring rule.
+
+Five equal-budget controls on the same32task manifest,160episodes/model:
+- no_gate: original unrestricted native execution;
+- gate_replan: existing destination policy with model continuation;
+- scope_replan: the existing policy plus explicit write-operation binding;
+- receipt_replan: the same operation-bound policy plus a one-use action-bound receipt;
+- deny_egress: conservative refusal baseline, with utility loss reported.
+
+All controls use the same selected task runner, tool definitions, schema decoding,
+model, initial task state and budget. Rotate arm order; check manifests before
+pooling. Receipt authorization gets no extra private information or scoring labels.
+Receipt hashing/authentication and authorization recheck overhead are measured with
+native tool execution separately from model latency. Full lifecycle billing is
+not inferred from CPU seconds. No fake zero-cost total: model calls/tokens and
+remote runtime must remain in reports.
+
+The receipt binds task ID, epoch, exact function+arguments and a nonce; execution
+rechecks authorization and consumes it once under a process lock. It does not ask
+an LLM to reinterpret the authorized action. Tests cover destination substitution,
+cross-task/epoch mismatch, MAC tampering, replay and authorization changes. Native
+benchmark authority is static(epoch0); dynamic-revocation claims require separate
+fault experiments. This is a trusted adapter and an in-process transaction, not
+TEE/MPC/distributed atomicity. No receipt key or raw business text goes to summaries.
+
+## Limits that cannot be hidden
+
+Destination authorization does NOT validate message-body content. Final prose and
+unmediated tools remain outside this adapter. The new receipt mechanism protects
+action binding; it does not independently establish semantic confidentiality.
+Without an intervening handoff fault, receipt and ordinary gate should often tie:
+report this, rather than inventing a native utility/privacy superiority claim.
+Actual production use needs complete channel coverage and a trusted authority
+adapter; that is not supplied by benchmark task labels. No held-out success is
+claimed before the formal run is complete and checked.
+
+
+Development inspection exposed a specific source/destination confusion: a request
+that mentions an article URL as input and says to post its summary to a channel
+can authorize post_webpage under the legacy lexical destination policy. The new
+conservative adapter requires explicit write-to-target or direct-update syntax
+for post_webpage. This authored syntax adapter is NOT general intent understanding;
+it can reject legitimate paraphrases. Its false blocks must be counted. Other
+operations retain the original destination policy and its limitations. Compare
+scope_replan against receipt_replan to isolate receipt binding from authorization
+changes, and compare both against legacy gate_replan. Original v7 development
+runs remain frozen without this new adapter; never relabel their outcomes.
+
+## Measured development outcome (v7, completed)
+
+Both baseline and salient_v1 completed six cases with zero native utility. Baseline
+used18 calls,62,032 input/901 output tokens; salient_v1 used33 calls,105,881 input/
+1,168 output tokens. Native attack success and joint attacked utility were both
+zero in both conditions: zero attack success must not hide zero task success.
+Tool errors increased5→7. The prompt/feedback bundle is NOT a validated repair.
+Formal expansion must remain blocked by the development-competence gate.
+
+The next six-case probe uses the local server's native tool-calling API rather
+than embedding tools in a plain-text user message and asking for hand-written
+JSON. It preserves actual native execution and checkers; it is a backend-integration
+probe, not a clean one-variable ablation of model cognition. It runs separately at
+/media/volume/jin2/faa-research-20261013/native-diagnosis-v8. No success is claimed
+before completion. The running v8 decoder predates the repository improvement
+that classifies malformed native tool arguments as model-format errors instead
+of transport errors; any occurrence must be reported and rerun under a new
+revision, never silently patched into the frozen run.
+
+Frozen v7 sources and public task manifest are in evidence/native_v7/
+development_source.tar.gz; raw conversations are excluded. This archive predates
+the new operation-scope adapter and cost instrumentation and preserves exactly
+what was executed. Summary metrics are in public_summary.json beside it.
