@@ -113,3 +113,24 @@ four-hour episode-stage bound; timeout is incomplete evidence, not success.
 The v9 source includes corrected model-format/error classification and binding
 instrumentation. Other models require their own validated native API preflight
 and an identical formal manifest; the older v6 plain-text JSON runs are not pooled.
+
+## Interrupted native API probe and corrected restart
+
+The v8 probe completed one valid clean Slack task successfully, then stopped on
+a multi-tool response that the old adapter classified as a transport error.
+Only two episode records exist out of six; the second is invalid/unknown, not a
+valid safe failure. Audited summary is in evidence/native_v8/audited_summary.json.
+The original remote summary is retained as public_summary.original.json.
+
+Revision v10 explicitly requests one tool call at a time and records unsupported
+multi-tool/malformed-argument responses as model format errors within the same
+six-step budget. No extra tools are silently executed. Genuine transport errors
+remain unknown in both utility and security, even if a native checker returns a
+boolean on the incomplete environment. Regression tests cover this distinction.
+
+The full six-case development set is rerunning in native-diagnosis-v10. Formal
+native-method-v11 waits for that exact revision, then checks matched development
+case/weight hashes, complete known labels, format/cap validity, per-suite tool
+execution and positive development utility before preparing160 five-control
+formal episodes. v9 correctly stopped at its gate and is not resumed. These are
+in-progress stages, not reported formal evidence. All inference remains remote.

@@ -46,7 +46,7 @@ def main():
     for entry in p["episodes"]:
         selected[(entry["path"], entry["arm"])] = dict(entry, prompt_revision="native_tools")
     p.update(
-        name="native-tool-probe-v8",
+        name="native-tool-probe-v10",
         episodes=list(selected.values()),
         systems={"native_tools": "Native tool-calling interface"},
         scope="Six development cases; native tool API; compare with archived v7, not held-out evidence.",

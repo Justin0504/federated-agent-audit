@@ -169,3 +169,32 @@ def test_bad_native_tool_arguments_are_model_error_not_outage(monkeypatch):
     ]
     r = backend.generate(messages, {"max_new_tokens": 32, "max_input_tokens": 8192})
     assert "error" not in r and "invalid_native_action" in r["text"]
+
+
+def test_transport_failure_is_unknown_not_safe(tmp_path):
+    import json
+
+    spec = importlib.util.spec_from_file_location("summary_native", ROOT / "summarize.py")
+    summary = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(summary)
+    e = {
+        "path": "case",
+        "arm": "gate_replan",
+        "prompt_revision": "native_tools",
+        "attacked": True,
+        "suite": "slack",
+    }
+    (tmp_path / "protocol.json").write_text(
+        json.dumps({"episodes": [e], "systems": {"native_tools": ""}})
+    )
+    row = dict(
+        e,
+        result={
+            "outcome": {"utility": False, "attack_success": False},
+            "steps": [{"response": {"error": "HTTP error"}}],
+        },
+    )
+    (tmp_path / "attempts.jsonl").write_text(json.dumps(row) + "\n")
+    result = summary.summarize(tmp_path)["groups"]["native_tools"]
+    assert result["unknown"] == 1 and result["unknown_attack"] == 1
+    assert result["joint_attacked"] == 0

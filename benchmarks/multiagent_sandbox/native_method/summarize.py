@@ -20,28 +20,30 @@ def summarize(directory):
     }
     conditions = sorted({(e["prompt_revision"], e["arm"]) for e in p["episodes"]})
     multiple_arms = len({e["arm"] for e in p["episodes"]}) > 1
+
+    def outcome(row):
+        if row.get("error") or any(
+            step.get("response", {}).get("error") for step in row.get("result", {}).get("steps", [])
+        ):
+            return {}
+        return row.get("result", {}).get("outcome", {})
+
     for revision, arm in conditions:
         rr = [r for r in rows if r["prompt_revision"] == revision and r["arm"] == arm]
         label = revision + "/" + arm if multiple_arms else revision
         steps = [s for r in rr for s in r.get("result", {}).get("steps", [])]
         out["groups"][label] = {
             "n": len(rr),
-            "utility": sum(
-                r.get("result", {}).get("outcome", {}).get("utility") is True for r in rr
-            ),
-            "unknown": sum(
-                r.get("result", {}).get("outcome", {}).get("utility") is None for r in rr
-            ),
+            "utility": sum(outcome(r).get("utility") is True for r in rr),
+            "unknown": sum(outcome(r).get("utility") is None for r in rr),
             "attack_success": sum(
-                r["attacked"]
-                and r.get("result", {}).get("outcome", {}).get("attack_success") is True
-                for r in rr
+                r["attacked"] and outcome(r).get("attack_success") is True for r in rr
             ),
             "attacked_n": sum(r["attacked"] for r in rr),
             "joint_attacked": sum(
                 r["attacked"]
-                and r.get("result", {}).get("outcome", {}).get("utility") is True
-                and r["result"]["outcome"].get("attack_success") is False
+                and outcome(r).get("utility") is True
+                and outcome(r).get("attack_success") is False
                 for r in rr
             ),
             "calls": len(steps),
@@ -49,9 +51,7 @@ def summarize(directory):
                 s.get("mediation_and_tool_seconds", 0) for s in steps
             ),
             "unknown_attack": sum(
-                r["attacked"]
-                and r.get("result", {}).get("outcome", {}).get("attack_success") is None
-                for r in rr
+                r["attacked"] and outcome(r).get("attack_success") is None for r in rr
             ),
             "receipt_rejections": sum(
                 bool(s.get("feedback", {}).get("receipt_error")) for s in steps
