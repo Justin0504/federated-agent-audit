@@ -280,3 +280,45 @@ def test_native_batch_execution_is_bounded_authorized_and_costed(monkeypatch):
 
     with pytest.raises(ValueError):
         runner.unpack_actions('{"actions":[{"function":"read","args":{}},{"final":"bad"}]}')
+
+
+def test_formal_arms_inherit_validated_budget(tmp_path, monkeypatch):
+    import importlib
+    import json
+
+    monkeypatch.syspath_prepend(str(ROOT))
+    prep = importlib.import_module("prepare_comparison")
+    dev = tmp_path / "dev"
+    dev.mkdir()
+    summary = {
+        "complete": True,
+        "groups": {
+            "baseline": {"utility": 0},
+            "salient_v1": {
+                "utility": 1,
+                "unknown": 0,
+                "format_errors": 0,
+                "caps": 0,
+                "suites_with_tools": ["slack", "travel", "workspace"],
+            },
+        },
+    }
+    (dev / "public_summary.json").write_text(json.dumps(summary))
+    (dev / "protocol.json").write_text(
+        json.dumps({"max_steps": 6, "max_new_tokens": 1024, "max_input_tokens": 8192})
+    )
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "protocol.json").write_text(json.dumps({"cases": [{"task": "heldout"}]}))
+
+    def prepare(_, target):
+        target.mkdir()
+        (target / "protocol.json").write_text(
+            json.dumps({"cases": [{"task": "dev"}], "max_new_tokens": 512, "systems": {}})
+        )
+
+    monkeypatch.setattr(prep, "prepare", prepare)
+    result = prep.prepare_comparison(source, tmp_path / "formal", dev / "public_summary.json")
+    assert result["max_new_tokens"] == 1024 and result["max_steps"] == 6
+    assert len(result["episodes"]) == 5
+    assert len(result["development_protocol_sha256"]) == 64

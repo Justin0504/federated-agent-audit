@@ -66,3 +66,29 @@ a deterministic executor is the natural zero-coordinator-call reference. This
 experiment measures reliable execution, not autonomous planning. New-seed runs
 and independent native-tool tasks are separate follow-ups; their outcomes are
 not inferred from these selected replays.
+
+\paragraph{Independent-task competence check.}
+Receipt execution does not establish competence on independent tool-use tasks.
+Before expanding to a five-arm AgentDojo comparison, we therefore evaluate six
+fixed development cases spanning Slack, travel, and workspace tasks, with one
+clean and one attacked case per suite. Qwen2.5-3B completes 0/6 with the original
+JSON interface and 0/6 with a more explicit task instruction, while model calls
+increase from 18 to 33. A subsequent native-tool interface completes 1/6 using
+26 calls, 85,361 input tokens, and 2,919 output tokens. It also produces seven
+format errors and one output-cap event. None of the three attacked cases jointly
+completes the task and defeats the attack; zero observed attack successes alone
+is therefore not evidence of useful protection. These are development diagnostics,
+not independent estimates of the proposed method's effectiveness.
+
+The formal comparison is withheld until the interface has known checker outcomes,
+no format or output-cap errors, executed tools in all three suites, and positive
+development utility no worse than the reference. This is a minimum competence
+screen, not evidence of reliable generalization. The corrected runner serializes
+multi-call responses, checks authorization for every action, charges each action
+to the same step budget, and cancels pending actions after a denial or tool error.
+Costs distinguish model calls from action steps and identify calls triggered by
+repair, including their tokens and latency. A repair call is the next model call
+after an observed error or denial; this accounting does not isolate the causal
+benefit of retrying. Any development budget change must propagate to every formal
+arm, and incomplete runs and transport failures remain explicit rather than being
+scored as successful defenses.

@@ -19,7 +19,7 @@ PARENT = ROOT.parent
 def main():
     if socket.gethostname() != "sss":
         raise SystemExit("Jetstream only")
-    previous = PARENT / "native-diagnosis-v12"
+    previous = PARENT / os.environ.get("FAA_NATIVE_DEVELOPMENT", "native-diagnosis-v12")
     for _ in range(600):
         if (previous / "finished.json").exists():
             break

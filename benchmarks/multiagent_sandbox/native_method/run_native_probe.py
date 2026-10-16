@@ -38,6 +38,9 @@ def main():
             h.update(chunk)
     if h.hexdigest() != EXPECTED:
         raise SystemExit("weight hash mismatch")
+    output_budget = int(os.environ.get("FAA_NATIVE_OUTPUT_TOKENS", "512"))
+    if output_budget not in (512, 1024):
+        raise SystemExit("unsupported development output budget")
     target = ROOT / "development"
     prepare(PARENT / "agentdojo-schema-v6-qwen25_3b", target)
     shutil.copy2(ROOT / "native_backend.py", target / "backend.py")
@@ -46,7 +49,8 @@ def main():
     for entry in p["episodes"]:
         selected[(entry["path"], entry["arm"])] = dict(entry, prompt_revision="native_tools")
     p.update(
-        name="native-tool-probe-v12",
+        name=ROOT.name,
+        max_new_tokens=output_budget,
         episodes=list(selected.values()),
         systems={"native_tools": "Native tool-calling interface"},
         scope="Six development cases; native tool API; compare with archived v7, not held-out evidence.",

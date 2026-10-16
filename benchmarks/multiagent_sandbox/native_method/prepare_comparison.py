@@ -46,6 +46,7 @@ def prepare_comparison(
     # This is a declared development selection rule, not a held-out score filter.
     if g["utility"] == 0 or g["utility"] < reference["groups"]["baseline"]["utility"]:
         raise ValueError("no demonstrated development competence; do not scale yet")
+    selected_protocol = json.loads(Path(development_summary).with_name("protocol.json").read_text())
     prepare(source, target)
     p = json.loads((target / "protocol.json").read_text())
     formal = json.loads((source / "protocol.json").read_text())
@@ -55,7 +56,13 @@ def prepare_comparison(
     if revision == "native_tools":
         shutil.copy2(Path(__file__).with_name("native_backend.py"), target / "backend.py")
         p["systems"]["native_tools"] = "Native tool-calling interface"
-    p.update(name="native-method-v13", cases=formal["cases"], episodes=[])
+    p.update(name=target.parent.name, cases=formal["cases"], episodes=[])
+    # Every arm inherits the validated development budget, including final answers.
+    for key in ("max_steps", "max_new_tokens", "max_input_tokens"):
+        p[key] = selected_protocol[key]
+    p["development_protocol_sha256"] = hashlib.sha256(
+        Path(development_summary).with_name("protocol.json").read_bytes()
+    ).hexdigest()
     p["source_hashes"] = {
         f.name: hashlib.sha256(f.read_bytes()).hexdigest() for f in target.glob("*.py")
     }

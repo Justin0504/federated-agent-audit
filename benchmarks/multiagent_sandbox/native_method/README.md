@@ -164,3 +164,21 @@ unchanged weights, six steps, 512 output tokens, and 8192 context.
 32 disjoint cases across five arms. All arms use this same serialization and
 budget. Failures and caps remain visible; no passing outcome is assumed.
 The original v7/v8/v10 evidence is retained and must not be pooled with v12.
+
+### Conditional output-budget diagnostic
+
+At the four-completed-case checkpoint, v12 has 0 format errors, one output cap,
+1/4 utility, and 0/2 attacked joint successes. This is incomplete, not a final
+result or a paired improvement estimate. The remaining cases continue unchanged.
+A separately queued v14 runs only after the v13 gate rejects a complete probe
+with caps but no format errors or unknown outcomes. It changes only the output
+ceiling from 512 to 1024; weights, cases, six action steps and 8192 context remain
+fixed. It does not repair already-observed results in place.
+
+`run_budget_followup.py` records a skip if the original gate passes or the
+failure does not meet this criterion. Otherwise `native-diagnosis-v14` runs the
+six cases and `native-method-v15` waits on the unchanged gate. Formal preparation
+inherits and hashes the validated development protocol's step, input, and output
+budgets for every arm. This diagnoses output-budget sensitivity, not a method
+advantage. Repair costs include input/output tokens and elapsed inference time;
+wall time is CPU-runtime-specific and is not a commercial API price estimate.
