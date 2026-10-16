@@ -1,0 +1,44 @@
+\subsection{Paired protocol and model checks}
+\label{sec:paired-protocol}
+We extend the authored scheduling sandbox to test whether marker removal also
+limits inference about private sets. Three finite decision rules select the first
+common option, the cheapest common option under public costs, or the first option
+approved by two of three members. Feasible and infeasible cases are balanced.
+These are controlled variations of a shared representation, not three independent
+application benchmarks. Twin worlds differ in one member's private bit while
+preserving the authorized decision and the other members' inputs.
+
+\paragraph{Information and execution.}
+An enumerating observer knows the other two members' sets and the authorized
+result. We report $\log_2(|\Omega_0|/|\Omega_T|)$ for the sets of compatible private
+states before and after disclosure. This is information gain under a stipulated
+uniform conditional prior; it is not an estimate of population entropy or a
+semantic confidentiality guarantee. The exact-redaction and structured controls
+expose the full set, while a membership oracle answers eight adaptive queries.
+A trusted task-bound broker exposes only the authorized result and returns a
+constant closed-task response to further queries. Its restricted interface makes
+zero additional information expected by construction; it is an oracle-like
+control, not a cryptographic implementation or evidence that an agent discovers
+minimal disclosure autonomously.
+
+Three member agents submit source-verified proposals. The proposals are shared
+across controls, and a model coordinator executes the resulting receipt. Each
+control gets at most one validator-triggered retry using the already-public
+authorized result. We retain initial errors and score the final action against
+the independently computed task result. Joint success requires correct execution
+and zero additional information under the stated observer model.
+
+% Measured table is inserted after complete, manifest-matched exports are checked.
+\input{paired_protocol_results}
+
+\paragraph{Limits and follow-up.}
+The privacy comparison concerns protocol payloads; model-output differences are
+recorded separately, and timing channels are excluded. Fixed control order and
+prompt caching confound latency comparisons, so observed coordinator time cannot
+establish a policy speedup. Historical traces record total tokens and elapsed time,
+not the separate time of each retry; the next instrumentation version separates
+these quantities and rotates control order. Small paired samples do not establish
+statistically reliable model rankings. Qwen2.5-3B and Qwen3-8B differ in model family
+as well as size. Closed-provider coordinators and independent adaptive observers
+are planned extensions, not completed experiments; they must see only the released
+view and use the same frozen tasks and query budgets.

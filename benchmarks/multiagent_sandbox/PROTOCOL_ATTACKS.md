@@ -189,7 +189,7 @@ up to 792 model calls including retries. Runtime/format gates decide expansion;
 low utility or high leakage must not suppress results. The source does not launch
 on a workstation. The initial launcher hit Python 3.10's missing file_digest API
 before inference; chunked hashing fixed that compatibility issue. The failed log
-is retained remotely. Expanded results are not yet included in this document.
+is retained remotely. Expanded results are reported below.
 
 
 ### First completed v4 smoke result (3B)
@@ -200,5 +200,45 @@ Meeting and cost selection: 4/4 utility in every arm. Quorum: 4/4 for exact,
 structured and task-bound controls, 2/4 for membership queries. Both failed
 quorum actions remained wrong after the one allowed retry; they are retained as
 failures, not repaired by the scorer. Task-bound joint success was 12/12 across
-three rules. This six-pair smoke is small and has no completed matched 8B result
-yet. The expanded 3B run and queued 8B stages must be reported separately.
+three rules. This six-pair smoke is kept separate from the completed expanded stage below.
+
+For the proposed closed-model coordinator/attacker experiments, see
+[CLOSED_MODEL_PROTOCOL.md](CLOSED_MODEL_PROTOCOL.md). No paid run is included.
+
+
+### Complete matched expanded results (Jetstream)
+
+Both configurations completed 96/96 strategy episodes, with identical manifest
+`5e5f7b5c1564ab5cb37f5dce6db537cfa98c4a75f9fe9a13024f6e96f3573488`.
+There are 12 twin-pair clusters, 24 worlds and four controls per model; the 192
+strategy episodes are not 192 independent samples. No infrastructure, member,
+format or output-cap failures were recorded. Frozen executed source: cf206be.
+
+| Control | 3B first/final | 8B first/final | Joint 3B / 8B | Retries 3B / 8B | Extra bits |
+|---|---:|---:|---:|---:|---:|
+| Exact redaction | 24/24 | 22/22 | 0 / 0 | 0 / 2 | 6.42 |
+| Structured release | 24/24 | 22/22 | 0 / 0 | 0 / 2 | 6.42 |
+| Membership oracle | 20/20 | 20/21 | 0 / 0 | 4 / 4 | 6.42 |
+| Task-bound | 24/24 | 21/21 | 24 / 21 | 0 / 3 | 0 |
+
+First/final are counts out of 24, not fractions. All arms correctly returned null
+on all 12 infeasible worlds per model; residual errors concern feasible actions.
+On task-bound feasible worlds this is 12/12 versus 9/12. Paired membership outcomes
+are 18 both-success, two 3B-only, three 8B-only and one both-fail; reporting only the
+one-count marginal improvement would hide these disagreements.
+
+3B uses 72 shared member + 100 coordinator calls (172 total), including four
+unsuccessful retries. 8B uses 72 + 107 calls (179 total), with one recovery in 11
+retries. Total is 351 calls, excluding separate smoke runs. Coordinator tokens and
+observed elapsed times are in `evidence/paired_models/expanded_analysis.json`.
+Fixed arm order and prompt caching confound timing; historical runs do not isolate
+retry-only latency/tokens. Future instrumentation records those separately and
+rotates order, but these completed runs must not be relabeled as counterbalanced.
+
+The 6.42-bit estimate assumes a finite uniform conditional prior; zero task-bound
+payload leakage follows from the trusted broker's restricted interface, not from
+a learned defense. One 8B quorum twin pair has different coordinator outputs despite
+identical task-bound payloads; this is not itself evidence of secret dependence.
+Model families differ, so this is neither a parameter scaling law nor a reliable
+ranking. Sanitized row exports and a validating paired analysis are committed;
+private messages and member calendars remain remote.

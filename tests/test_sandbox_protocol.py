@@ -105,6 +105,7 @@ def test_bounded_repair_preserves_initial_failure(monkeypatch):
     )
     assert not row["initial_utility"] and row["utility"] and row["joint"]
     assert row["coordinator_calls"] == 2 and row["seconds"] == 2
+    assert row["retry_seconds"] == 1 and row["retry_input_tokens"] == 1
     assert not s.valid_action('{"slot":false}', 0)
 
 
@@ -121,3 +122,67 @@ def test_sweep_gate_ignores_utility_but_rejects_bad_runtime():
     assert sweep.gate(s)
     s["format_errors"] = 3
     assert not sweep.gate(s)
+
+
+def test_pair_analysis_refuses_unmatched_or_incomplete():
+    import copy
+
+    import pytest
+
+    analysis = importlib.import_module("benchmarks.multiagent_sandbox.paired_analysis")
+    d = {
+        "summary": {"complete": True, "planned": 0},
+        "rows": [],
+        "protocol": {"case_manifest_sha256": "a"},
+    }
+    other = copy.deepcopy(d)
+    other["protocol"]["case_manifest_sha256"] = "b"
+    with pytest.raises(ValueError, match="unmatched"):
+        analysis.compare(d, other)
+    other["summary"]["complete"] = False
+    with pytest.raises(ValueError, match="incomplete"):
+        analysis.compare(d, other)
+
+
+def test_pair_analysis_accepts_complete_keys_and_preserves_costs():
+    import copy
+
+    analysis = importlib.import_module("benchmarks.multiagent_sandbox.paired_analysis")
+    rows = [
+        {
+            "task": "meeting",
+            "case": 0,
+            "world": w,
+            "arm": arm,
+            "null_case": False,
+            "utility": True,
+            "joint": True,
+            "additional_bits": 0,
+            "coordinator_calls": 1,
+            "seconds": 2,
+        }
+        for arm in analysis.ARMS
+        for w in (0, 1)
+    ]
+    d = {
+        "summary": {
+            "complete": True,
+            "planned": 8,
+            "model": "left",
+            "member_calls": 6,
+            "coordinator_calls": 8,
+        },
+        "rows": rows,
+        "protocol": {
+            "case_manifest_sha256": "a",
+            "source_hashes": {},
+            "seed": 1,
+            "pairs": 1,
+            "tasks": ["meeting"],
+        },
+    }
+    other = copy.deepcopy(d)
+    other["summary"]["model"] = "right"
+    result = analysis.compare(d, other)
+    assert result["paired_episodes"] == 8
+    assert result["models"]["left"]["arms"]["task_bound"]["seconds"] == 4

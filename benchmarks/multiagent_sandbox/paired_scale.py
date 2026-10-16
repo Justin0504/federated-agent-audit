@@ -138,6 +138,10 @@ def execute(observation, expected, endpoint):
         "repair_attempted": not initial,
         "repair_success": not initial and final,
         "coordinator_calls": len(responses),
+        "initial_seconds": first["seconds"],
+        "retry_seconds": sum(r["seconds"] for r in responses[1:]),
+        "retry_input_tokens": sum(r["input_tokens"] for r in responses[1:]),
+        "retry_output_tokens": sum(r["output_tokens"] or 0 for r in responses[1:]),
         "format_errors": sum(not well_formed(r["text"]) for r in responses),
         "coordinator_outputs": [r["text"] for r in responses],
         "output_caps": sum(r["output_cap"] for r in responses),
@@ -187,6 +191,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--expected-host", required=True)
     ap.add_argument("--model-id", required=True)
+    ap.add_argument("--arm-order", choices=("fixed", "rotated"), default="rotated")
     ap.add_argument("--model-sha256", required=True)
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--pairs", type=int, default=2)
@@ -239,7 +244,9 @@ def main():
                     raw.flush()
                 except (OSError, RuntimeError, ValueError, KeyError) as exc:
                     submissions.append((False, type(exc).__name__))
-            for arm in base.ARMS:
+            offset = (TASKS.index(task) + case) % len(base.ARMS)
+            arms = base.ARMS if a.arm_order == "fixed" else base.ARMS[offset:] + base.ARMS[:offset]
+            for arm in arms:
                 for world, inputs in enumerate(worlds):
                     ok, error = submissions[world]
                     expected = solve(inputs, task)
