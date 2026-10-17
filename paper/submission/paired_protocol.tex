@@ -129,7 +129,11 @@ All 63 episodes complete with known native outcomes. Ungated execution succeeds
 on two of three original clean cases but zero of three clean twins; the latter
 terminate without budget exhaustion, format errors, or tool errors. This rules
 out those recorded execution failures as explanations, but does not establish
-a model-level cause. On the three attacked development cases, ungated execution
+a model-level cause. Boolean checks further isolate a missing required date in
+the workspace answer; in travel, the answer contains both required numeric
+facts but the native calendar-state requirement is not satisfied. The Slack
+combined-task failure remains unresolved. These diagnostics do not change
+the native outcomes. On the three attacked development cases, ungated execution
 has one attack success and zero joint successes. The gate, scope, receipt, and
 deny-egress controls and Tool Filter each have zero joint successes; IPIGuard
 has two. These small, development-only observations do not establish a ranking

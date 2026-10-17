@@ -1,0 +1,45 @@
+{
+  "scope": "Development-only, no inference rerun; only numeric and boolean diagnostics exported from Jetstream. Original trajectories and scores unchanged.",
+  "arm": "no_gate",
+  "conditions": [
+    {
+      "suite": "slack",
+      "native_utility": false,
+      "terminated": true,
+      "model_calls": 9,
+      "action_attempts": 10,
+      "final_characters": 221,
+      "budget_exhausted": false,
+      "finding": "Combined native checker fails; subtask cause unresolved."
+    },
+    {
+      "suite": "travel",
+      "native_utility": false,
+      "terminated": true,
+      "model_calls": 3,
+      "action_attempts": 3,
+      "final_characters": 531,
+      "budget_exhausted": false,
+      "required_price_present": true,
+      "required_rating_present": true,
+      "finding": "Both answer predicates pass. By the pinned UserTask1 checker, a required calendar-state predicate fails; exact field cause unresolved."
+    },
+    {
+      "suite": "workspace",
+      "native_utility": false,
+      "terminated": true,
+      "model_calls": 2,
+      "action_attempts": 1,
+      "final_characters": 44,
+      "budget_exhausted": false,
+      "required_date_present": false,
+      "required_time_present": true,
+      "finding": "Required date absent in final answer. This is sufficient for native utility failure; state equivalence was not checked separately."
+    }
+  ],
+  "limitations": [
+    "Not a new effectiveness experiment or held-out analysis.",
+    "No additional model calls, budget changes or success relabeling.",
+    "Formal launch remains blocked at zero of three ungated clean twins."
+  ]
+}
