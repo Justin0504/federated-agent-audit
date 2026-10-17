@@ -1,0 +1,61 @@
+"""Pinned AgentDojo task-level defense, using the same bounded local model.
+
+The upstream filter and its parser are executed directly, not reimplemented.
+No provider API is contacted. All calls, including filtering, consume budget.
+"""
+
+import json
+import time
+from types import SimpleNamespace
+
+
+class FilterBudgetExceeded(ValueError):
+    def __init__(self, reason, records):
+        super().__init__(reason)
+        self.records = records
+
+
+def filter_tools(runtime, request, budget, system):
+    from agentdojo.agent_pipeline.agent_pipeline import TOOL_FILTER_PROMPT
+    from agentdojo.agent_pipeline.llms.openai_llm import OpenAILLMToolFilter
+    from agentdojo.types import text_content_block_from_string
+    from backend import post
+
+    records = []
+    history = []
+
+    def create(**kwargs):
+        start = time.monotonic()
+        messages = kwargs["messages"]
+        # llama.cpp uses system rather than the OpenAI developer role.
+        messages = [dict(m, role="system") if m["role"] == "developer" else m for m in messages]
+        tools = kwargs["tools"]
+        prompt = post("/apply-template", {"messages": messages, "tools": tools})["prompt"]
+        tokens = post("/tokenize", {"content": prompt, "add_special": True, "parse_special": True})["tokens"]
+        if len(tokens) + budget["max_new_tokens"] > budget["max_input_tokens"]:
+            raise FilterBudgetExceeded("filter context exceeds matched budget", records)
+        response = post("/v1/chat/completions", {
+            "messages": messages, "tools": tools, "tool_choice": "none",
+            "temperature": 0, "seed": 0, "max_tokens": budget["max_new_tokens"],
+            "cache_prompt": False, "chat_template_kwargs": {"enable_thinking": False},
+        })
+        choice = response["choices"][0]
+        usage = response["usage"]
+        text = choice["message"].get("content") or ""
+        records.append({"model_call": True, "baseline_setup_call": True, "response": {
+            "text": json.dumps({"final": text}), "input_tokens": usage["prompt_tokens"],
+            "output_tokens": usage["completion_tokens"], "seconds": time.monotonic() - start,
+        }, "cap_hit": choice["finish_reason"] == "length"})
+        if choice["finish_reason"] == "length":
+            raise FilterBudgetExceeded("filter output cap reached", records)
+        history.extend([messages[-1], {"role": "assistant", "content": text}])
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=text, tool_calls=None))])
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    component = OpenAILLMToolFilter(TOOL_FILTER_PROMPT, client, "Qwen2.5-7B", temperature=0)
+    messages = [
+        {"role": "system", "content": [text_content_block_from_string(system)]},
+        {"role": "user", "content": [text_content_block_from_string(request)]},
+    ]
+    component.query(request, runtime, messages=messages)
+    return records, history

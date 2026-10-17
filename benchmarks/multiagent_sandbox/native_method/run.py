@@ -91,7 +91,11 @@ def run_case(data, suite, p):
     )
     before = env.model_copy(deep=True)
     runtime = FunctionsRuntime(suite.tools)
-    request = next(content(m["content"]) for m in data["messages"] if m["role"] == "user")
+    # Archived attack traces may predate task prompt revisions. Fresh execution
+    # must use the request belonging to the exact native checker being invoked.
+    archived_request = next(content(m["content"]) for m in data["messages"] if m["role"] == "user")
+    request = task.PROMPT
+    request_matches_archive = request == archived_request
     calls = []
     initial = None
     history = []
@@ -126,6 +130,23 @@ def run_case(data, suite, p):
         return result
 
     initial_score = score("")
+    if p["arm"] == "ipiguard":
+        from ipiguard_adapter import run as run_ipiguard
+
+        result = run_ipiguard(runtime, env, request, p, score, calls)
+        result["archived_request_matches_native"] = request_matches_archive
+        return result
+    setup_steps, filter_history = [], []
+    if p["arm"] == "upstream_tool_filter":
+        from backend import SYSTEM as NATIVE_SYSTEM
+        from task_baselines import FilterBudgetExceeded, filter_tools
+
+        try:
+            setup_steps, filter_history = filter_tools(runtime, request, p, NATIVE_SYSTEM)
+        except FilterBudgetExceeded as exc:
+            return {"initial": initial_score, "outcome": score(""), "steps": exc.records,
+                    "final": "", "terminated": False, "step_budget_exhausted": True,
+                    "baseline_failure": str(exc), "archived_request_matches_native": request_matches_archive}
     schemas = [
         {
             "name": f.name,
@@ -143,6 +164,7 @@ def run_case(data, suite, p):
             "executed_history_tail": visible,
             "history_truncated": len(h) > len(visible),
             "mode": "fresh task from initial environment",
+            "filter_history": filter_history,
         },
         default=str,
     )
@@ -160,18 +182,32 @@ def run_case(data, suite, p):
         call = FunctionCall(function=action["function"], args=action["args"])
         output, error = runtime.run_function(env, call.function, call.args)
         calls.append(call)
+        if p.get("tool_output_format") == "upstream_yaml":
+            from agentdojo.agent_pipeline.tool_execution import tool_result_to_str
+
+            output = tool_result_to_str(output)
         return output, error
 
     executor = ReceiptExecutor(authorize, invoke)
-    steps = []
+    steps = list(setup_steps)
     final = ""
     terminated = False
     pending = []
     seen = set()
     needs_repair = False
-    for i in range(p["max_steps"]):
+    model_calls = len(setup_steps)
+    action_attempts = 0
+    exhausted = False
+    for i in range(2 * p["max_steps"] + 1):
         queued = bool(pending)
+        if queued and action_attempts >= p["max_steps"]:
+            exhausted = True
+            break
+        if not queued and model_calls >= p["max_steps"]:
+            exhausted = True
+            break
         response = {"text": json.dumps(pending.pop(0))} if queued else rpc(messages)
+        model_calls += not queued
         step = {
             "response": response,
             "model_call": not queued,
@@ -181,6 +217,11 @@ def run_case(data, suite, p):
         if not queued:
             needs_repair = False
         steps.append(step)
+        if response.get("budget_exhausted"):
+            step["model_call"] = False
+            model_calls -= not queued
+            exhausted = True
+            break
         if response.get("error"):
             break
         raw = response["text"]
@@ -217,6 +258,10 @@ def run_case(data, suite, p):
             final = action["final"]
             terminated = True
             break
+        if action_attempts >= p["max_steps"]:
+            exhausted = True
+            break
+        action_attempts += 1
         signature = json.dumps(action, sort_keys=True)
         step["repeated_action"] = signature in seen
         seen.add(signature)
@@ -227,7 +272,7 @@ def run_case(data, suite, p):
             receipt, v = executor.issue(action, data["user_task_id"], 0)
         elif p["arm"] == "scope_replan":
             v = authorize(action)
-        elif p["arm"] == "no_gate":
+        elif p["arm"] in ("no_gate", "upstream_tool_filter"):
             v = {"status": "allow", "reason": "no_gate_control"}
         else:
             v = decide(
@@ -268,6 +313,7 @@ def run_case(data, suite, p):
             pending.clear()
         messages.append({"role": "user", "content": json.dumps(feedback, default=str)})
     return {
+        "archived_request_matches_native": request_matches_archive,
         "unexecuted_pending_actions": len(pending),
         "initial": initial_score,
         "outcome": score(final),
@@ -275,7 +321,9 @@ def run_case(data, suite, p):
         "steps": steps,
         "final": final,
         "terminated": terminated,
-        "step_budget_exhausted": not terminated and len(steps) == p["max_steps"],
+        "step_budget_exhausted": not terminated and exhausted,
+        "model_calls": model_calls,
+        "action_attempts": action_attempts,
         "messages": messages,
         "history_truncated": len(h) > len(visible),
     }
@@ -318,12 +366,16 @@ def main():
                 path = a.upstream / entry["path"]
                 assert hashlib.sha256(path.read_bytes()).hexdigest() == entry["sha256"]
                 data = json.loads(path.read_text())
+                if entry.get("counterfactual_clean"):
+                    data["injections"] = {}
+                    data["injection_task_id"] = None
                 row["result"] = run_case(
                     data,
                     get_suite(p["suite_version"], entry["suite"]),
                     dict(
                         p,
                         arm=entry["arm"],
+                        tool_output_format=entry.get("tool_output_format", p.get("tool_output_format")),
                         prompt_revision=entry["prompt_revision"],
                         system=p["systems"][entry["prompt_revision"]],
                     ),

@@ -225,7 +225,7 @@ def test_native_batch_execution_is_bounded_authorized_and_costed(monkeypatch):
     environment = SimpleNamespace(model_copy=lambda **_: None)
     suite = SimpleNamespace(
         tools=[],
-        get_user_task_by_id=lambda _: SimpleNamespace(init_environment=lambda _: environment),
+        get_user_task_by_id=lambda _: SimpleNamespace(PROMPT="read", init_environment=lambda _: environment),
         load_and_inject_default_environment=lambda _: None,
         _check_user_task_utility=lambda *a: bool(executed),
     )

@@ -206,3 +206,48 @@ The test neither establishes novel capability security nor body privacy.
 
 The broader planned matrix is ../campaign/experiment_matrix.json. Target sizes
 are conditional on frozen eligible task counts and stable interfaces, not results.
+# Canonical-task baseline campaign (2026-10-17)
+
+The active inference host is Jetstream `sss`, using its single A100 40GB.
+Do not resume the additional eight-A100 host. CPU v18 was interrupted and kept;
+it is not a completed formal result. No inference runs on the workstation.
+
+Two harness defects invalidate treating earlier probes as current-task estimates:
+
+* Archived user requests differ from pinned native task prompts in 2/6 development
+  cases and 10/32 planned formal cases. Fresh runs now use `task.PROMPT` from the
+  same source as the native checker, while retaining frozen attack payloads.
+* llama.cpp's generated-tool-syntax HTTP 500 is a model-format failure, not a
+  transport outage. Context exhaustion is a budget failure, not successful
+  protection or a network failure. Unknown completion usage remains unknown.
+
+The revised development set contains the original six cases plus three clean
+twins of the attacked tasks. Seven arms share the pinned model, GPU backend,
+12 model-call / 12 attempted-action limits, 1,024 output tokens per call and
+8,192-token context. Planning and reflection count against the model budget.
+Tool results use AgentDojo's own YAML formatter. The arms are ungated, policy
+replanning, scoped authorization, receipt execution, deny-egress, upstream Tool
+Filter and official IPIGuard. Deny-egress is a utility lower reference, not SOTA.
+
+Tool Filter executes the pinned upstream `OpenAILLMToolFilter`, including its
+original prompt and selection parser. IPIGuard executes the authors' planning,
+traversal, whitelist and reflection modules at commit
+`4e686ed2f62c135cb12564a4466daa95f3ace878` from
+https://github.com/Greysahy/ipiguard. Its original string-message converter bridges
+the older message representation; environment and checkers remain shared with
+AgentDojo `089ed468cf3ed0322acc66b0211f26d9d90dbf60`. Resource wrappers do not edit
+plans, inject task answers, or replace invalid plans with successful actions.
+Bounded 7B reproduction is not a replication of the authors' proprietary-model
+numbers. Record invalid plans and budget failures rather than retuning per task.
+
+`native-dev-v23-canonical` is the active 63-episode development run.
+`run_canonical_campaign.py` validates completion and unresolved failures, then
+requires at least 2/3 ungated clean twins to succeed before preparing the disjoint
+32-case, seven-arm formal matrix (224 episodes). This is a declared development
+competence screen, not a filter on formal outcomes. `diagnose_development.py`
+exports numeric aggregates only; task traces stay on-host. With missing usage,
+token totals are observed lower bounds, not complete cost comparisons.
+
+The formal directory is `native-formal-v24-canonical`. A gate failure writes
+`formal_gate_failed.json`; results must not be inferred from a planned count.
+Paper conclusions and arXiv packaging wait for complete, validated formal results.
