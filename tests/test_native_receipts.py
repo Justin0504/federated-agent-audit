@@ -322,3 +322,18 @@ def test_formal_arms_inherit_validated_budget(tmp_path, monkeypatch):
     assert result["max_new_tokens"] == 1024 and result["max_steps"] == 6
     assert len(result["episodes"]) == 5
     assert len(result["development_protocol_sha256"]) == 64
+
+
+def test_attack_screen_reference_matches_receipt(monkeypatch):
+    import importlib
+
+    monkeypatch.syspath_prepend(str(ROOT))
+    screen = importlib.import_module("attack_screen")
+    for family in screen.FAMILIES:
+        receipt = screen.trial("receipt", family, 0)
+        reference = screen.trial("bound_reference", family, 0)
+        assert receipt["utility"] and reference["utility"]
+        assert not receipt["attack_success"] and not reference["attack_success"]
+        assert receipt["attack_queries"] == reference["attack_queries"] == 8
+    assert screen.trial("reauthorize", "replay", 0)["attack_success"]
+    assert not screen.trial("reauthorize", "revocation", 0)["attack_success"]

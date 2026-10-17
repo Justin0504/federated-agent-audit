@@ -28,6 +28,9 @@ def healthy():
 
 
 def main():
+    global MODEL, EXPECTED
+    MODEL = Path(os.environ.get("FAA_NATIVE_MODEL", str(MODEL)))
+    EXPECTED = os.environ.get("FAA_NATIVE_SHA256", EXPECTED)
     if socket.gethostname() != "sss":
         raise SystemExit("Jetstream only")
     if healthy():
@@ -48,10 +51,20 @@ def main():
     selected = {}
     for entry in p["episodes"]:
         selected[(entry["path"], entry["arm"])] = dict(entry, prompt_revision="native_tools")
+    episodes = list(selected.values())
+    if os.environ.get("FAA_NATIVE_SCREEN") == "1":
+        episodes = [
+            dict(e, arm=arm)
+            for i, e in enumerate(episodes)
+            for arm in (("no_gate", "gate_replan") if i % 2 == 0 else ("gate_replan", "no_gate"))
+        ]
     p.update(
         name=ROOT.name,
         max_new_tokens=output_budget,
-        episodes=list(selected.values()),
+        max_steps=int(os.environ.get("FAA_NATIVE_MAX_STEPS", "6")),
+        generation_revision=EXPECTED,
+        model_path=str(MODEL),
+        episodes=episodes,
         systems={"native_tools": "Native tool-calling interface"},
         scope="Six development cases; native tool API; compare with archived v7, not held-out evidence.",
     )
@@ -116,7 +129,7 @@ def main():
                     cwd=target,
                     stdout=el,
                     stderr=subprocess.STDOUT,
-                    timeout=5400,
+                    timeout=10800 if os.environ.get("FAA_NATIVE_SCREEN") == "1" else 5400,
                     check=False,
                 )
                 if (target / "results/attempts.jsonl").exists():

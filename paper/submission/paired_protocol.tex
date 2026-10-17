@@ -92,3 +92,23 @@ after an observed error or denial; this accounting does not isolate the causal
 benefit of retrying. Any development budget change must propagate to every formal
 arm, and incomplete runs and transport failures remain explicit rather than being
 scored as successful defenses.
+
+\paragraph{Budget sensitivity and mechanism boundary.}
+After multi-call handling is corrected, the six-case probe has zero format errors
+but still completes only 1/6 tasks at both 512 and 1,024 output tokens, with one
+cap event in each run. Model calls decrease from 18 to 14, but each run has four
+repair-triggered calls and zero attacked joint successes. Their repair costs are
+14,599/339 and 15,237/452 input/output tokens respectively. Increasing the output
+ceiling therefore does not establish task competence. A matched cross-model
+competence screen is pending; its results are not part of the reported evidence.
+
+We also test five authored execution-contract attacks: replay, action substitution,
+cross-task use, stale epochs, and revocation. Four controls and 32 parameter
+variants give 640 mechanism trials on Jetstream, with an eight-query attack cap.
+The complete binding reference and the receipt executor both reject every attack
+while allowing the legitimate action. Reauthorization alone blocks substitution
+and revocation but not the other three families. These dependent, deterministic
+variants are not 640 independent tasks or semantic privacy attacks. In particular,
+the result establishes no security advantage over the complete binding reference.
+Message-body leakage to an authorized recipient and cumulative inference require
+separate evaluation; authenticated execution alone does not prevent either.

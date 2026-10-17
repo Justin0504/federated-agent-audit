@@ -182,3 +182,27 @@ inherits and hashes the validated development protocol's step, input, and output
 budgets for every arm. This diagnoses output-budget sensitivity, not a method
 advantage. Repair costs include input/output tokens and elapsed inference time;
 wall time is CPU-runtime-specific and is not a commercial API price estimate.
+
+### P0 screen v16 and mechanism boundary
+
+Both v12 and v14 are complete: 1/6 utility and 0/3 attacked joint success.
+512/1024 output ceilings yielded18/14 model calls, zero format errors but one
+cap each. Four repair calls cost14599/339 and15237/452 input/output tokens.
+Both formal gates failed. Public aggregates are archived by revision.
+
+Jetstream v16 runs the exact six development cases with no_gate and gate_replan
+for 3B/7B/8B:36 episodes total, same12steps/1024output/8192context. This changes
+both action budget and model screening relative to historical probes; it is
+not a held-out effect estimate. Weight hashes are checked, including both7B
+shards. FourCPUthreads, sequential models, bounded runtime. Formal promotion
+is deliberately not automatic from this expanded competence diagnosis.
+
+attack_screen.py is an authored mechanism test, not semantic attack efficacy.
+Five families × four controls ×32 dependent parameter variants =640 trials.
+The complete in-memory binding reference and receipt both block all five
+families. Reauthorization alone blocks substitution/revocation only. Legitimate
+utility here means one authorized mock action, not AgentDojo task completion.
+The test neither establishes novel capability security nor body privacy.
+
+The broader planned matrix is ../campaign/experiment_matrix.json. Target sizes
+are conditional on frozen eligible task counts and stable interfaces, not results.
