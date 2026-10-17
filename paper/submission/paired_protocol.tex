@@ -108,19 +108,42 @@ This small development threshold is a screening rule, not an accuracy claim.
 Across both arms, Qwen2.5-3B and Qwen3-8B each complete one of six tasks;
 Qwen2.5-7B completes all three clean tasks but none of the three attacked tasks.
 For 7B, the observed attack success count falls from one to zero under the gate,
-but attacked joint success remains zero. These results support formal evaluation
-of the 7B configuration, not an effectiveness claim. The 3B configuration also
+but attacked joint success remains zero. These historical results do not justify formal expansion: a subsequent
+provenance audit found that archived requests disagreed with the pinned native
+task prompts in two of six development cases (and ten of 32 planned formal
+cases). The historical screen is retained as a diagnostic, not a valid estimate
+of current-task competence. The 3B configuration also
 has an output-cap event and the 8B configuration fails the clean-utility screen.
 All 36 development episodes are retained, including unsuccessful configurations.
 Model families differ, so this is not a controlled model-size scaling study.
-The held-out 7B run is pending and is excluded from quantitative claims.
-A planned single-A100 replication must use the same weight hash and runtime
-release as its CPU reference; backend-dependent outputs and latency must be
-reported separately. No GPU replication result is reported here.
+The held-out 7B comparison has not started under the corrected protocol.
+
+\paragraph{Canonical GPU development check.}
+We therefore rerun development using requests from the pinned native task
+classes, their matching checkers, and upstream tool-result serialization on a
+Jetstream A100. Nine conditions comprise the original six cases and three
+same-task, no-injection twins of the attacked cases. Seven arms include the five
+system controls below, the upstream AgentDojo Tool Filter, and the official
+IPIGuard implementation adapted to the same local model and bounded runtime.
+All 63 episodes complete with known native outcomes. Ungated execution succeeds
+on two of three original clean cases but zero of three clean twins; the latter
+terminate without budget exhaustion, format errors, or tool errors. This rules
+out those recorded execution failures as explanations, but does not establish
+a model-level cause. On the three attacked development cases, ungated execution
+has one attack success and zero joint successes. The gate, scope, receipt, and
+deny-egress controls and Tool Filter each have zero joint successes; IPIGuard
+has two. These small, development-only observations do not establish a ranking
+or a general privacy guarantee. Four Tool Filter calls have unknown usage;
+reported token totals for that arm are lower bounds.
+The frozen development launch requirement of at least two successful ungated clean
+twins is not met. The 32-task, seven-arm formal comparison is therefore withheld,
+and no favorable effectiveness conclusion is drawn from reduced attack success.
+This corrected GPU protocol is not a matched replication of the historical CPU
+screen, because task requests, serialization, and budget accounting changed.
 
 \paragraph{Matched controls and claim scope.}
-The held-out comparison freezes the same tasks, model, context and action budgets
-for five arms: ungated execution, the existing policy gate with replanning,
+The planned held-out comparison freezes tasks, model, context and action budgets
+for seven arms, including the two upstream defenses and five system controls: ungated execution, the existing policy gate with replanning,
 operation-scoped authorization with replanning, receipt-bound execution with
 replanning, and denial of egress. The latter is a restrictive utility reference,
 not a competitive defense. Scoped authorization is an ablation that isolates
