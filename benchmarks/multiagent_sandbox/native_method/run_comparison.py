@@ -33,7 +33,7 @@ def main():
     # Recompute aggregate from raw on-host rows, including unknown security labels.
     report = summarize(previous / "development/results")
     summary = previous / "development/results/public_summary.json"
-    target = ROOT / "formal-3b"
+    target = ROOT / "formal"
     try:
         if os.environ.get("FAA_SCREEN_COMPARE") == "1":
             prepare_screen_formal(
@@ -125,7 +125,7 @@ def main():
                         cwd=target,
                         stdout=rl,
                         stderr=subprocess.STDOUT,
-                        timeout=14400,
+                        timeout=int(os.environ.get("FAA_FORMAL_TIMEOUT", "14400")),
                         check=False,
                     )
                     status = {"exit_code": r.returncode, "timed_out": False}

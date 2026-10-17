@@ -99,15 +99,37 @@ but still completes only 1/6 tasks at both 512 and 1,024 output tokens, with one
 cap event in each run. Model calls decrease from 18 to 14, but each run has four
 repair-triggered calls and zero attacked joint successes. Their repair costs are
 14,599/339 and 15,237/452 input/output tokens respectively. Increasing the output
-ceiling therefore does not establish task competence. A matched cross-model
-competence screen is in progress; its results are not part of the reported evidence.
-It contrasts ungated and gated executions on the same six development cases at
+ceiling therefore does not establish task competence. A completed matched
+cross-model development screen contrasts ungated and gated executions on the same six cases at
 12 action steps, 1,024 output tokens per call, and an 8,192-token context budget.
 Before formal expansion, the complete screen must have known outcomes, no format
 or output-cap errors, and at least two of three clean ungated tasks completed.
 This small development threshold is a screening rule, not an accuracy claim.
-A single-A100 replication uses the same weight hash and runtime release as the
-CPU screen; backend-dependent outputs and latency must be reported separately.
+Across both arms, Qwen2.5-3B and Qwen3-8B each complete one of six tasks;
+Qwen2.5-7B completes all three clean tasks but none of the three attacked tasks.
+For 7B, the observed attack success count falls from one to zero under the gate,
+but attacked joint success remains zero. These results support formal evaluation
+of the 7B configuration, not an effectiveness claim. The 3B configuration also
+has an output-cap event and the 8B configuration fails the clean-utility screen.
+All 36 development episodes are retained, including unsuccessful configurations.
+Model families differ, so this is not a controlled model-size scaling study.
+The held-out 7B run is pending and is excluded from quantitative claims.
+A planned single-A100 replication must use the same weight hash and runtime
+release as its CPU reference; backend-dependent outputs and latency must be
+reported separately. No GPU replication result is reported here.
+
+\paragraph{Matched controls and claim scope.}
+The held-out comparison freezes the same tasks, model, context and action budgets
+for five arms: ungated execution, the existing policy gate with replanning,
+operation-scoped authorization with replanning, receipt-bound execution with
+replanning, and denial of egress. The latter is a restrictive utility reference,
+not a competitive defense. Scoped authorization is an ablation that isolates
+binding from authority decisions. None of these authored controls is presented
+as an implementation of an external state-of-the-art defense. Presidio measures
+identifier detection in a separate experiment and is not a task-aware AgentDojo
+defense. The complete binding reference is evaluated in the execution-contract
+tests below; no receipt superiority over that reference is claimed. Native attack
+predicates measure benchmark-specific violations, not all semantic disclosures.
 
 We also test five authored execution-contract attacks: replay, action substitution,
 cross-task use, stale epochs, and revocation. Four controls and 32 parameter

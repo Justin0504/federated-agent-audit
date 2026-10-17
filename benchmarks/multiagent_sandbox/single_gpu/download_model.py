@@ -4,6 +4,7 @@ import concurrent.futures
 import hashlib
 import os
 import socket
+import time
 import urllib.request
 from pathlib import Path
 
@@ -18,29 +19,42 @@ def part(i):
     start = i * CHUNK
     end = min(SIZE, start + CHUNK) - 1
     path = ROOT / ("part-%03d" % i)
-    req = urllib.request.Request(
-        URL + "?download=true&faa_part=" + str(i), headers={"Range": f"bytes={start}-{end}"}
-    )
-    with urllib.request.urlopen(req, timeout=120) as response:
-        if response.headers.get("Content-Range") != f"bytes {start}-{end}/{SIZE}":
-            raise RuntimeError("unexpected range response")
-        with path.open("wb") as f:
-            while True:
-                chunk = response.read(1024 * 1024)
-                if not chunk:
-                    break
-                f.write(chunk)
-    if path.stat().st_size != end - start + 1:
-        raise RuntimeError("incomplete range")
-    print("part complete", i, flush=True)
-    return path
+    length = end - start + 1
+    for attempt in range(8):
+        offset = path.stat().st_size if path.exists() else 0
+        if offset > length:
+            raise RuntimeError("oversized cached range")
+        if offset == length:
+            return path  # Final full-file SHA256 still verifies every cached byte.
+        first = start + offset
+        req = urllib.request.Request(
+            URL + f"?download=true&faa_part={i}&offset={offset}",
+            headers={"Range": f"bytes={first}-{end}"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=120) as response:
+                if response.status != 206 or response.headers.get("Content-Range") != f"bytes {first}-{end}/{SIZE}":
+                    raise RuntimeError("unexpected range response")
+                with path.open("ab") as f:
+                    while block := response.read(1024 * 1024):
+                        if f.tell() + len(block) > length:
+                            raise RuntimeError("oversized range response")
+                        f.write(block)
+            if path.stat().st_size == length:
+                print("part complete", i, flush=True)
+                return path
+        except OSError as exc:
+            print("part retry", i, attempt + 1, type(exc).__name__, flush=True)
+        time.sleep(min(2 ** attempt, 30))
+    raise RuntimeError(f"range {i} exhausted retries; partial bytes retained")
 
 
 def main():
     if socket.gethostname() != "zxlyg2286":
         raise SystemExit("Remote GPU host only")
+    ROOT.mkdir(parents=True, exist_ok=True)
     count = (SIZE + CHUNK - 1) // CHUNK
-    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
         paths = list(pool.map(part, range(count)))
     h = hashlib.sha256()
     target = ROOT / "qwen2.5-3b-q4km.gguf.verified"
