@@ -1,0 +1,223 @@
+{
+  "date": "2026-10-16",
+  "status": "planned matrix, not completed results",
+  "hardware": {
+    "verified_new_node": "8x A100-SXM4-80GB, ~75.8GiB free each, /data ~3.7TB, 1TiB RAM",
+    "inference_local": false
+  },
+  "rules": [
+    "Do not sum rows: many ablations reuse the same task pool.",
+    "Task count is limited to frozen upstream eligible manifests; target sizes are not claims about dataset availability.",
+    "Formal main results require complete predeclared task manifests and unchanged metrics; failed trials are not dropped.",
+    "No assumption of receipt novelty over a complete bound capability baseline.",
+    "No unattended full campaign launch: execute staged pilot then measured scaling under existing resource constraints."
+  ],
+  "experiments": [
+    {
+      "id": "E01",
+      "priority": "P0",
+      "title": "执行与计分有效性",
+      "scale": "6开发用例 × 2门控 × 3模型＝36次；12步/1024输出/8192上下文",
+      "status": "运行中：Jetstream v16",
+      "question": "先分离模型能力、工具格式、门控误拒、预算不足。独立人工审计失败类别。"
+    },
+    {
+      "id": "E02",
+      "priority": "P0",
+      "title": "完整外部任务对照",
+      "scale": "先32冻结case × 8控制 × 3模型＝768次；再全量合格独立任务 × 干净/攻击 × 8控制 × 3模型 × 3种子",
+      "status": "待E01通过",
+      "question": "以AgentDojo原生判定器计分；不把未知、拒绝或任务失败算成安全成功。"
+    },
+    {
+      "id": "E03",
+      "priority": "P0",
+      "title": "跨规模及跨家族",
+      "scale": "3B/7B/8B开发；正式增加14–32B和70B级各一个；至少2家族，具体checkpoint先核实许可/接口",
+      "status": "开发阶段已启动",
+      "question": "同任务配对；量化精度、模板、上下文、预算逐项记录；家族变化不解释为纯规模效应。"
+    },
+    {
+      "id": "E04",
+      "priority": "P0",
+      "title": "强基线公平性",
+      "scale": "8控制：无防护、提示策略、现有权限门控、动作凭证、完整一次性绑定参考、语义隐私检查、Presidio、全拒绝；同一主矩阵复用",
+      "status": "部分实现",
+      "question": "PrivacyChecker优先核实公开实现；只比较共同威胁模型。Presidio正文能力不代替任务权限。"
+    },
+    {
+      "id": "E05",
+      "priority": "P0",
+      "title": "自适应语义攻击",
+      "scale": "100任务场景 × 6攻击族 × 4防御 × 2攻击模型＝4800场攻击；每场最多16次查询",
+      "status": "待实现",
+      "question": "授权目的地正文外泄、上下文投毒、编码/转述、多轮拼接、重复查询、协作串谋。攻击模型与受测模型交叉，开发/测试攻击模板隔离。"
+    },
+    {
+      "id": "E06",
+      "priority": "P0",
+      "title": "执行契约攻击",
+      "scale": "已跑5族 × 4控制 × 32参数变体＝640条；后续并发/重启故障扩展",
+      "status": "640条已完成，作者构造机制测试",
+      "question": "重放、参数替换、跨任务、过期epoch、撤销；完整绑定参考与凭证同为0成功。变体非独立任务，非语义隐私证据。"
+    },
+    {
+      "id": "E07",
+      "priority": "P0",
+      "title": "信息累积与双世界",
+      "scale": "200保留任务对 × 查询预算1/2/4/8/16/32 × 4控制 × 3接收模型＝14400场",
+      "status": "现有小沙盒；独立攻击者待补",
+      "question": "双世界保持授权输出不变；分别评估隐藏属性猜测、成员识别、授权输出之外的增量。受控先验指标与现实语义指标分开。"
+    },
+    {
+      "id": "E08",
+      "priority": "P0",
+      "title": "第二个独立隐私基准",
+      "scale": "PrivacyLens-Live优先可复现性审查；否则PrivacyLens独立语义切片；目标200–500可用case × 4控制 × 3模型",
+      "status": "待核实/接入",
+      "question": "保留原生隐私指标；没有原生任务成功判定器则不伪称端到端utility。新适配部分单列。"
+    },
+    {
+      "id": "E09",
+      "priority": "P1",
+      "title": "独立长流程任务",
+      "scale": "tau2-bench公开环境先20任务，扩展可用全量 × 4控制 × 3模型",
+      "status": "待接入",
+      "question": "保留原生任务完成度；若注入私有数据则标为派生扩展，不称原始benchmark。"
+    },
+    {
+      "id": "E10",
+      "priority": "P0",
+      "title": "组件消融",
+      "scale": "100保留case × 6消融 × 3模型 × 3种子＝5400次",
+      "status": "待主矩阵稳定",
+      "question": "去除语义检查、任务绑定、一次性状态、重新授权、恢复机制、最小披露；每项隔离变量。"
+    },
+    {
+      "id": "E11",
+      "priority": "P0",
+      "title": "重试因果对照",
+      "scale": "100保留case × 4恢复策略 × 3模型 × 3种子＝3600次",
+      "status": "已有选择性诊断；独立对照待补",
+      "question": "不重试/原历史/新上下文/结构化反馈；随机分配预算内策略，保留失败成本，不只抽成功例。"
+    },
+    {
+      "id": "E12",
+      "priority": "P1",
+      "title": "预算与Pareto曲线",
+      "scale": "50保留case × 4步预算 × 3输出预算 × 4控制 × 3模型＝7200次",
+      "status": "512/1024开发诊断已完成",
+      "question": "步数6/12/24/48，输出512/1024/2048；对安全、utility、GPU时间同时画前沿。不得只汇报最佳预算。"
+    },
+    {
+      "id": "E13",
+      "priority": "P0",
+      "title": "标签质量与隐私边界",
+      "scale": "500人工核验片段；漏标/错标/伪造标签各5档 × 4控制",
+      "status": "待系统化",
+      "question": "测precision/recall/calibration及对最终联合成功的影响；原始正文、元数据和标签可见性明确。"
+    },
+    {
+      "id": "E14",
+      "priority": "P0",
+      "title": "误拒与最小披露",
+      "scale": "300合法共享/否定授权/来源URL/委托场景 × 4控制 × 3模型＝3600次",
+      "status": "少量回归测试",
+      "question": "避免策略靠全拒绝获得低泄露；测授权召回、错误披露、任务成功、冗余披露。"
+    },
+    {
+      "id": "E15",
+      "priority": "P1",
+      "title": "元数据再识别与链接攻击",
+      "scale": "1000合成主体 × 多轮发布；3种攻击者知识 × 4保护配置",
+      "status": "待实现",
+      "question": "验证center-blind不是metadata-private；衡量主体链接和敏感属性预测，明确不能推导总体DP。"
+    },
+    {
+      "id": "E16",
+      "priority": "P1",
+      "title": "脱敏/DP隐私效用",
+      "scale": "10隐私预算 × 5随机种子 × 3任务切片；使用同一冻结案例",
+      "status": "旧实验需迁移/复核",
+      "question": "若保留非DP字段不得宣称整体DP；报告邻接定义、组合、检测损失和任务损失。"
+    },
+    {
+      "id": "E17",
+      "priority": "P0",
+      "title": "判定器与统计可信度",
+      "scale": "至少300分层抽样输出双人盲审；全部实验按任务聚类bootstrap；预注册分析",
+      "status": "待执行",
+      "question": "错误/未知全部单列；评审者一致性、不同判断模型敏感性；无人工数据不得填结果。"
+    },
+    {
+      "id": "E18",
+      "priority": "P1",
+      "title": "租户/agent拓扑扩展",
+      "scale": "3/8/16/32/64agent × 链/星/树/图 × 3负载 × 3重复＝180场",
+      "status": "待系统实验",
+      "question": "agent数不是同时驻留模型数；测跨租户污染、链路覆盖、任务联合成功。"
+    },
+    {
+      "id": "E19",
+      "priority": "P1",
+      "title": "并发与故障恢复",
+      "scale": "8类故障 × 4控制 × 100故障时点＝3200次；并发1/8/32/128",
+      "status": "待实现",
+      "question": "服务重启、重复投递、乱序、权限撤销竞态、存储失败、审计断连；副作用不得重复。"
+    },
+    {
+      "id": "E20",
+      "priority": "P1",
+      "title": "部署长稳与吞吐",
+      "scale": "24小时试跑后72小时；目标10万到100万事件；1/8/32/128租户",
+      "status": "待部署",
+      "question": "分别报告真实模型任务与回放流量；P50/P95/P99、内存、丢事件、吞吐、预算，不能把回放算LLM任务。"
+    },
+    {
+      "id": "E21",
+      "priority": "P1",
+      "title": "真实工作流试点",
+      "scale": "3场景 × 30–50独立任务 × 有/无防护 × 2模型；受控Slack/邮件/日程沙盒",
+      "status": "待授权环境/实现",
+      "question": "用沙盒账户和虚构敏感信息；不发真实外部消息，不使用真实用户隐私。Telegram可作后续展示。"
+    },
+    {
+      "id": "E22",
+      "priority": "P1",
+      "title": "分布外迁移",
+      "scale": "2未见领域 × 3语言/表达变化 × 100case × 3控制",
+      "status": "待实施",
+      "question": "固定规则/提示后再测；显式记录作者生成与外部来源，避免开发集泄漏。"
+    },
+    {
+      "id": "E23",
+      "priority": "P1",
+      "title": "异构agent及攻击者迁移",
+      "scale": "3发送模型 × 3接收模型 × 2攻击模型 × 50任务 × 4控制＝3600场",
+      "status": "待主评测稳定",
+      "question": "区分攻击生成器和防御模型；只暴露符合威胁模型的上下文。"
+    },
+    {
+      "id": "E24",
+      "priority": "P1",
+      "title": "独立复现与资源成本",
+      "scale": "第二机器重跑固定10%任务；固定模型哈希/依赖/容器/种子；报告冷启动及GPU小时",
+      "status": "待实现",
+      "question": "新8×A100 vs Jetstream重跑分开；量化/后端差异不可直接当方法收益。"
+    },
+    {
+      "id": "E25",
+      "priority": "可选",
+      "title": "闭源模型外部验证",
+      "scale": "2API模型 × 100任务 × 4控制 × 2条件＝1600次",
+      "status": "需要新凭据和预算；未启动",
+      "question": "固定返回版本；按实际Token价格计费；API key不进仓库，不复用历史泄漏key。"
+    }
+  ],
+  "sources": [
+    "https://github.com/ethz-spylab/agentdojo",
+    "https://github.com/SALT-NLP/PrivacyLens",
+    "https://aclanthology.org/2025.findings-emnlp.925/",
+    "https://github.com/sierra-research/tau2-bench"
+  ]
+}

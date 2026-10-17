@@ -1,0 +1,49 @@
+{
+  "history_cached": {
+    "n": 18,
+    "initial": 6,
+    "final": 7,
+    "retries": 12,
+    "recoveries": 1,
+    "categories": {
+      "wrong_integer -> wrong_integer": 9,
+      "wrong_integer -> correct": 1,
+      "wrong_integer -> unexpected_null": 2,
+      "correct": 6
+    }
+  },
+  "history_uncached": {
+    "n": 18,
+    "initial": 6,
+    "final": 7,
+    "retries": 12,
+    "recoveries": 1,
+    "categories": {
+      "wrong_integer -> wrong_integer": 9,
+      "wrong_integer -> correct": 1,
+      "wrong_integer -> unexpected_null": 2,
+      "correct": 6
+    }
+  },
+  "fresh_uncached": {
+    "n": 18,
+    "initial": 6,
+    "final": 18,
+    "retries": 12,
+    "recoveries": 12,
+    "categories": {
+      "wrong_integer -> correct": 12,
+      "correct": 6
+    }
+  },
+  "receipt_uncached": {
+    "n": 18,
+    "initial": 18,
+    "final": 18,
+    "retries": 0,
+    "recoveries": 0,
+    "categories": {
+      "correct": 18
+    }
+  }
+}

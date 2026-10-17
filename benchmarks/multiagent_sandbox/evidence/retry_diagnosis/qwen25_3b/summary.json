@@ -1,0 +1,45 @@
+{
+  "history_cached": {
+    "n": 6,
+    "initial": 2,
+    "final": 2,
+    "retries": 4,
+    "recoveries": 0,
+    "categories": {
+      "wrong_integer -> unexpected_null": 4,
+      "correct": 2
+    }
+  },
+  "history_uncached": {
+    "n": 6,
+    "initial": 2,
+    "final": 2,
+    "retries": 4,
+    "recoveries": 0,
+    "categories": {
+      "wrong_integer -> unexpected_null": 4,
+      "correct": 2
+    }
+  },
+  "fresh_uncached": {
+    "n": 6,
+    "initial": 2,
+    "final": 2,
+    "retries": 4,
+    "recoveries": 0,
+    "categories": {
+      "wrong_integer -> wrong_integer": 4,
+      "correct": 2
+    }
+  },
+  "receipt_uncached": {
+    "n": 6,
+    "initial": 6,
+    "final": 6,
+    "retries": 0,
+    "recoveries": 0,
+    "categories": {
+      "correct": 6
+    }
+  }
+}

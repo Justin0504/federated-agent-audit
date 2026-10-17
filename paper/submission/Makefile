@@ -4,7 +4,7 @@
 #   make arxiv      → arxiv_submission.zip, self-contained
 #   make clean
 
-main.pdf: main.tex references.bib
+main.pdf: main.tex paired_protocol.tex paired_protocol_results.tex references.bib
 	tectonic main.tex
 
 .PHONY: anon arxiv clean
@@ -17,11 +17,11 @@ anon: main.tex references.bib
 # main.tex alone compiles here and fails on arXiv. Staged into a temp tree and
 # test-compiled from there, so a missing dependency fails the build instead of
 # being discovered by arXiv.
-arxiv: main.tex references.bib
+arxiv: main.tex paired_protocol.tex paired_protocol_results.tex references.bib
 	tectonic main.tex --keep-intermediates
 	rm -rf .arxiv arxiv_submission.zip
 	mkdir -p .arxiv/figures/icons/pdf
-	cp main.tex references.bib main.bbl .arxiv/
+	cp main.tex paired_protocol.tex paired_protocol_results.tex references.bib main.bbl .arxiv/
 	# the leading-underscore files are the local preview harness, not the paper
 	for f in ../figures/*.tex; do case $$(basename $$f) in _*) ;; *) cp $$f .arxiv/figures/;; esac; done
 	cp ../figures/icons/pdf/*.pdf .arxiv/figures/icons/pdf/

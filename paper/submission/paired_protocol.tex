@@ -1,0 +1,170 @@
+\subsection{Paired protocol and model checks}
+\label{sec:paired-protocol}
+We extend the authored scheduling sandbox to test whether marker removal also
+limits inference about private sets. Three finite decision rules select the first
+common option, the cheapest common option under public costs, or the first option
+approved by two of three members. Feasible and infeasible cases are balanced.
+These are controlled variations of a shared representation, not three independent
+application benchmarks. Twin worlds differ in one member's private bit while
+preserving the authorized decision and the other members' inputs.
+
+\paragraph{Information and execution.}
+An enumerating observer knows the other two members' sets and the authorized
+result. We report $\log_2(|\Omega_0|/|\Omega_T|)$ for the sets of compatible private
+states before and after disclosure. This is information gain under a stipulated
+uniform conditional prior; it is not an estimate of population entropy or a
+semantic confidentiality guarantee. The exact-redaction and structured controls
+expose the full set, while a membership oracle answers eight adaptive queries.
+A trusted task-bound broker exposes only the authorized result and returns a
+constant closed-task response to further queries. Its restricted interface makes
+zero additional information expected by construction; it is an oracle-like
+control, not a cryptographic implementation or evidence that an agent discovers
+minimal disclosure autonomously.
+
+Three member agents submit source-verified proposals. The proposals are shared
+across controls, and a model coordinator executes the resulting receipt. Each
+control gets at most one validator-triggered retry using the already-public
+authorized result. We retain initial errors and score the final action against
+the independently computed task result. Joint success requires correct execution
+and zero additional information under the stated observer model.
+
+% Measured table is inserted after complete, manifest-matched exports are checked.
+\input{paired_protocol_results}
+
+\paragraph{Limits and follow-up.}
+The privacy comparison concerns protocol payloads; model-output differences are
+recorded separately, and timing channels are excluded. Fixed control order and
+prompt caching confound latency comparisons, so observed coordinator time cannot
+establish a policy speedup. Historical traces record total tokens and elapsed time,
+not the separate time of each retry; the next instrumentation version separates
+these quantities and rotates control order. Small paired samples do not establish
+statistically reliable model rankings. Qwen2.5-3B and Qwen3-8B differ in model family
+as well as size. Closed-provider coordinators and independent adaptive observers
+are planned extensions, not completed experiments; they must see only the released
+view and use the same frozen tasks and query budgets.
+
+
+\paragraph{Diagnosing failed recovery.}
+We replay all first-pass errors from the expanded stage together with one
+historically successful control per affected task/control stratum: six selected
+rows for 3B and 18 for 8B. These are diagnostic samples, not held-out estimates.
+With original history, cached and uncached executions each finish at 2/6 for 3B
+and 7/18 for 8B. A fresh retry containing only the public receipt and an explicit
+copy instruction reaches 2/6 and 18/18 respectively. Restricting the first-pass
+execution view to the receipt reaches 6/6 and 18/18 without retries. For 8B this
+uses 18 coordinator calls versus 30 with history-based recovery. Disclosure to
+the stipulated observer is held fixed; the intervention changes execution input,
+not the privacy score. Replay order is cyclic; one historically successful 8B
+control fails on replay, so historical and replay first-pass counts differ.
+
+The contrast implicates input presentation and recovery context rather than a
+transport or JSON failure; it does not identify an internal model mechanism.
+A fresh retry also changes its instruction, so its effect cannot be attributed
+solely to removing history. Receipt-only first passes preserve the original
+system instruction. Because the broker already computes the authorized result,
+a deterministic executor is the natural zero-coordinator-call reference. This
+experiment measures reliable execution, not autonomous planning. New-seed runs
+and independent native-tool tasks are separate follow-ups; their outcomes are
+not inferred from these selected replays.
+
+\paragraph{Independent-task competence check.}
+Receipt execution does not establish competence on independent tool-use tasks.
+Before expanding to a five-arm AgentDojo comparison, we therefore evaluate six
+fixed development cases spanning Slack, travel, and workspace tasks, with one
+clean and one attacked case per suite. Qwen2.5-3B completes 0/6 with the original
+JSON interface and 0/6 with a more explicit task instruction, while model calls
+increase from 18 to 33. A subsequent native-tool interface completes 1/6 using
+26 calls, 85,361 input tokens, and 2,919 output tokens. It also produces seven
+format errors and one output-cap event. None of the three attacked cases jointly
+completes the task and defeats the attack; zero observed attack successes alone
+is therefore not evidence of useful protection. These are development diagnostics,
+not independent estimates of the proposed method's effectiveness.
+
+The formal comparison is withheld until the interface has known checker outcomes,
+no format or output-cap errors, executed tools in all three suites, and positive
+development utility no worse than the reference. This is a minimum competence
+screen, not evidence of reliable generalization. The corrected runner serializes
+multi-call responses, checks authorization for every action, charges each action
+to the same step budget, and cancels pending actions after a denial or tool error.
+Costs distinguish model calls from action steps and identify calls triggered by
+repair, including their tokens and latency. A repair call is the next model call
+after an observed error or denial; this accounting does not isolate the causal
+benefit of retrying. Any development budget change must propagate to every formal
+arm, and incomplete runs and transport failures remain explicit rather than being
+scored as successful defenses.
+
+\paragraph{Budget sensitivity and mechanism boundary.}
+After multi-call handling is corrected, the six-case probe has zero format errors
+but still completes only 1/6 tasks at both 512 and 1,024 output tokens, with one
+cap event in each run. Model calls decrease from 18 to 14, but each run has four
+repair-triggered calls and zero attacked joint successes. Their repair costs are
+14,599/339 and 15,237/452 input/output tokens respectively. Increasing the output
+ceiling therefore does not establish task competence. A completed matched
+cross-model development screen contrasts ungated and gated executions on the same six cases at
+12 action steps, 1,024 output tokens per call, and an 8,192-token context budget.
+Before formal expansion, the complete screen must have known outcomes, no format
+or output-cap errors, and at least two of three clean ungated tasks completed.
+This small development threshold is a screening rule, not an accuracy claim.
+Across both arms, Qwen2.5-3B and Qwen3-8B each complete one of six tasks;
+Qwen2.5-7B completes all three clean tasks but none of the three attacked tasks.
+For 7B, the observed attack success count falls from one to zero under the gate,
+but attacked joint success remains zero. These historical results do not justify formal expansion: a subsequent
+provenance audit found that archived requests disagreed with the pinned native
+task prompts in two of six development cases (and ten of 32 planned formal
+cases). The historical screen is retained as a diagnostic, not a valid estimate
+of current-task competence. The 3B configuration also
+has an output-cap event and the 8B configuration fails the clean-utility screen.
+All 36 development episodes are retained, including unsuccessful configurations.
+Model families differ, so this is not a controlled model-size scaling study.
+The held-out 7B comparison has not started under the corrected protocol.
+
+\paragraph{Canonical GPU development check.}
+We therefore rerun development using requests from the pinned native task
+classes, their matching checkers, and upstream tool-result serialization on a
+Jetstream A100. Nine conditions comprise the original six cases and three
+same-task, no-injection twins of the attacked cases. Seven arms include the five
+system controls below, the upstream AgentDojo Tool Filter, and the official
+IPIGuard implementation adapted to the same local model and bounded runtime.
+All 63 episodes complete with known native outcomes. Ungated execution succeeds
+on two of three original clean cases but zero of three clean twins; the latter
+terminate without budget exhaustion, format errors, or tool errors. This rules
+out those recorded execution failures as explanations, but does not establish
+a model-level cause. Boolean checks further isolate a missing required date in
+the workspace answer; in travel, the answer contains both required numeric
+facts but the native calendar-state requirement is not satisfied. The Slack
+combined-task failure remains unresolved. These diagnostics do not change
+the native outcomes. On the three attacked development cases, ungated execution
+has one attack success and zero joint successes. The gate, scope, receipt, and
+deny-egress controls and Tool Filter each have zero joint successes; IPIGuard
+has two. These small, development-only observations do not establish a ranking
+or a general privacy guarantee. Four Tool Filter calls have unknown usage;
+reported token totals for that arm are lower bounds.
+The frozen development launch requirement of at least two successful ungated clean
+twins is not met. The 32-task, seven-arm formal comparison is therefore withheld,
+and no favorable effectiveness conclusion is drawn from reduced attack success.
+This corrected GPU protocol is not a matched replication of the historical CPU
+screen, because task requests, serialization, and budget accounting changed.
+
+\paragraph{Matched controls and claim scope.}
+The planned held-out comparison freezes tasks, model, context and action budgets
+for seven arms, including the two upstream defenses and five system controls: ungated execution, the existing policy gate with replanning,
+operation-scoped authorization with replanning, receipt-bound execution with
+replanning, and denial of egress. The latter is a restrictive utility reference,
+not a competitive defense. Scoped authorization is an ablation that isolates
+binding from authority decisions. None of these authored controls is presented
+as an implementation of an external state-of-the-art defense. Presidio measures
+identifier detection in a separate experiment and is not a task-aware AgentDojo
+defense. The complete binding reference is evaluated in the execution-contract
+tests below; no receipt superiority over that reference is claimed. Native attack
+predicates measure benchmark-specific violations, not all semantic disclosures.
+
+We also test five authored execution-contract attacks: replay, action substitution,
+cross-task use, stale epochs, and revocation. Four controls and 32 parameter
+variants give 640 mechanism trials on Jetstream, with an eight-query attack cap.
+The complete binding reference and the receipt executor both reject every attack
+while allowing the legitimate action. Reauthorization alone blocks substitution
+and revocation but not the other three families. These dependent, deterministic
+variants are not 640 independent tasks or semantic privacy attacks. In particular,
+the result establishes no security advantage over the complete binding reference.
+Message-body leakage to an authorized recipient and cumulative inference require
+separate evaluation; authenticated execution alone does not prevent either.

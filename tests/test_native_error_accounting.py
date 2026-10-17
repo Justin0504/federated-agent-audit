@@ -1,0 +1,48 @@
+import importlib.util
+import io
+import urllib.error
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
+PATH = Path(__file__).resolve().parents[1] / "benchmarks/multiagent_sandbox/native_method/native_backend.py"
+spec = importlib.util.spec_from_file_location("native_backend", PATH)
+backend = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(backend)
+
+
+def test_generated_syntax_is_not_transport_failure():
+    error = urllib.error.HTTPError("http://localhost", 500, "bad", {}, io.BytesIO(
+        b'{"error":{"message":"The model produced output that does not match the expected peg-native format"}}'
+    ))
+    with patch.object(backend.urllib.request, "urlopen", side_effect=error):
+        with pytest.raises(backend.NativeFormatError):
+            backend.post("/v1/chat/completions", {})
+
+
+def test_other_server_errors_remain_unknown():
+    error = urllib.error.HTTPError("http://localhost", 500, "bad", {}, io.BytesIO(b"backend offline"))
+    with patch.object(backend.urllib.request, "urlopen", side_effect=error):
+        with pytest.raises(urllib.error.HTTPError):
+            backend.post("/v1/chat/completions", {})
+
+
+def test_format_failure_preserves_unknown_completion_cost():
+    messages = [{"role": "system", "content": ""}, {"role": "user", "content": '{"tools":[],"original_request":"test"}'}]
+    with patch.object(backend, "post", side_effect=[{"prompt": "p"}, {"tokens": [1, 2]}, backend.NativeFormatError()]):
+        result = backend.generate(messages, {"max_new_tokens": 8, "max_input_tokens": 64})
+    assert "error" not in result
+    assert result["usage_unknown"]
+    assert result["input_tokens"] == 2
+    assert result["output_tokens"] is None
+
+
+def test_context_limit_is_a_budget_outcome_without_model_call():
+    messages = [{"role": "system", "content": ""}, {"role": "user", "content": '{"tools":[],"original_request":"test"}'}]
+    with patch.object(backend, "post", side_effect=[{"prompt": "p"}, {"tokens": list(range(60))}]) as post:
+        result = backend.generate(messages, {"max_new_tokens": 8, "max_input_tokens": 64})
+    assert result["budget_exhausted"] == "context"
+    assert result["model_called"] is False
+    assert "error" not in result
+    assert post.call_count == 2

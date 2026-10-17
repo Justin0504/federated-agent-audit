@@ -1,0 +1,191 @@
+{
+  "paired_episodes": 48,
+  "paired_world_clusters": 6,
+  "manifest": "dca719fb423682d71d1b1d1f24e228fed9a7862f43a78acc6e153ad475e1a239",
+  "models": {
+    "qwen25_3b": {
+      "member_calls_shared": 36,
+      "coordinator_calls": 50,
+      "arms": {
+        "exact_redaction": {
+          "n": 12,
+          "initial": 12,
+          "final": 12,
+          "joint": 0,
+          "repairs": 0,
+          "repair_success": 0,
+          "null_n": 6,
+          "null_success": 6,
+          "unknown": 0,
+          "member_failures": 0,
+          "privacy_n": 12,
+          "additional_bits": 6.666666666666667,
+          "calls": 12,
+          "seconds": 22.33470278303139,
+          "input_tokens": 2620,
+          "output_tokens": 78
+        },
+        "structured_release": {
+          "n": 12,
+          "initial": 12,
+          "final": 12,
+          "joint": 0,
+          "repairs": 0,
+          "repair_success": 0,
+          "null_n": 6,
+          "null_success": 6,
+          "unknown": 0,
+          "member_failures": 0,
+          "privacy_n": 12,
+          "additional_bits": 6.666666666666667,
+          "calls": 12,
+          "seconds": 4.667757748859003,
+          "input_tokens": 2620,
+          "output_tokens": 78
+        },
+        "membership_oracle": {
+          "n": 12,
+          "initial": 10,
+          "final": 10,
+          "joint": 0,
+          "repairs": 2,
+          "repair_success": 0,
+          "null_n": 6,
+          "null_success": 6,
+          "unknown": 0,
+          "member_failures": 0,
+          "privacy_n": 12,
+          "additional_bits": 6.666666666666667,
+          "calls": 14,
+          "seconds": 16.403811994125135,
+          "input_tokens": 2434,
+          "output_tokens": 90
+        },
+        "task_bound": {
+          "n": 12,
+          "initial": 12,
+          "final": 12,
+          "joint": 12,
+          "repairs": 0,
+          "repair_success": 0,
+          "null_n": 6,
+          "null_success": 6,
+          "unknown": 0,
+          "member_failures": 0,
+          "privacy_n": 12,
+          "additional_bits": 0.0,
+          "calls": 12,
+          "seconds": 10.953921235050075,
+          "input_tokens": 2210,
+          "output_tokens": 78
+        }
+      }
+    },
+    "qwen3_8b": {
+      "member_calls_shared": 36,
+      "coordinator_calls": 48,
+      "arms": {
+        "exact_redaction": {
+          "n": 12,
+          "initial": 12,
+          "final": 12,
+          "joint": 0,
+          "repairs": 0,
+          "repair_success": 0,
+          "null_n": 6,
+          "null_success": 6,
+          "unknown": 0,
+          "member_failures": 0,
+          "privacy_n": 12,
+          "additional_bits": 6.666666666666667,
+          "calls": 12,
+          "seconds": 53.00730439380277,
+          "input_tokens": 2668,
+          "output_tokens": 78
+        },
+        "structured_release": {
+          "n": 12,
+          "initial": 12,
+          "final": 12,
+          "joint": 0,
+          "repairs": 0,
+          "repair_success": 0,
+          "null_n": 6,
+          "null_success": 6,
+          "unknown": 0,
+          "member_failures": 0,
+          "privacy_n": 12,
+          "additional_bits": 6.666666666666667,
+          "calls": 12,
+          "seconds": 8.559570474084467,
+          "input_tokens": 2668,
+          "output_tokens": 78
+        },
+        "membership_oracle": {
+          "n": 12,
+          "initial": 12,
+          "final": 12,
+          "joint": 0,
+          "repairs": 0,
+          "repair_success": 0,
+          "null_n": 6,
+          "null_success": 6,
+          "unknown": 0,
+          "member_failures": 0,
+          "privacy_n": 12,
+          "additional_bits": 6.666666666666667,
+          "calls": 12,
+          "seconds": 33.331302664009854,
+          "input_tokens": 2054,
+          "output_tokens": 78
+        },
+        "task_bound": {
+          "n": 12,
+          "initial": 12,
+          "final": 12,
+          "joint": 12,
+          "repairs": 0,
+          "repair_success": 0,
+          "null_n": 6,
+          "null_success": 6,
+          "unknown": 0,
+          "member_failures": 0,
+          "privacy_n": 12,
+          "additional_bits": 0.0,
+          "calls": 12,
+          "seconds": 23.894133239169605,
+          "input_tokens": 2258,
+          "output_tokens": 78
+        }
+      }
+    }
+  },
+  "discordance": {
+    "exact_redaction": {
+      "both_success": 12,
+      "left_only": 0,
+      "right_only": 0,
+      "both_fail": 0
+    },
+    "structured_release": {
+      "both_success": 12,
+      "left_only": 0,
+      "right_only": 0,
+      "both_fail": 0
+    },
+    "membership_oracle": {
+      "both_success": 10,
+      "left_only": 0,
+      "right_only": 2,
+      "both_fail": 0
+    },
+    "task_bound": {
+      "both_success": 12,
+      "left_only": 0,
+      "right_only": 0,
+      "both_fail": 0
+    }
+  },
+  "latency_caveat": "fixed arm order and prompt caching; descriptive observed coordinator latency only, not a causal policy speedup",
+  "privacy_scope": "finite stipulated conditional prior; not a calibrated real-world entropy estimate"
+}

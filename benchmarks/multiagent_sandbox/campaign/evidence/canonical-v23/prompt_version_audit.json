@@ -1,0 +1,17 @@
+{
+  "scope": "Prompt/checker version audit only; no formal outcomes inspected",
+  "groups": {
+    "travel": {
+      "n": 11,
+      "request_mismatch": 10
+    },
+    "slack": {
+      "n": 10,
+      "request_mismatch": 0
+    },
+    "workspace": {
+      "n": 11,
+      "request_mismatch": 0
+    }
+  }
+}

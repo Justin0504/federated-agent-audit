@@ -1,0 +1,11 @@
+{
+  "passed": false,
+  "episodes": 6,
+  "model_requests": 17,
+  "format_errors": 0,
+  "suites_with_executed_tools": [
+    "slack",
+    "travel"
+  ],
+  "criteria": "6 valid episodes, native checkers known, format error rate <=20%, at least one executed tool in each suite; task-success outcomes do not gate expansion"
+}

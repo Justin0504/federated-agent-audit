@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-16",
+  "resource": "user-authorized additional GPU node",
+  "gpu_count": 8,
+  "gpu": "NVIDIA A100-SXM4-80GB",
+  "reported_memory_mib_per_gpu": 81920,
+  "reported_free_memory_mib_per_gpu": 77591,
+  "data_volume_available": "approximately 3.7 TB",
+  "torch": "2.6.0+cu124",
+  "driver": "570.172.08",
+  "cuda_available": true,
+  "single_gpu_matmul_correct": true,
+  "is_model_benchmark": false,
+  "credentials_in_repository": false
+}

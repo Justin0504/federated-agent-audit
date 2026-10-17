@@ -105,3 +105,10 @@ report stages separately rather than accumulating their sample counts.
 
 The measured run used commit `dcd825a` (checksum in provenance). Subsequent lint
 cleanup changes exception typing and comments, not prompts or inference settings.
+
+## Beyond marker leakage
+
+See [Protocol attacks](PROTOCOL_ATTACKS.md) for calendar reconstruction,
+paired worlds, adaptive membership queries, and the trusted task-bound receipt
+prototype. The protocol and four-live-role pilots are reported separately from
+the original exact-marker benchmark; they use different privacy endpoints.

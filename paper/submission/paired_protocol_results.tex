@@ -1,0 +1,36 @@
+\paragraph{Matched expanded results.}
+The expanded stage comprises 12 twin-pair clusters (four per rule), 24 worlds
+and four controls per model. Manifest and source hashes, task seeds and trial
+keys match exactly across the two model configurations. Neither smoke trials
+nor earlier development retries are pooled into these counts.
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llrrrrr}
+\toprule
+Model & Control & First/final & Joint & Retries & Calls & Bits \\
+\midrule
+Qwen2.5-3B & Exact redaction & 24/24 & 0 & 0 & 24 & 6.42 \\
+ & Structured & 24/24 & 0 & 0 & 24 & 6.42 \\
+ & Membership & 20/20 & 0 & 4 & 28 & 6.42 \\
+ & Task-bound & 24/24 & 24 & 0 & 24 & 0.00 \\
+\midrule
+Qwen3-8B & Exact redaction & 22/22 & 0 & 2 & 26 & 6.42 \\
+ & Structured & 22/22 & 0 & 2 & 26 & 6.42 \\
+ & Membership & 20/21 & 0 & 4 & 28 & 6.42 \\
+ & Task-bound & 21/21 & 21 & 3 & 27 & 0.00 \\
+\bottomrule
+\end{tabular}
+\caption{Matched expanded protocol checks. First/final and joint are success counts out of 24 per row, not percentages. Calls count coordinator requests only; each model also uses 72 shared member calls. Bits are mean additional information under the stipulated observer. Worlds within a twin pair are dependent.}
+\label{tab:paired-protocol}
+\end{table}
+Qwen2.5-3B uses 72 member and 100 coordinator calls, including 4 retries with 0 successful recoveries. Observed coordinator time totals 105.6 seconds; reported coordinator token counts total 19,883 input and 648 output tokens. These totals exclude member latency and cannot isolate retry-only time.
+Qwen3-8B uses 72 member and 107 coordinator calls, including 11 retries with 1 successful recoveries. Observed coordinator time totals 254.1 seconds; reported coordinator token counts total 22,082 input and 699 output tokens. These totals exclude member latency and cannot isolate retry-only time.
+The controls differ primarily in disclosure by construction. These measurements test execution reliability and exposure under a fixed interface; they do not establish a learned defense advantage or a general scaling law.
+
+All controls succeed on all 12 infeasible worlds per model. On the 12 feasible
+worlds, task-bound execution succeeds in 12 cases for 3B and nine for 8B.
+For membership queries, 18 paired worlds succeed under both models, two only
+under 3B, three only under 8B and one under neither. One 8B quorum twin pair
+produces different coordinator outputs despite identical task-bound payloads;
+this output variation alone does not establish dependence on the hidden bit.
