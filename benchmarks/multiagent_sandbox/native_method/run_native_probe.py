@@ -15,7 +15,7 @@ from summarize import summarize
 
 ROOT = Path(__file__).resolve().parent
 PARENT = ROOT.parent
-RUNTIME = Path("/dev/shm/faa8b-remote-v1/llama-b11624")
+RUNTIME = Path(os.environ.get("FAA_RUNTIME", "/dev/shm/faa8b-remote-v1/llama-b11624"))
 MODEL = Path("/dev/shm/faa-protocol-models/qwen2.5-3b-q4km.gguf")
 EXPECTED = "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d"
 
@@ -31,8 +31,8 @@ def main():
     global MODEL, EXPECTED
     MODEL = Path(os.environ.get("FAA_NATIVE_MODEL", str(MODEL)))
     EXPECTED = os.environ.get("FAA_NATIVE_SHA256", EXPECTED)
-    if socket.gethostname() != "sss":
-        raise SystemExit("Jetstream only")
+    if socket.gethostname() not in ("sss", "zxlyg2286"):
+        raise SystemExit("Authorized remote hosts only")
     if healthy():
         raise SystemExit("Port18089 occupied; refusing replacement")
     h = hashlib.sha256()
@@ -64,6 +64,10 @@ def main():
         max_steps=int(os.environ.get("FAA_NATIVE_MAX_STEPS", "6")),
         generation_revision=EXPECTED,
         model_path=str(MODEL),
+        execution_host=socket.gethostname(),
+        runtime_path=str(RUNTIME),
+        gpu_layers=int(os.environ.get("FAA_GPU_LAYERS", "0")),
+        backend="llama.cpp b11624; hardware/backend recorded separately",
         episodes=episodes,
         systems={"native_tools": "Native tool-calling interface"},
         scope="Six development cases; native tool API; compare with archived v7, not held-out evidence.",
@@ -73,7 +77,7 @@ def main():
     }
     (target / "protocol.json").write_text(json.dumps(p, indent=2))
 
-    python = str(PARENT / "agentdojo-env/bin/python")
+    python = os.environ.get("FAA_REMOTE_PYTHON", str(PARENT / "agentdojo-env/bin/python"))
     with (ROOT / "server.log").open("w") as log:
         server = subprocess.Popen(
             [
@@ -93,7 +97,7 @@ def main():
                 "-tb",
                 "4",
                 "-ngl",
-                "0",
+                os.environ.get("FAA_GPU_LAYERS", "0"),
                 "--no-context-shift",
                 "--jinja",
                 "--reasoning-budget",
@@ -101,7 +105,7 @@ def main():
             ],
             stdout=log,
             stderr=subprocess.STDOUT,
-            env=dict(os.environ, LD_LIBRARY_PATH=str(RUNTIME)),
+            env=dict(os.environ, LD_LIBRARY_PATH=str(RUNTIME) + ":" + os.environ.get("LD_LIBRARY_PATH", "")),
         )
         worker = None
         try:

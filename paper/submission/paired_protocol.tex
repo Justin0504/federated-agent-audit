@@ -100,7 +100,14 @@ cap event in each run. Model calls decrease from 18 to 14, but each run has four
 repair-triggered calls and zero attacked joint successes. Their repair costs are
 14,599/339 and 15,237/452 input/output tokens respectively. Increasing the output
 ceiling therefore does not establish task competence. A matched cross-model
-competence screen is pending; its results are not part of the reported evidence.
+competence screen is in progress; its results are not part of the reported evidence.
+It contrasts ungated and gated executions on the same six development cases at
+12 action steps, 1,024 output tokens per call, and an 8,192-token context budget.
+Before formal expansion, the complete screen must have known outcomes, no format
+or output-cap errors, and at least two of three clean ungated tasks completed.
+This small development threshold is a screening rule, not an accuracy claim.
+A single-A100 replication uses the same weight hash and runtime release as the
+CPU screen; backend-dependent outputs and latency must be reported separately.
 
 We also test five authored execution-contract attacks: replay, action substitution,
 cross-task use, stale epochs, and revocation. Four controls and 32 parameter

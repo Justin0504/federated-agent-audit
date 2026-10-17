@@ -9,7 +9,8 @@ import time
 from pathlib import Path
 
 from prepare_comparison import prepare_comparison
-from run_development import EXPECTED, MODEL, RUNTIME, healthy
+from prepare_screen_formal import prepare_screen_formal
+from run_native_probe import EXPECTED, MODEL, RUNTIME, healthy
 from summarize import summarize
 
 ROOT = Path(__file__).resolve().parent
@@ -17,8 +18,11 @@ PARENT = ROOT.parent
 
 
 def main():
-    if socket.gethostname() != "sss":
-        raise SystemExit("Jetstream only")
+    global MODEL, EXPECTED
+    MODEL = Path(os.environ.get("FAA_NATIVE_MODEL", str(MODEL)))
+    EXPECTED = os.environ.get("FAA_NATIVE_SHA256", EXPECTED)
+    if socket.gethostname() not in ("sss", "zxlyg2286"):
+        raise SystemExit("Authorized remote hosts only")
     previous = PARENT / os.environ.get("FAA_NATIVE_DEVELOPMENT", "native-diagnosis-v12")
     for _ in range(600):
         if (previous / "finished.json").exists():
@@ -31,14 +35,19 @@ def main():
     summary = previous / "development/results/public_summary.json"
     target = ROOT / "formal-3b"
     try:
-        prepare_comparison(
-            PARENT / "agentdojo-schema-v6-qwen25_3b",
-            target,
-            summary,
-            revision="native_tools",
-            reference_summary=PARENT
-            / "native-diagnosis-v7/development/results/public_summary.json",
-        )
+        if os.environ.get("FAA_SCREEN_COMPARE") == "1":
+            prepare_screen_formal(
+                PARENT / "agentdojo-schema-v6-qwen25_3b", previous / "development", target
+            )
+        else:
+            prepare_comparison(
+                PARENT / "agentdojo-schema-v6-qwen25_3b",
+                target,
+                summary,
+                revision="native_tools",
+                reference_summary=PARENT
+                / "native-diagnosis-v7/development/results/public_summary.json",
+            )
     except ValueError as exc:
         (ROOT / "gate_failed.json").write_text(
             json.dumps({"reason": str(exc), "development": report}, indent=2)
@@ -56,7 +65,7 @@ def main():
             h.update(chunk)
     if h.hexdigest() != EXPECTED:
         raise SystemExit("weight mismatch")
-    python = str(PARENT / "agentdojo-env/bin/python")
+    python = os.environ.get("FAA_REMOTE_PYTHON", str(PARENT / "agentdojo-env/bin/python"))
     with (ROOT / "server.log").open("w") as sl:
         server = subprocess.Popen(
             [
@@ -76,7 +85,7 @@ def main():
                 "-tb",
                 "4",
                 "-ngl",
-                "0",
+                os.environ.get("FAA_GPU_LAYERS", "0"),
                 "--no-context-shift",
                 "--jinja",
                 "--reasoning-budget",
@@ -84,7 +93,10 @@ def main():
             ],
             stdout=sl,
             stderr=subprocess.STDOUT,
-            env=dict(os.environ, LD_LIBRARY_PATH=str(RUNTIME)),
+            env=dict(
+                os.environ,
+                LD_LIBRARY_PATH=str(RUNTIME) + ":" + os.environ.get("LD_LIBRARY_PATH", ""),
+            ),
         )
         worker = None
         try:

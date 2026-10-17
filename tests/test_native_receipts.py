@@ -337,3 +337,68 @@ def test_attack_screen_reference_matches_receipt(monkeypatch):
         assert receipt["attack_queries"] == reference["attack_queries"] == 8
     assert screen.trial("reauthorize", "replay", 0)["attack_success"]
     assert not screen.trial("reauthorize", "revocation", 0)["attack_success"]
+
+
+def test_incomplete_screen_cannot_pass_competence(tmp_path, monkeypatch):
+    import importlib
+    import json
+
+    monkeypatch.syspath_prepend(str(ROOT))
+    audit = importlib.import_module("audit_screen")
+    episodes = [
+        {"path": str(i), "arm": arm, "attacked": attacked}
+        for arm in ("no_gate", "gate_replan")
+        for attacked in (False, True)
+        for i in range(3 * int(attacked), 3 * int(attacked) + 3)
+    ]
+    (tmp_path / "protocol.json").write_text(json.dumps({"episodes": episodes}))
+    rows = [
+        dict(e, result={"steps": [], "outcome": {"utility": True, "attack_success": False}})
+        for e in episodes
+    ]
+    (tmp_path / "attempts.jsonl").write_text("\n".join(json.dumps(r) for r in rows[:2]))
+    assert not audit.analyze(tmp_path)["eligible_for_formal"]
+    (tmp_path / "attempts.jsonl").write_text("\n".join(json.dumps(r) for r in rows))
+    assert audit.analyze(tmp_path)["eligible_for_formal"]
+    rows[0]["result"]["steps"] = [{"response": {"error": "transport"}}]
+    (tmp_path / "attempts.jsonl").write_text("\n".join(json.dumps(r) for r in rows))
+    result = audit.analyze(tmp_path)
+    assert not result["eligible_for_formal"]
+    assert result["groups"]["no_gate/clean"]["unknown"] == 1
+
+
+def test_screen_formal_refuses_failure_and_preserves_budgets(tmp_path, monkeypatch):
+    import importlib
+    import json
+
+    import pytest
+
+    monkeypatch.syspath_prepend(str(ROOT))
+    prep = importlib.import_module("prepare_screen_formal")
+    monkeypatch.setattr(prep, "analyze", lambda _: {"eligible_for_formal": False})
+    with pytest.raises(ValueError, match="screen failed"):
+        prep.prepare_screen_formal(tmp_path / "missing", tmp_path / "dev", tmp_path / "formal")
+    assert not (tmp_path / "formal").exists()
+    dev = tmp_path / "dev"
+    dev.mkdir()
+    (dev / "results").mkdir()
+    (dev / "results/screen_audit.json").write_text("{}")
+    (dev / "protocol.json").write_text(
+        json.dumps(
+            {
+                "cases": [{"task": "dev"}],
+                "max_steps": 12,
+                "max_new_tokens": 1024,
+                "max_input_tokens": 8192,
+            }
+        )
+    )
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "protocol.json").write_text(json.dumps({"cases": [{"task": "heldout"}]}))
+    monkeypatch.setattr(prep, "analyze", lambda _: {"eligible_for_formal": True})
+    p = prep.prepare_screen_formal(source, dev, tmp_path / "formal")
+    assert len(p["episodes"]) == 5 and p["max_steps"] == 12 and p["max_new_tokens"] == 1024
+    (source / "protocol.json").write_text(json.dumps({"cases": [{"task": "dev"}]}))
+    with pytest.raises(ValueError, match="overlap"):
+        prep.prepare_screen_formal(source, dev, tmp_path / "overlap")
