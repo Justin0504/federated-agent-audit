@@ -65,6 +65,40 @@ def main():
         fig.savefig(args.out / ("formal_privacy_utility." + ext), dpi=220, facecolor="white")
     plt.close(fig)
 
+    # The same dimensions, labels, and method colors make the two figures comparable.
+    fig, axes = plt.subplots(1, 3, figsize=(11.4, 4.3), sharey=True)
+    panels = [("model_calls", "Extra calls per task", 1),
+              ("input_tokens", "Extra input tokens per task (k)", 1000),
+              ("seconds", "Extra model-call time per task (s)", 1)]
+    unknown_labels = []
+    for ax, (field, title, scale) in zip(axes, panels):
+        for i, (arm, color) in enumerate(zip(LABELS, COLORS)):
+            v = data["methods"][arm]["paired_cost"][field]
+            x, ci = v["mean_delta_vs_no_gate"], v["paired_bootstrap95"]
+            if x is None:
+                ax.text(.02, i, "Unknown", transform=ax.get_yaxis_transform(), va="center", fontsize=8)
+            else:
+                lo, hi = ci
+                ax.errorbar(x / scale, i, xerr=[[max(0, x-lo) / scale], [max(0, hi-x) / scale]],
+                            fmt="o", color=color, capsize=3)
+            if v["paired_unknown"]:
+                unknown_labels.append(f'{LABELS[arm]} / {field}: {v["paired_unknown"]} unknown pairs')
+        ax.axvline(0, color="#AAA39A", linewidth=.8, linestyle="--")
+        ax.set_title(title, fontsize=9, loc="left", pad=12)
+        ax.spines[["top", "right", "left"]].set_visible(False)
+        ax.grid(axis="x", color="#E4E0DB", linewidth=.5)
+        ax.set_axisbelow(True)
+        ax.tick_params(axis="y", length=0)
+        ax.locator_params(axis="x", nbins=4)
+    axes[0].set_yticks(range(8), list(LABELS.values()))
+    axes[0].invert_yaxis()
+    fig.subplots_adjust(left=.20, right=.985, top=.88, bottom=.18, wspace=.35)
+    fig.text(.20, .04, "Difference versus no gate on the same task; bars: paired bootstrap95% intervals.\nTiming is observational. Unknown pairs are excluded and enumerated in the accompanying audit file.", fontsize=8)
+    (args.out / "cost_unknown_pairs.json").write_text(json.dumps(unknown_labels, indent=2))
+    for ext in ("pdf", "svg", "png"):
+        fig.savefig(args.out / ("formal_paired_cost." + ext), dpi=220, facecolor="white")
+    plt.close(fig)
+
 
 if __name__ == "__main__":
     main()
