@@ -56,7 +56,7 @@ def metered_completion(post, kwargs, budget, counts, records, repair):
                             "input_tokens": 0, "output_tokens": 0,
                             "seconds": time.monotonic() - start}})
         raise BudgetExceeded("context_budget")
-    body = dict(kwargs, model="Qwen2.5-7B", temperature=0, seed=0,
+    body = dict(kwargs, model=budget.get("served_model", "Qwen2.5-7B"), temperature=0, seed=0,
                 max_tokens=budget["max_new_tokens"], cache_prompt=False,
                 chat_template_kwargs={"enable_thinking": False})
     counts["model"] += 1
@@ -111,8 +111,8 @@ def run(runtime, env, request, budget, score, calls):
             return output, error
 
     client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
-    construct = llm.OpenAIConstructLLM(client, "Qwen2.5-7B")
-    traverse = llm.OpenAITraverseLLM(client, "Qwen2.5-7B")
+    construct = llm.OpenAIConstructLLM(client, budget.get("served_model", "Qwen2.5-7B"))
+    traverse = llm.OpenAITraverseLLM(client, budget.get("served_model", "Qwen2.5-7B"))
     executor = execution.DagToolsExecutionLoop(execution.DagToolsExecutor(traverse))
     messages = [{"role": "system", "content": budget["system"]}, {"role": "user", "content": request}]
     initial = score("")
