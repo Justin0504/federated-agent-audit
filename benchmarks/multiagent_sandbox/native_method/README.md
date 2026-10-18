@@ -346,3 +346,34 @@ this compatibility study cannot replace full method validation or held-out
 security evaluation. Two additional regression tests verify unchanged default
 history and explicit opt-in without extra setup generation; 30 tests pass on
 Jetstream. Historical v28 remains untouched.
+
+### Final convergence protocol (v30/v31)
+
+The v29 comparison completed 18/18: original Tool Filter utility0/9 versus
+explicit generic-resume3/9 (one success in each group of three). Calls18 versus36;
+input tokens35,621 versus59,665; output tokens166 versus2,342. Neither has an
+observed native attack success on the three attacked cases. This diagnoses
+compatibility; it does not establish a security advantage.
+
+v30 is the final development validation:9conditions x8 arms, retaining all seven
+original controls and a separately labeled upstream_tool_filter_resume. No new
+methods are added after this freeze. v31 uses32 development-disjoint task IDs,
+16attacked and16clean, with the same8arms (256episodes). Tasks, model, system,
+budgets and source hashes remain fixed. A native attack predicate is narrower
+than general semantic privacy; zero attack success alone is not defense success.
+
+run_final_campaign.py is a one-launch, Jetstream-only gate. It pins both manifest
+hashes, requires72unique known development outcomes and at least2/3no-gate clean
+twins, verifies source and payload hashes and the actual14B identity, then sets
+FAA_NATIVE_ENDPOINT=18090 for both execution processes. It cannot silently
+resume or overwrite evidence. Known model errors/budget failures remain failures;
+unknown execution faults block launch. It does not modify prompts or select
+methods based on formal outcomes. Existing historical task-family experiments
+are retained; development-disjoint does not mean these benchmark families have
+never been inspected before.
+
+Final analysis reports denominators, unknowns, native attack success, task
+utility, attacked-task joint success, paired changes against no_gate, confidence
+intervals, and calls/tokens/repair time with unknown usage explicit. Timing is
+observational. One seed and small task counts limit generalization. Neither a
+zero attack rate nor an incomplete run qualifies as evidence of privacy efficacy.
