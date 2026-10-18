@@ -262,3 +262,12 @@ count. Output-cap failures retain reported usage. Five regression tests cover
 these cases; all 24 focused tests pass remotely on Jetstream. No completed v23/v25
 results are recomputed or relabeled, and no new efficacy run is implied. Future
 protocol manifests must pin this updated adapter before comparing costs.
+
+Tool Filter setup now also distinguishes backend-generated syntax failures from
+transport failures. Syntax failures retain their attempted-call record, elapsed
+time and unknown token cost, and return a native task outcome without marking a
+budget exhaustion. Context preflight rejection makes no generation request;
+network exceptions remain unknown infrastructure failures. Missing usage is not
+zero. Four additional remote integration checks bring the focused suite to 28
+passing tests. Historical outputs are unchanged; these fixes do not qualify a
+model for formal evaluation or establish task effectiveness.

@@ -139,13 +139,13 @@ def run_case(data, suite, p):
     setup_steps, filter_history = [], []
     if p["arm"] == "upstream_tool_filter":
         from backend import SYSTEM as NATIVE_SYSTEM
-        from task_baselines import FilterBudgetExceeded, filter_tools
+        from task_baselines import FilterBudgetExceeded, FilterGenerationError, filter_tools
 
         try:
             setup_steps, filter_history = filter_tools(runtime, request, p, p.get("native_system", NATIVE_SYSTEM))
-        except FilterBudgetExceeded as exc:
+        except (FilterBudgetExceeded, FilterGenerationError) as exc:
             return {"initial": initial_score, "outcome": score(""), "steps": exc.records,
-                    "final": "", "terminated": False, "step_budget_exhausted": True,
+                    "final": "", "terminated": False, "step_budget_exhausted": isinstance(exc, FilterBudgetExceeded),
                     "baseline_failure": str(exc), "archived_request_matches_native": request_matches_archive}
     schemas = [
         {
