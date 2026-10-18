@@ -251,3 +251,14 @@ token totals are observed lower bounds, not complete cost comparisons.
 The formal directory is `native-formal-v24-canonical`. A gate failure writes
 `formal_gate_failed.json`; results must not be inferred from a planned count.
 Paper conclusions and arXiv packaging wait for complete, validated formal results.
+
+### IPIGuard cost-accounting revision after v25
+
+The adapter now records a generation attempt before submitting it. Generated
+syntax failures retain the attempt, elapsed time, repair indicator, and unknown
+token usage; requested prompt length is separate from confirmed usage. A context
+preflight rejection records a non-generation event and consumes no generation
+count. Output-cap failures retain reported usage. Five regression tests cover
+these cases; all 24 focused tests pass remotely on Jetstream. No completed v23/v25
+results are recomputed or relabeled, and no new efficacy run is implied. Future
+protocol manifests must pin this updated adapter before comparing costs.

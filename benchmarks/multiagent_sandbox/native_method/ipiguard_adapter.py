@@ -42,6 +42,45 @@ def components():
     return llm, execution
 
 
+def metered_completion(post, kwargs, budget, counts, records, repair):
+    """Keep attempted generations observable even when parsing/server calls fail."""
+    if counts["model"] >= budget["max_steps"]:
+        raise BudgetExceeded("model_call_budget")
+    start = time.monotonic()
+    messages = kwargs["messages"]
+    prompt = post("/apply-template", {"messages": messages})["prompt"]
+    tokens = post("/tokenize", {"content": prompt, "add_special": True, "parse_special": True})["tokens"]
+    if len(tokens) + budget["max_new_tokens"] > budget["max_input_tokens"]:
+        records.append({"model_call": False, "repair_call": False,
+                        "context_budget_exhausted": True, "response": {
+                            "input_tokens": 0, "output_tokens": 0,
+                            "seconds": time.monotonic() - start}})
+        raise BudgetExceeded("context_budget")
+    body = dict(kwargs, model="Qwen2.5-7B", temperature=0, seed=0,
+                max_tokens=budget["max_new_tokens"], cache_prompt=False,
+                chat_template_kwargs={"enable_thinking": False})
+    counts["model"] += 1
+    record = {"model_call": True, "repair_call": repair, "response": {
+        "input_tokens": None, "output_tokens": None, "usage_unknown": True,
+        "requested_prompt_tokens": len(tokens)}}
+    records.append(record)
+    try:
+        response = post("/v1/chat/completions", body)
+        usage = response.get("usage") or {}
+        record["response"].update(input_tokens=usage.get("prompt_tokens"),
+                                  output_tokens=usage.get("completion_tokens"),
+                                  usage_unknown=any(usage.get(k) is None for k in
+                                                    ("prompt_tokens", "completion_tokens")))
+        choice = response["choices"][0]
+        record["response"]["text"] = choice["message"].get("content") or ""
+        record["cap_hit"] = choice["finish_reason"] == "length"
+        if record["cap_hit"]:
+            raise BudgetExceeded("output_budget")
+        return response
+    finally:
+        record["response"]["seconds"] = time.monotonic() - start
+
+
 def run(runtime, env, request, budget, score, calls):
     from agentdojo.functions_runtime import FunctionCall
     from backend import NativeFormatError, post
@@ -52,28 +91,8 @@ def run(runtime, env, request, budget, score, calls):
     counts = {"model": 0, "tools": 0}
 
     def create(**kwargs):
-        if counts["model"] >= budget["max_steps"]:
-            raise BudgetExceeded("model_call_budget")
-        counts["model"] += 1
-        start = time.monotonic()
-        messages = kwargs["messages"]
-        prompt = post("/apply-template", {"messages": messages})["prompt"]
-        tokens = post("/tokenize", {"content": prompt, "add_special": True, "parse_special": True})["tokens"]
-        if len(tokens) + budget["max_new_tokens"] > budget["max_input_tokens"]:
-            raise BudgetExceeded("context_budget")
-        body = dict(kwargs, model="Qwen2.5-7B", temperature=0, seed=0,
-                    max_tokens=budget["max_new_tokens"], cache_prompt=False,
-                    chat_template_kwargs={"enable_thinking": False})
-        response = post("/v1/chat/completions", body)
-        usage = response["usage"]
         repair = any(f.function == "query_reflection" for f in inspect.stack())
-        records.append({"model_call": True, "repair_call": repair, "response": {
-            "text": response["choices"][0]["message"].get("content") or "",
-            "input_tokens": usage["prompt_tokens"], "output_tokens": usage["completion_tokens"],
-            "seconds": time.monotonic() - start,
-        }, "cap_hit": response["choices"][0]["finish_reason"] == "length"})
-        if records[-1]["cap_hit"]:
-            raise BudgetExceeded("output_budget")
+        response = metered_completion(post, kwargs, budget, counts, records, repair)
         return ChatCompletion.model_validate(response)
 
     class MeteredRuntime:
@@ -111,4 +130,5 @@ def run(runtime, env, request, budget, score, calls):
         records.append({"model_call": False, "response": {}, "format_error": error})
     return {"initial": initial, "outcome": score(final), "steps": records,
             "final": final, "terminated": error is None, "step_budget_exhausted": exhausted,
-            "baseline_failure": error, "baseline_revision": REVISION}
+            "baseline_failure": error, "baseline_revision": REVISION,
+            "model_calls": counts["model"], "action_attempts": counts["tools"]}
