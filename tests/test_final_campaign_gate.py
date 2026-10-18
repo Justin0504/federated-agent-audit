@@ -13,10 +13,10 @@ def fixture(tmp_path, monkeypatch):
     dev, source = tmp_path / "dev", tmp_path / "formal"
     (dev / "results").mkdir(parents=True)
     source.mkdir()
-    episodes = [dict(path=str(i), arm=a, counterfactual_clean=i >= 6, attacked=3 <= i < 6)
+    episodes = [{"path": str(i), "arm": a, "counterfactual_clean": i >= 6, "attacked": 3 <= i < 6}
                 for i in range(9) for a in m.ARMS]
-    p = dict(episodes=episodes, source_hashes={}, cases=[{"task": "dev"}], endpoint="http://127.0.0.1:18090")
-    f = dict(cases=[{"task": str(i)} for i in range(32)])
+    p = {"episodes": episodes, "source_hashes": {}, "cases": [{"task": "dev"}], "endpoint": "http://127.0.0.1:18090"}
+    f = {"cases": [{"task": str(i)} for i in range(32)]}
     (dev / "protocol.json").write_text(json.dumps(p))
     (source / "protocol.json").write_text(json.dumps(f))
     monkeypatch.setattr(m, "DEV_SHA", m.sha(dev / "protocol.json"))
