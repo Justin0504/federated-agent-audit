@@ -326,3 +326,23 @@ compatibility comparison. Any continuation variant must be explicitly named,
 retain the original upstream-filter condition, use the same model and total
 call/token/action budgets, and cover all nine conditions before interpretation.
 Do not overwrite v28 or choose a variant using formal outcomes.
+
+### v29 preregistered continuation compatibility comparison
+
+`run_filter_compat.py` freezes two separate nine-condition development protocols
+before inference: `upstream` and `generic_resume`. Both run the same official
+Tool Filter selection component. The latter adds exactly one fixed user message
+following selection: "Now complete the original user task using the selected
+tools." It is a labeled adaptation, not the unmodified upstream baseline. The
+12-call budget includes selection; extra prompt tokens consume the unchanged
+context and token accounting. Model, task identities, system prompt, feedback,
+source files, and all other budgets match. The execution order is original then
+resumed, so timing comparisons remain descriptive rather than randomized.
+
+The runner verifies the historical hashes and actual 14B API identity, refuses
+to overwrite a run, retains unknown outcomes and failures, and never launches
+formal evaluation. Results must be considered jointly after both variants end;
+this compatibility study cannot replace full method validation or held-out
+security evaluation. Two additional regression tests verify unchanged default
+history and explicit opt-in without extra setup generation; 30 tests pass on
+Jetstream. Historical v28 remains untouched.
