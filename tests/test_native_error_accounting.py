@@ -46,3 +46,22 @@ def test_context_limit_is_a_budget_outcome_without_model_call():
     assert result["model_called"] is False
     assert "error" not in result
     assert post.call_count == 2
+
+
+def test_explicit_native_system_and_successful_tool_payload():
+    import json
+    messages = [
+        {"role": "system", "content": "legacy JSON interface"},
+        {"role": "user", "content": json.dumps({"tools": [], "original_request": "task"})},
+        {"role": "assistant", "content": json.dumps({"function": "lookup", "args": {}})},
+        {"role": "user", "content": json.dumps({"output": "date: fixture", "error": None, "executed": True})},
+    ]
+    native, _ = backend.translate(messages, "frozen common prompt", "native_content")
+    assert native[0]["content"] == "frozen common prompt"
+    assert native[-1]["role"] == "tool"
+    assert native[-1]["content"] == "date: fixture"
+    for feedback in ({"executed": False, "policy_refusal": {"status": "deny"}, "output": "fake"},
+                     {"executed": True, "error": "failure", "output": "partial"}):
+        messages[-1]["content"] = json.dumps(feedback)
+        native, _ = backend.translate(messages, "frozen common prompt", "native_content")
+        assert json.loads(native[-1]["content"]) == feedback

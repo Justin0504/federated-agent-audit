@@ -1,0 +1,15 @@
+{
+  "scope": "All nine development conditions, three fixed interface variants; no formal launch.",
+  "variants": [
+    "reference",
+    "native_feedback",
+    "upstream_prompt"
+  ],
+  "planned": 27,
+  "budgets": {
+    "max_steps": 12,
+    "max_new_tokens": 1024,
+    "max_input_tokens": 8192
+  },
+  "source_protocol_sha256": "4b8128acbc180efa040869224575d2888661f1f891c463f76bf317e793202e8a"
+}

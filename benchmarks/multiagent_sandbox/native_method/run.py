@@ -133,7 +133,7 @@ def run_case(data, suite, p):
     if p["arm"] == "ipiguard":
         from ipiguard_adapter import run as run_ipiguard
 
-        result = run_ipiguard(runtime, env, request, p, score, calls)
+        result = run_ipiguard(runtime, env, request, dict(p, system=p.get("native_system", p["system"])), score, calls)
         result["archived_request_matches_native"] = request_matches_archive
         return result
     setup_steps, filter_history = [], []
@@ -142,7 +142,7 @@ def run_case(data, suite, p):
         from task_baselines import FilterBudgetExceeded, filter_tools
 
         try:
-            setup_steps, filter_history = filter_tools(runtime, request, p, NATIVE_SYSTEM)
+            setup_steps, filter_history = filter_tools(runtime, request, p, p.get("native_system", NATIVE_SYSTEM))
         except FilterBudgetExceeded as exc:
             return {"initial": initial_score, "outcome": score(""), "steps": exc.records,
                     "final": "", "terminated": False, "step_budget_exhausted": True,

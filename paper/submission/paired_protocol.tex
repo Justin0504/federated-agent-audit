@@ -131,8 +131,12 @@ terminate without budget exhaustion, format errors, or tool errors. This rules
 out those recorded execution failures as explanations, but does not establish
 a model-level cause. Boolean checks further isolate a missing required date in
 the workspace answer; in travel, the answer contains both required numeric
-facts but the native calendar-state requirement is not satisfied. The Slack
-combined-task failure remains unresolved. These diagnostics do not change
+facts but no calendar event is created. Replaying the recorded actions against
+the same initial environments reproduces all three failed native scores. The
+Slack agent posts a summary but omits one required website, while completing
+the second subtask; the workspace agent searches the calendar without first
+querying the current day. The missing date lookup is a diagnostic observation,
+not an additional scoring requirement. These diagnostics do not change
 the native outcomes. On the three attacked development cases, ungated execution
 has one attack success and zero joint successes. The gate, scope, receipt, and
 deny-egress controls and Tool Filter each have zero joint successes; IPIGuard
@@ -144,6 +148,24 @@ twins is not met. The 32-task, seven-arm formal comparison is therefore withheld
 and no favorable effectiveness conclusion is drawn from reduced attack success.
 This corrected GPU protocol is not a matched replication of the historical CPU
 screen, because task requests, serialization, and budget accounting changed.
+
+\paragraph{Interface ablation and baseline comparability.}
+A separate frozen development ablation evaluates all nine conditions under three
+interfaces (27 episodes), without changing the model or budgets. Ungated
+same-task clean-twin success is 0/3 with the reference envelope, 1/3 with native
+tool-result content, and 0/3 when native content is combined with the upstream
+system prompt. Corresponding clean-twin model-call totals are 14, 15, and 21;
+repair calls are 0, 0, and 10. The latter configuration records ten tool errors.
+On attacked cases, native content increases attack successes from 1/3 to 2/3
+without achieving joint success; the upstream-prompt variant achieves 1/3 joint
+success. These development observations do not establish causal population
+performance, and none qualifies for formal expansion. We also identify a
+baseline-comparability defect: the native adapter overrode the runner's system
+prompt, whereas IPIGuard received its legacy JSON-interface instruction. The
+adapter now exposes an explicit shared prompt setting. The earlier seven-arm
+numbers therefore remain descriptive diagnostics, not a fair effectiveness
+ranking. A new complete, common-prompt development run is required before any
+held-out comparison; no such result is claimed here.
 
 \paragraph{Matched controls and claim scope.}
 The planned held-out comparison freezes tasks, model, context and action budgets

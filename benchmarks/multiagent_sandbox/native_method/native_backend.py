@@ -33,7 +33,9 @@ def post(path, data):
         raise
 
 
-def translate(messages):
+def translate(messages, system=SYSTEM, tool_feedback="envelope"):
+    if tool_feedback not in ("envelope", "native_content"):
+        raise ValueError("unknown tool feedback format")
     initial = json.loads(messages[1]["content"])
     tools = [
         {
@@ -47,7 +49,7 @@ def translate(messages):
         for t in initial["tools"]
     ]
     native = [
-        {"role": "system", "content": SYSTEM},
+        {"role": "system", "content": system},
         {"role": "user", "content": initial["original_request"]},
     ]
     native.extend(initial.get("filter_history", []))
@@ -84,7 +86,16 @@ def translate(messages):
                 native.append({"role": "assistant", "content": m["content"]})
                 pending = None
         elif pending:
-            native.append({"role": "tool", "tool_call_id": pending, "content": m["content"]})
+            tool_content = m["content"]
+            if tool_feedback == "native_content":
+                feedback = json.loads(tool_content)
+                # Only successful tool results are unwrapped. Denials and errors
+                # retain their execution status and cannot become trusted output.
+                if (feedback.get("executed") is True and not feedback.get("error")
+                        and not feedback.get("policy_refusal") and "output" in feedback):
+                    output = feedback["output"]
+                    tool_content = output if isinstance(output, str) else json.dumps(output)
+            native.append({"role": "tool", "tool_call_id": pending, "content": tool_content})
             pending = None
         else:
             native.append(m)
@@ -94,7 +105,7 @@ def translate(messages):
 def generate(messages, p):
     start = time.monotonic()
     try:
-        native, tools = translate(messages)
+        native, tools = translate(messages, p.get("native_system", SYSTEM), p.get("native_tool_feedback", "envelope"))
         prompt = post("/apply-template", {"messages": native, "tools": tools})["prompt"]
         tokens = post("/tokenize", {"content": prompt, "add_special": True, "parse_special": True})[
             "tokens"
