@@ -299,3 +299,30 @@ outcomes, twin threshold, and frozen source hashes before creating a separate
 v28 run (nine conditions x seven arms). It inherits the exact model, endpoint,
 explicit native system prompt, feedback format and budgets; arm order rotates.
 It never launches formal tasks. v27 screening episodes are not pooled with v28.
+
+### v28 completed; Tool Filter portability remains unresolved
+
+All 63 development episodes completed. The no-gate clean twins pass 2/3;
+original clean utility is 1/3 and attacked utility/joint success is 1/3. All
+seven methods have zero observed native attack successes on the three attacked
+cases, so these development cases do not establish a defense advantage. Tool
+Filter utility is 0/9: each episode has one filtering call followed by a
+one-token execution response. IPIGuard has known tool errors and budget
+exhaustions; these remain failures, not privacy successes. Full numeric costs
+and outcomes are retained in `../campaign/evidence/14b-development-v28/`.
+
+A separate synthetic diagnostic confirms the 14B chat endpoint sees a supplied
+tool name with both `tool_choice=none` and `auto`. After a completed assistant
+tool-selection message it produces a one-token response; adding a generic
+request to complete the original task produces the expected tool call. However,
+the no-filter-history synthetic control also makes no tool call, so this is
+evidence of a history-sensitive behavior, not proof of a general repair. The
+official upstream pipeline retains that assistant selection message as well.
+Do not claim an adapter omission, silently change the official baseline, or
+count the synthetic probe as benchmark evidence.
+
+Formal evaluation remains withheld pending a preregistered development-only
+compatibility comparison. Any continuation variant must be explicitly named,
+retain the original upstream-filter condition, use the same model and total
+call/token/action budgets, and cover all nine conditions before interpretation.
+Do not overwrite v28 or choose a variant using formal outcomes.
