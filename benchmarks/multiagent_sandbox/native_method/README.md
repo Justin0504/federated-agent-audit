@@ -271,3 +271,16 @@ network exceptions remain unknown infrastructure failures. Missing usage is not
 zero. Four additional remote integration checks bring the focused suite to 28
 passing tests. Historical outputs are unchanged; these fixes do not qualify a
 model for formal evaluation or establish task effectiveness.
+
+### Oracle sanity check (v26; no model inference)
+
+On Jetstream, all six clean development conditions (three original clean cases
+and three same-task clean twins) pass the original native utility checker when
+executing each pinned task's `ground_truth(initial_environment)` sequence and
+supplying its `GROUND_TRUTH_OUTPUT`. There are zero tool errors and zero model
+calls. The respective action counts are 2, 7, 2, 9, 4, and 2, all below the
+12-action budget. The numerical report is in
+`../campaign/evidence/canonical-v23/oracle_sanity.json` and identifies the source
+protocol hash. This validates those environments and the oracle scoring path;
+it does not validate every adapter path, demonstrate model competence, or meet
+the formal launch gate. Oracle answers/actions were never supplied to the model.
