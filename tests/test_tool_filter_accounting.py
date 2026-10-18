@@ -23,7 +23,7 @@ def setup_filter(monkeypatch):
 
     monkeypatch.setattr(llms, "OpenAILLMToolFilter", component)
 
-    def run(response, context=100):
+    def run(response, context=100, continuation="upstream"):
         calls = []
         def post(path, data):
             calls.append(path)
@@ -35,7 +35,7 @@ def setup_filter(monkeypatch):
                 raise response
             return response
         monkeypatch.setattr(backend, "post", post)
-        return lambda: baseline.filter_tools(None, "fixture", {"max_new_tokens": 10, "max_input_tokens": context}, "system"), calls
+        return lambda: baseline.filter_tools(None, "fixture", {"max_new_tokens": 10, "max_input_tokens": context, "tool_filter_continuation": continuation}, "system"), calls
     return baseline, backend, run
 
 
@@ -74,3 +74,25 @@ def test_missing_usage_is_unknown(setup_filter):
     records, _ = call()
     assert records[0]["response"]["usage_unknown"]
     assert records[0]["response"]["input_tokens"] is None
+
+
+def test_continuation_is_explicit_and_preserves_original_history(setup_filter):
+    _, _, run = setup_filter
+    response = {"choices": [{"message": {"content": "lookup"}, "finish_reason": "stop"}]}
+    upstream, _ = run(response)
+    resumed, _ = run(response, continuation="generic_resume")
+    original_records, original_history = upstream()
+    resumed_records, resumed_history = resumed()
+    assert resumed_history[:-1] == original_history
+    assert len(original_history) == 2
+    assert resumed_history[-1] == {"role": "user", "content":
+        "Now complete the original user task using the selected tools."}
+    assert len(original_records) == len(resumed_records) == 1
+
+
+def test_unknown_continuation_rejected_before_call(setup_filter):
+    _, _, run = setup_filter
+    invoke, calls = run(None, continuation="invalid")
+    with pytest.raises(ValueError, match="unknown Tool Filter"):
+        invoke()
+    assert calls == []
