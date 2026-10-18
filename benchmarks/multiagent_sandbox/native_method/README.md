@@ -284,3 +284,18 @@ calls. The respective action counts are 2, 7, 2, 9, 4, and 2, all below the
 protocol hash. This validates those environments and the oracle scoring path;
 it does not validate every adapter path, demonstrate model competence, or meet
 the formal launch gate. Oracle answers/actions were never supplied to the model.
+
+### 14B screen and seven-method development validation
+
+The frozen v27 screen completes all nine conditions: original clean utility1/3,
+attacked utility/joint1/3 with zero observed native attack successes, and same-task
+clean-twin utility2/3. No unknown outcomes, format/tool errors, output caps, or
+budget exhaustions occur. This satisfies the specified competence screen only;
+original clean utility is lower than the earlier7B reference and no model-size
+ranking is established. Numerical evidence is in `campaign/evidence/14b-screen-v27`.
+
+`run_full_development.py` validates episode identities, complete status, known
+outcomes, twin threshold, and frozen source hashes before creating a separate
+v28 run (nine conditions x seven arms). It inherits the exact model, endpoint,
+explicit native system prompt, feedback format and budgets; arm order rotates.
+It never launches formal tasks. v27 screening episodes are not pooled with v28.
