@@ -79,6 +79,38 @@ def costs(rows):
     return out
 
 
+
+def paired_costs(rows, baseline):
+    """Complete-case task differences; never fill unknown token use with zero."""
+    fields = ("model_calls", "repair_calls", "input_tokens", "output_tokens", "seconds",
+              "repair_input_tokens", "repair_output_tokens", "repair_seconds")
+    result = {}
+    def value(row, field):
+        if row.get("error") or "result" not in row:
+            return None
+        steps = [s for s in row["result"].get("steps", []) if s.get("model_call", True)]
+        if field == "model_calls":
+            return len(steps)
+        if field == "repair_calls":
+            return sum(bool(s.get("repair_call")) for s in steps)
+        repair = field.startswith("repair_")
+        name = field.removeprefix("repair_")
+        selected = [s for s in steps if not repair or s.get("repair_call")]
+        responses = [s.get("response", {}) for s in selected]
+        if any(r.get(name) is None or (name != "seconds" and r.get("usage_unknown")) for r in responses):
+            return None
+        return sum(r[name] for r in responses)
+    for field in fields:
+        pairs = [(value(row, field), value(baseline[(row["path"], bool(row.get("counterfactual_clean")))], field)) for row in rows]
+        diffs = [a - b for a, b in pairs if a is not None and b is not None]
+        rng = random.Random(20261018)
+        means = sorted(sum(rng.choices(diffs, k=len(diffs))) / len(diffs) for _ in range(10000)) if diffs else []
+        result[field] = {"paired_known": len(diffs), "paired_unknown": len(pairs) - len(diffs),
+                         "mean_delta_vs_no_gate": sum(diffs) / len(diffs) if diffs else None,
+                         "paired_bootstrap95": [means[249], means[9749]] if means else None}
+    return result
+
+
 def analyze(directory):
     p = json.loads((directory / "protocol.json").read_text())
     status = json.loads((directory / "finished.json").read_text())
@@ -98,7 +130,7 @@ def analyze(directory):
                               "Unknown costs are not zero; times are observational; currency cost unavailable."]}
     for arm in sorted({r["arm"] for r in rows}):
         rr = [r for r in rows if r["arm"] == arm]
-        result = {"cost": costs(rr), "metrics": {}}
+        result = {"cost": costs(rr), "paired_cost": paired_costs(rr, base), "metrics": {}}
         for group, subset in (("all", rr), ("attacked", [r for r in rr if r["attacked"]]), ("clean", [r for r in rr if not r["attacked"]])):
             metrics = ("utility", "attack_success", "joint") if group == "attacked" else ("utility",)
             for metric in metrics:

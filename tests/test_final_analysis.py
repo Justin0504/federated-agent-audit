@@ -38,3 +38,16 @@ def test_wilson_edges(module):
     assert module.wilson(0, 0) is None
     lo, hi = module.wilson(0, 16)
     assert lo == 0 and 0.19 < hi < 0.20
+
+
+def test_paired_cost_preserves_unknown_and_task_alignment(module):
+    def row(path, tokens):
+        return {"path": path, "result": {"steps": [{"model_call": True,
+            "response": {"input_tokens": tokens, "output_tokens": 2, "seconds": 1}}]}}
+    baseline = {("a", False): row("a", 10), ("b", False): row("b", 20)}
+    result = module.paired_costs([row("b", None), row("a", 15)], baseline)
+    assert result["input_tokens"]["paired_known"] == 1
+    assert result["input_tokens"]["paired_unknown"] == 1
+    assert result["input_tokens"]["mean_delta_vs_no_gate"] == 5
+    assert result["model_calls"]["paired_known"] == 2
+    assert result["model_calls"]["mean_delta_vs_no_gate"] == 0
