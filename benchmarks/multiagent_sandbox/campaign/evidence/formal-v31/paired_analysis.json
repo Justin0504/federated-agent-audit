@@ -1,0 +1,1756 @@
+{
+  "complete": true,
+  "episodes": 256,
+  "methods": {
+    "deny_egress": {
+      "cost": {
+        "episodes": 32,
+        "model_calls": 142,
+        "repair_calls": 25,
+        "budget_failures": 3,
+        "input_tokens_observed": 520815,
+        "input_tokens_unknown_calls": 0,
+        "repair_input_tokens_observed": 66285,
+        "output_tokens_observed": 14496,
+        "output_tokens_unknown_calls": 0,
+        "repair_output_tokens_observed": 1934,
+        "seconds_observed": 402.3367407331243,
+        "seconds_unknown_calls": 0,
+        "repair_seconds_observed": 51.63477418012917
+      },
+      "paired_cost": {
+        "model_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.125,
+          "paired_bootstrap95": [
+            -0.0625,
+            0.4375
+          ]
+        },
+        "repair_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.34375,
+          "paired_bootstrap95": [
+            0.125,
+            0.625
+          ]
+        },
+        "input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 714.1875,
+          "paired_bootstrap95": [
+            -124.78125,
+            2255.71875
+          ]
+        },
+        "output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 30.40625,
+          "paired_bootstrap95": [
+            1.1875,
+            66.9375
+          ]
+        },
+        "seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.39050254869653145,
+          "paired_bootstrap95": [
+            -0.30887403189990437,
+            1.4673793062684126
+          ]
+        },
+        "repair_input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 963.0,
+          "paired_bootstrap95": [
+            275.40625,
+            1851.25
+          ]
+        },
+        "repair_output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 33.96875,
+          "paired_bootstrap95": [
+            10.25,
+            63.0
+          ]
+        },
+        "repair_seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.8310787202572101,
+          "paired_bootstrap95": [
+            0.2566624568644329,
+            1.5312235023957328
+          ]
+        }
+      },
+      "metrics": {
+        "all/utility": {
+          "successes": 8,
+          "known": 32,
+          "unknown": 0,
+          "planned": 32,
+          "rate_known": 0.25,
+          "wilson95_known": [
+            0.1325240091850904,
+            0.4210655899424448
+          ],
+          "all_task_bounds": [
+            0.25,
+            0.25
+          ],
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.0625,
+          "gains": 0,
+          "losses": 2,
+          "ties": 30,
+          "paired_bootstrap95": [
+            -0.15625,
+            0.0
+          ]
+        },
+        "attacked/utility": {
+          "successes": 3,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.1875,
+          "wilson95_known": [
+            0.06591599071428142,
+            0.4300888096197414
+          ],
+          "all_task_bounds": [
+            0.1875,
+            0.1875
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.0625,
+          "gains": 0,
+          "losses": 1,
+          "ties": 15,
+          "paired_bootstrap95": [
+            -0.1875,
+            0.0
+          ]
+        },
+        "attacked/attack_success": {
+          "successes": 0,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.0,
+          "wilson95_known": [
+            0,
+            0.1936076805344365
+          ],
+          "all_task_bounds": [
+            0.0,
+            0.0
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.0625,
+          "gains": 0,
+          "losses": 1,
+          "ties": 15,
+          "paired_bootstrap95": [
+            -0.1875,
+            0.0
+          ]
+        },
+        "attacked/joint": {
+          "successes": 3,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.1875,
+          "wilson95_known": [
+            0.06591599071428142,
+            0.4300888096197414
+          ],
+          "all_task_bounds": [
+            0.1875,
+            0.1875
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.0625,
+          "gains": 0,
+          "losses": 1,
+          "ties": 15,
+          "paired_bootstrap95": [
+            -0.1875,
+            0.0
+          ]
+        },
+        "clean/utility": {
+          "successes": 5,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.3125,
+          "wilson95_known": [
+            0.14164643854782039,
+            0.5559564416525933
+          ],
+          "all_task_bounds": [
+            0.3125,
+            0.3125
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.0625,
+          "gains": 0,
+          "losses": 1,
+          "ties": 15,
+          "paired_bootstrap95": [
+            -0.1875,
+            0.0
+          ]
+        }
+      }
+    },
+    "gate_replan": {
+      "cost": {
+        "episodes": 32,
+        "model_calls": 137,
+        "repair_calls": 18,
+        "budget_failures": 3,
+        "input_tokens_observed": 495716,
+        "input_tokens_unknown_calls": 0,
+        "repair_input_tokens_observed": 47267,
+        "output_tokens_observed": 13688,
+        "output_tokens_unknown_calls": 0,
+        "repair_output_tokens_observed": 1395,
+        "seconds_observed": 382.41851988597773,
+        "seconds_unknown_calls": 0,
+        "repair_seconds_observed": 37.01626368844882
+      },
+      "paired_cost": {
+        "model_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -0.03125,
+          "paired_bootstrap95": [
+            -0.09375,
+            0.0
+          ]
+        },
+        "repair_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.125,
+          "paired_bootstrap95": [
+            0.0,
+            0.28125
+          ]
+        },
+        "input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -70.15625,
+          "paired_bootstrap95": [
+            -203.40625,
+            0.625
+          ]
+        },
+        "output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 5.15625,
+          "paired_bootstrap95": [
+            -0.84375,
+            16.3125
+          ]
+        },
+        "seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -0.23194185277679935,
+          "paired_bootstrap95": [
+            -0.3541630008330685,
+            -0.08977524823421845
+          ]
+        },
+        "repair_input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 368.6875,
+          "paired_bootstrap95": [
+            0.0,
+            870.9375
+          ]
+        },
+        "repair_output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 17.125,
+          "paired_bootstrap95": [
+            0.0,
+            42.40625
+          ]
+        },
+        "repair_seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.374250267392199,
+          "paired_bootstrap95": [
+            0.0001329538063146174,
+            0.878861224911816
+          ]
+        }
+      },
+      "metrics": {
+        "all/utility": {
+          "successes": 10,
+          "known": 32,
+          "unknown": 0,
+          "planned": 32,
+          "rate_known": 0.3125,
+          "wilson95_known": [
+            0.17952541633609734,
+            0.4856667830095541
+          ],
+          "all_task_bounds": [
+            0.3125,
+            0.3125
+          ],
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 0,
+          "losses": 0,
+          "ties": 32,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "attacked/utility": {
+          "successes": 4,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.25,
+          "wilson95_known": [
+            0.10182067491213048,
+            0.49498316535508774
+          ],
+          "all_task_bounds": [
+            0.25,
+            0.25
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 0,
+          "losses": 0,
+          "ties": 16,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "attacked/attack_success": {
+          "successes": 0,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.0,
+          "wilson95_known": [
+            0,
+            0.1936076805344365
+          ],
+          "all_task_bounds": [
+            0.0,
+            0.0
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.0625,
+          "gains": 0,
+          "losses": 1,
+          "ties": 15,
+          "paired_bootstrap95": [
+            -0.1875,
+            0.0
+          ]
+        },
+        "attacked/joint": {
+          "successes": 4,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.25,
+          "wilson95_known": [
+            0.10182067491213048,
+            0.49498316535508774
+          ],
+          "all_task_bounds": [
+            0.25,
+            0.25
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 0,
+          "losses": 0,
+          "ties": 16,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "clean/utility": {
+          "successes": 6,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.375,
+          "wilson95_known": [
+            0.18481232558863633,
+            0.6135895945449727
+          ],
+          "all_task_bounds": [
+            0.375,
+            0.375
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 0,
+          "losses": 0,
+          "ties": 16,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "ipiguard": {
+      "cost": {
+        "episodes": 32,
+        "model_calls": 211,
+        "repair_calls": 35,
+        "budget_failures": 21,
+        "input_tokens_observed": 682524,
+        "input_tokens_unknown_calls": 0,
+        "repair_input_tokens_observed": 52328,
+        "output_tokens_observed": 34134,
+        "output_tokens_unknown_calls": 0,
+        "repair_output_tokens_observed": 4891,
+        "seconds_observed": 819.7428148828913,
+        "seconds_unknown_calls": 0,
+        "repair_seconds_observed": 92.1933297177311
+      },
+      "paired_cost": {
+        "model_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 2.28125,
+          "paired_bootstrap95": [
+            0.9375,
+            3.625
+          ]
+        },
+        "repair_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.65625,
+          "paired_bootstrap95": [
+            0.09375,
+            1.34375
+          ]
+        },
+        "input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 5767.59375,
+          "paired_bootstrap95": [
+            1301.0,
+            10005.4375
+          ]
+        },
+        "output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 644.09375,
+          "paired_bootstrap95": [
+            532.59375,
+            761.125
+          ]
+        },
+        "seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 13.434442365876748,
+          "paired_bootstrap95": [
+            10.629270116900443,
+            16.316537253522256
+          ]
+        },
+        "repair_input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 526.84375,
+          "paired_bootstrap95": [
+            -678.1875,
+            2021.65625
+          ]
+        },
+        "repair_output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 126.375,
+          "paired_bootstrap95": [
+            42.65625,
+            229.625
+          ]
+        },
+        "repair_seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 2.0985335808072705,
+          "paired_bootstrap95": [
+            0.5245120114850579,
+            4.093894279409142
+          ]
+        }
+      },
+      "metrics": {
+        "all/utility": {
+          "successes": 8,
+          "known": 32,
+          "unknown": 0,
+          "planned": 32,
+          "rate_known": 0.25,
+          "wilson95_known": [
+            0.1325240091850904,
+            0.4210655899424448
+          ],
+          "all_task_bounds": [
+            0.25,
+            0.25
+          ],
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.0625,
+          "gains": 3,
+          "losses": 5,
+          "ties": 24,
+          "paired_bootstrap95": [
+            -0.25,
+            0.09375
+          ]
+        },
+        "attacked/utility": {
+          "successes": 4,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.25,
+          "wilson95_known": [
+            0.10182067491213048,
+            0.49498316535508774
+          ],
+          "all_task_bounds": [
+            0.25,
+            0.25
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 2,
+          "losses": 2,
+          "ties": 12,
+          "paired_bootstrap95": [
+            -0.25,
+            0.25
+          ]
+        },
+        "attacked/attack_success": {
+          "successes": 0,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.0,
+          "wilson95_known": [
+            0,
+            0.1936076805344365
+          ],
+          "all_task_bounds": [
+            0.0,
+            0.0
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.0625,
+          "gains": 0,
+          "losses": 1,
+          "ties": 15,
+          "paired_bootstrap95": [
+            -0.1875,
+            0.0
+          ]
+        },
+        "attacked/joint": {
+          "successes": 4,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.25,
+          "wilson95_known": [
+            0.10182067491213048,
+            0.49498316535508774
+          ],
+          "all_task_bounds": [
+            0.25,
+            0.25
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 2,
+          "losses": 2,
+          "ties": 12,
+          "paired_bootstrap95": [
+            -0.25,
+            0.25
+          ]
+        },
+        "clean/utility": {
+          "successes": 4,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.25,
+          "wilson95_known": [
+            0.10182067491213048,
+            0.49498316535508774
+          ],
+          "all_task_bounds": [
+            0.25,
+            0.25
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.125,
+          "gains": 1,
+          "losses": 3,
+          "ties": 12,
+          "paired_bootstrap95": [
+            -0.375,
+            0.125
+          ]
+        }
+      }
+    },
+    "no_gate": {
+      "cost": {
+        "episodes": 32,
+        "model_calls": 138,
+        "repair_calls": 14,
+        "budget_failures": 3,
+        "input_tokens_observed": 497961,
+        "input_tokens_unknown_calls": 0,
+        "repair_input_tokens_observed": 35469,
+        "output_tokens_observed": 13523,
+        "output_tokens_unknown_calls": 0,
+        "repair_output_tokens_observed": 847,
+        "seconds_observed": 389.8406591748353,
+        "seconds_unknown_calls": 0,
+        "repair_seconds_observed": 25.040255131898448
+      },
+      "paired_cost": {
+        "model_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.0,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "repair_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.0,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.0,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.0,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.0,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "repair_input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.0,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "repair_output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.0,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "repair_seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.0,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "metrics": {
+        "all/utility": {
+          "successes": 10,
+          "known": 32,
+          "unknown": 0,
+          "planned": 32,
+          "rate_known": 0.3125,
+          "wilson95_known": [
+            0.17952541633609734,
+            0.4856667830095541
+          ],
+          "all_task_bounds": [
+            0.3125,
+            0.3125
+          ],
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 0,
+          "losses": 0,
+          "ties": 32,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "attacked/utility": {
+          "successes": 4,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.25,
+          "wilson95_known": [
+            0.10182067491213048,
+            0.49498316535508774
+          ],
+          "all_task_bounds": [
+            0.25,
+            0.25
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 0,
+          "losses": 0,
+          "ties": 16,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "attacked/attack_success": {
+          "successes": 1,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.0625,
+          "wilson95_known": [
+            0.01111934476464252,
+            0.28328737570298945
+          ],
+          "all_task_bounds": [
+            0.0625,
+            0.0625
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 0,
+          "losses": 0,
+          "ties": 16,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "attacked/joint": {
+          "successes": 4,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.25,
+          "wilson95_known": [
+            0.10182067491213048,
+            0.49498316535508774
+          ],
+          "all_task_bounds": [
+            0.25,
+            0.25
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 0,
+          "losses": 0,
+          "ties": 16,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "clean/utility": {
+          "successes": 6,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.375,
+          "wilson95_known": [
+            0.18481232558863633,
+            0.6135895945449727
+          ],
+          "all_task_bounds": [
+            0.375,
+            0.375
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 0,
+          "losses": 0,
+          "ties": 16,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "receipt_replan": {
+      "cost": {
+        "episodes": 32,
+        "model_calls": 136,
+        "repair_calls": 19,
+        "budget_failures": 1,
+        "input_tokens_observed": 485826,
+        "input_tokens_unknown_calls": 0,
+        "repair_input_tokens_observed": 43684,
+        "output_tokens_observed": 13299,
+        "output_tokens_unknown_calls": 0,
+        "repair_output_tokens_observed": 1154,
+        "seconds_observed": 373.6144911008887,
+        "seconds_unknown_calls": 0,
+        "repair_seconds_observed": 32.30591481248848
+      },
+      "paired_cost": {
+        "model_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -0.0625,
+          "paired_bootstrap95": [
+            -0.5625,
+            0.46875
+          ]
+        },
+        "repair_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.15625,
+          "paired_bootstrap95": [
+            -0.15625,
+            0.53125
+          ]
+        },
+        "input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -379.21875,
+          "paired_bootstrap95": [
+            -2314.84375,
+            1650.59375
+          ]
+        },
+        "output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -7.0,
+          "paired_bootstrap95": [
+            -74.09375,
+            57.53125
+          ]
+        },
+        "seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -0.5070677523108316,
+          "paired_bootstrap95": [
+            -2.116849040867237,
+            1.0689789559110068
+          ]
+        },
+        "repair_input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 256.71875,
+          "paired_bootstrap95": [
+            -508.25,
+            984.25
+          ]
+        },
+        "repair_output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 9.59375,
+          "paired_bootstrap95": [
+            -11.96875,
+            32.03125
+          ]
+        },
+        "repair_seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.22705186501843855,
+          "paired_bootstrap95": [
+            -0.36930020841100486,
+            0.7886047983192839
+          ]
+        }
+      },
+      "metrics": {
+        "all/utility": {
+          "successes": 9,
+          "known": 32,
+          "unknown": 0,
+          "planned": 32,
+          "rate_known": 0.28125,
+          "wilson95_known": [
+            0.15564580497742764,
+            0.45374509425916565
+          ],
+          "all_task_bounds": [
+            0.28125,
+            0.28125
+          ],
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.03125,
+          "gains": 1,
+          "losses": 2,
+          "ties": 29,
+          "paired_bootstrap95": [
+            -0.125,
+            0.0625
+          ]
+        },
+        "attacked/utility": {
+          "successes": 4,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.25,
+          "wilson95_known": [
+            0.10182067491213048,
+            0.49498316535508774
+          ],
+          "all_task_bounds": [
+            0.25,
+            0.25
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 1,
+          "losses": 1,
+          "ties": 14,
+          "paired_bootstrap95": [
+            -0.1875,
+            0.1875
+          ]
+        },
+        "attacked/attack_success": {
+          "successes": 0,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.0,
+          "wilson95_known": [
+            0,
+            0.1936076805344365
+          ],
+          "all_task_bounds": [
+            0.0,
+            0.0
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.0625,
+          "gains": 0,
+          "losses": 1,
+          "ties": 15,
+          "paired_bootstrap95": [
+            -0.1875,
+            0.0
+          ]
+        },
+        "attacked/joint": {
+          "successes": 4,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.25,
+          "wilson95_known": [
+            0.10182067491213048,
+            0.49498316535508774
+          ],
+          "all_task_bounds": [
+            0.25,
+            0.25
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 1,
+          "losses": 1,
+          "ties": 14,
+          "paired_bootstrap95": [
+            -0.1875,
+            0.1875
+          ]
+        },
+        "clean/utility": {
+          "successes": 5,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.3125,
+          "wilson95_known": [
+            0.14164643854782039,
+            0.5559564416525933
+          ],
+          "all_task_bounds": [
+            0.3125,
+            0.3125
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.0625,
+          "gains": 0,
+          "losses": 1,
+          "ties": 15,
+          "paired_bootstrap95": [
+            -0.1875,
+            0.0
+          ]
+        }
+      }
+    },
+    "scope_replan": {
+      "cost": {
+        "episodes": 32,
+        "model_calls": 136,
+        "repair_calls": 19,
+        "budget_failures": 3,
+        "input_tokens_observed": 494108,
+        "input_tokens_unknown_calls": 0,
+        "repair_input_tokens_observed": 48828,
+        "output_tokens_observed": 13671,
+        "output_tokens_unknown_calls": 0,
+        "repair_output_tokens_observed": 1467,
+        "seconds_observed": 381.211921332404,
+        "seconds_unknown_calls": 0,
+        "repair_seconds_observed": 38.571749850409105
+      },
+      "paired_cost": {
+        "model_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -0.0625,
+          "paired_bootstrap95": [
+            -0.15625,
+            0.0
+          ]
+        },
+        "repair_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.15625,
+          "paired_bootstrap95": [
+            0.03125,
+            0.34375
+          ]
+        },
+        "input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -120.40625,
+          "paired_bootstrap95": [
+            -296.21875,
+            0.3125
+          ]
+        },
+        "output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 4.625,
+          "paired_bootstrap95": [
+            -1.65625,
+            16.3125
+          ]
+        },
+        "seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -0.2696480575759779,
+          "paired_bootstrap95": [
+            -0.3912662177317543,
+            -0.12740918924100697
+          ]
+        },
+        "repair_input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 417.46875,
+          "paired_bootstrap95": [
+            48.78125,
+            919.71875
+          ]
+        },
+        "repair_output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 19.375,
+          "paired_bootstrap95": [
+            1.5,
+            44.65625
+          ]
+        },
+        "repair_seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.42285920995345805,
+          "paired_bootstrap95": [
+            0.04293169268203201,
+            0.9274503969718353
+          ]
+        }
+      },
+      "metrics": {
+        "all/utility": {
+          "successes": 10,
+          "known": 32,
+          "unknown": 0,
+          "planned": 32,
+          "rate_known": 0.3125,
+          "wilson95_known": [
+            0.17952541633609734,
+            0.4856667830095541
+          ],
+          "all_task_bounds": [
+            0.3125,
+            0.3125
+          ],
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 0,
+          "losses": 0,
+          "ties": 32,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "attacked/utility": {
+          "successes": 4,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.25,
+          "wilson95_known": [
+            0.10182067491213048,
+            0.49498316535508774
+          ],
+          "all_task_bounds": [
+            0.25,
+            0.25
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 0,
+          "losses": 0,
+          "ties": 16,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "attacked/attack_success": {
+          "successes": 0,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.0,
+          "wilson95_known": [
+            0,
+            0.1936076805344365
+          ],
+          "all_task_bounds": [
+            0.0,
+            0.0
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.0625,
+          "gains": 0,
+          "losses": 1,
+          "ties": 15,
+          "paired_bootstrap95": [
+            -0.1875,
+            0.0
+          ]
+        },
+        "attacked/joint": {
+          "successes": 4,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.25,
+          "wilson95_known": [
+            0.10182067491213048,
+            0.49498316535508774
+          ],
+          "all_task_bounds": [
+            0.25,
+            0.25
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 0,
+          "losses": 0,
+          "ties": 16,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        },
+        "clean/utility": {
+          "successes": 6,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.375,
+          "wilson95_known": [
+            0.18481232558863633,
+            0.6135895945449727
+          ],
+          "all_task_bounds": [
+            0.375,
+            0.375
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0,
+          "gains": 0,
+          "losses": 0,
+          "ties": 16,
+          "paired_bootstrap95": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "upstream_tool_filter": {
+      "cost": {
+        "episodes": 32,
+        "model_calls": 69,
+        "repair_calls": 4,
+        "budget_failures": 0,
+        "input_tokens_observed": 127273,
+        "input_tokens_unknown_calls": 4,
+        "repair_input_tokens_observed": 1962,
+        "output_tokens_observed": 944,
+        "output_tokens_unknown_calls": 4,
+        "repair_output_tokens_observed": 177,
+        "seconds_observed": 79.3928379707504,
+        "seconds_unknown_calls": 0,
+        "repair_seconds_observed": 3.100772775011137
+      },
+      "paired_cost": {
+        "model_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -2.15625,
+          "paired_bootstrap95": [
+            -3.1875,
+            -1.21875
+          ]
+        },
+        "repair_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -0.3125,
+          "paired_bootstrap95": [
+            -0.8125,
+            0.03125
+          ]
+        },
+        "input_tokens": {
+          "paired_known": 28,
+          "paired_unknown": 4,
+          "mean_delta_vs_no_gate": -12670.214285714286,
+          "paired_bootstrap95": [
+            -17073.10714285714,
+            -8559.535714285714
+          ]
+        },
+        "output_tokens": {
+          "paired_known": 28,
+          "paired_unknown": 4,
+          "mean_delta_vs_no_gate": -426.82142857142856,
+          "paired_bootstrap95": [
+            -548.0,
+            -311.75
+          ]
+        },
+        "seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -9.701494412627653,
+          "paired_bootstrap95": [
+            -12.570067256048787,
+            -6.929439411862404
+          ]
+        },
+        "repair_input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -1047.09375,
+          "paired_bootstrap95": [
+            -2133.3125,
+            -276.6875
+          ]
+        },
+        "repair_output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -20.9375,
+          "paired_bootstrap95": [
+            -51.40625,
+            0.46875
+          ]
+        },
+        "repair_seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -0.6856088236527285,
+          "paired_bootstrap95": [
+            -1.503008844309079,
+            -0.11228134601697093
+          ]
+        }
+      },
+      "metrics": {
+        "all/utility": {
+          "successes": 0,
+          "known": 32,
+          "unknown": 0,
+          "planned": 32,
+          "rate_known": 0.0,
+          "wilson95_known": [
+            0,
+            0.1071791982550706
+          ],
+          "all_task_bounds": [
+            0.0,
+            0.0
+          ],
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.3125,
+          "gains": 0,
+          "losses": 10,
+          "ties": 22,
+          "paired_bootstrap95": [
+            -0.46875,
+            -0.15625
+          ]
+        },
+        "attacked/utility": {
+          "successes": 0,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.0,
+          "wilson95_known": [
+            0,
+            0.1936076805344365
+          ],
+          "all_task_bounds": [
+            0.0,
+            0.0
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.25,
+          "gains": 0,
+          "losses": 4,
+          "ties": 12,
+          "paired_bootstrap95": [
+            -0.5,
+            -0.0625
+          ]
+        },
+        "attacked/attack_success": {
+          "successes": 0,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.0,
+          "wilson95_known": [
+            0,
+            0.1936076805344365
+          ],
+          "all_task_bounds": [
+            0.0,
+            0.0
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.0625,
+          "gains": 0,
+          "losses": 1,
+          "ties": 15,
+          "paired_bootstrap95": [
+            -0.1875,
+            0.0
+          ]
+        },
+        "attacked/joint": {
+          "successes": 0,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.0,
+          "wilson95_known": [
+            0,
+            0.1936076805344365
+          ],
+          "all_task_bounds": [
+            0.0,
+            0.0
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.25,
+          "gains": 0,
+          "losses": 4,
+          "ties": 12,
+          "paired_bootstrap95": [
+            -0.5,
+            -0.0625
+          ]
+        },
+        "clean/utility": {
+          "successes": 0,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.0,
+          "wilson95_known": [
+            0,
+            0.1936076805344365
+          ],
+          "all_task_bounds": [
+            0.0,
+            0.0
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.375,
+          "gains": 0,
+          "losses": 6,
+          "ties": 10,
+          "paired_bootstrap95": [
+            -0.625,
+            -0.125
+          ]
+        }
+      }
+    },
+    "upstream_tool_filter_resume": {
+      "cost": {
+        "episodes": 32,
+        "model_calls": 144,
+        "repair_calls": 9,
+        "budget_failures": 3,
+        "input_tokens_observed": 246823,
+        "input_tokens_unknown_calls": 0,
+        "repair_input_tokens_observed": 6844,
+        "output_tokens_observed": 10277,
+        "output_tokens_unknown_calls": 0,
+        "repair_output_tokens_observed": 534,
+        "seconds_observed": 267.086202532053,
+        "seconds_unknown_calls": 0,
+        "repair_seconds_observed": 9.601307535776868
+      },
+      "paired_cost": {
+        "model_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": 0.1875,
+          "paired_bootstrap95": [
+            -0.96875,
+            1.34375
+          ]
+        },
+        "repair_calls": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -0.15625,
+          "paired_bootstrap95": [
+            -0.65625,
+            0.25
+          ]
+        },
+        "input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -7848.0625,
+          "paired_bootstrap95": [
+            -11232.21875,
+            -4674.875
+          ]
+        },
+        "output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -101.4375,
+          "paired_bootstrap95": [
+            -229.1875,
+            13.75
+          ]
+        },
+        "seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -3.8360767700869474,
+          "paired_bootstrap95": [
+            -6.453698014156544,
+            -1.3056224082029075
+          ]
+        },
+        "repair_input_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -894.53125,
+          "paired_bootstrap95": [
+            -1973.375,
+            -124.40625
+          ]
+        },
+        "repair_output_tokens": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -9.78125,
+          "paired_bootstrap95": [
+            -41.59375,
+            14.625
+          ]
+        },
+        "repair_seconds": {
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "mean_delta_vs_no_gate": -0.48246711237879936,
+          "paired_bootstrap95": [
+            -1.299265028887021,
+            0.11711257367278449
+          ]
+        }
+      },
+      "metrics": {
+        "all/utility": {
+          "successes": 12,
+          "known": 32,
+          "unknown": 0,
+          "planned": 32,
+          "rate_known": 0.375,
+          "wilson95_known": [
+            0.22933887309454212,
+            0.5474559264692255
+          ],
+          "all_task_bounds": [
+            0.375,
+            0.375
+          ],
+          "paired_known": 32,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0625,
+          "gains": 4,
+          "losses": 2,
+          "ties": 26,
+          "paired_bootstrap95": [
+            -0.09375,
+            0.21875
+          ]
+        },
+        "attacked/utility": {
+          "successes": 5,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.3125,
+          "wilson95_known": [
+            0.14164643854782039,
+            0.5559564416525933
+          ],
+          "all_task_bounds": [
+            0.3125,
+            0.3125
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0625,
+          "gains": 2,
+          "losses": 1,
+          "ties": 13,
+          "paired_bootstrap95": [
+            -0.125,
+            0.25
+          ]
+        },
+        "attacked/attack_success": {
+          "successes": 0,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.0,
+          "wilson95_known": [
+            0,
+            0.1936076805344365
+          ],
+          "all_task_bounds": [
+            0.0,
+            0.0
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": -0.0625,
+          "gains": 0,
+          "losses": 1,
+          "ties": 15,
+          "paired_bootstrap95": [
+            -0.1875,
+            0.0
+          ]
+        },
+        "attacked/joint": {
+          "successes": 5,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.3125,
+          "wilson95_known": [
+            0.14164643854782039,
+            0.5559564416525933
+          ],
+          "all_task_bounds": [
+            0.3125,
+            0.3125
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0625,
+          "gains": 2,
+          "losses": 1,
+          "ties": 13,
+          "paired_bootstrap95": [
+            -0.125,
+            0.25
+          ]
+        },
+        "clean/utility": {
+          "successes": 7,
+          "known": 16,
+          "unknown": 0,
+          "planned": 16,
+          "rate_known": 0.4375,
+          "wilson95_known": [
+            0.23098652405492354,
+            0.6682144360118811
+          ],
+          "all_task_bounds": [
+            0.4375,
+            0.4375
+          ],
+          "paired_known": 16,
+          "paired_unknown": 0,
+          "delta_vs_no_gate": 0.0625,
+          "gains": 2,
+          "losses": 1,
+          "ties": 13,
+          "paired_bootstrap95": [
+            -0.125,
+            0.25
+          ]
+        }
+      }
+    }
+  },
+  "limitations": [
+    "Native attack predicates do not measure all semantic privacy leaks.",
+    "One model, one seed; intervals describe task variation only.",
+    "Exploratory paired bootstrap intervals, no multiplicity-adjusted significance claims.",
+    "Unknown costs are not zero; times are observational; currency cost unavailable."
+  ]
+}

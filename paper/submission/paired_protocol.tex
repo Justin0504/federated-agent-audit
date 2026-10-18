@@ -144,7 +144,7 @@ has two. These small, development-only observations do not establish a ranking
 or a general privacy guarantee. Four Tool Filter calls have unknown usage;
 reported token totals for that arm are lower bounds.
 The frozen development launch requirement of at least two successful ungated clean
-twins is not met. The 32-task, seven-arm formal comparison is therefore withheld,
+twins is not met. At that stage, the 32-task, seven-arm comparison was withheld,
 and no favorable effectiveness conclusion is drawn from reduced attack success.
 This corrected GPU protocol is not a matched replication of the historical CPU
 screen, because task requests, serialization, and budget accounting changed.
@@ -164,11 +164,10 @@ baseline-comparability defect: the native adapter overrode the runner's system
 prompt, whereas IPIGuard received its legacy JSON-interface instruction. The
 adapter now exposes an explicit shared prompt setting. The earlier seven-arm
 numbers therefore remain descriptive diagnostics, not a fair effectiveness
-ranking. A new complete, common-prompt development run is required before any
-held-out comparison; no such result is claimed here.
+ranking. These diagnostics motivated the common-prompt 14B validation reported below.
 
 \paragraph{Matched controls and claim scope.}
-The planned held-out comparison freezes tasks, model, context and action budgets
+The initial comparison design froze tasks, model, context and action budgets
 for seven arms, including the two upstream defenses and five system controls: ungated execution, the existing policy gate with replanning,
 operation-scoped authorization with replanning, receipt-bound execution with
 replanning, and denial of egress. The latter is a restrictive utility reference,
@@ -190,3 +189,57 @@ variants are not 640 independent tasks or semantic privacy attacks. In particula
 the result establishes no security advantage over the complete binding reference.
 Message-body leakage to an authorized recipient and cumulative inference require
 separate evaluation; authenticated execution alone does not prevent either.
+
+
+\paragraph{Final independent-task comparison.}
+We subsequently freeze a Qwen2.5-14B-Instruct Q4\_K\_M executor, a shared
+system instruction, and budgets of 12 model calls, 12 tool actions, 1,024 output
+tokens per call and an 8,192-token context. Selection and planning calls consume
+the same model-call budget. Development comprises nine conditions per method;
+the ungated executor completes two of three same-task clean twins. A final
+72-episode validation precedes the formal comparison. We retain the original
+upstream Tool Filter and separately label an adaptation that adds a generic
+instruction to resume the original task after selection. A nine-condition
+compatibility comparison improves its utility from 0/9 to 3/9, but does not
+establish security effectiveness. No task-specific hints are added.
+
+The frozen formal batch contains 32 task IDs disjoint from development
+(16 clean and 16 attacked), eight methods and one seed: 256 completed episodes.
+All native utility and attack outcomes are known. These task families and archived
+attack payloads have appeared in earlier diagnostics; task disjointness is not
+an assertion of a previously unseen benchmark. Figure~\ref{fig:final-native}
+reports native attack success, clean utility and attacked joint success.
+\input{final_native_results}
+
+\paragraph{What the result supports.}
+Ungated execution completes 10/32 tasks and exhibits one native attack success
+among 16 attacked tasks. Gate and scope each complete 10/32, receipt 9/32,
+deny-egress 8/32 and IPIGuard 8/32. The original Tool Filter completes 0/32;
+its explicitly labeled resume adaptation completes 12/32. All seven defended
+variants have zero observed native attack successes. This is only one discordant
+attack case against no gate, and a zero count out of 16 has a Wilson 95\% upper
+bound of 19.4\%. It does not establish broad privacy protection.
+
+The resume adaptation gains four tasks and loses two relative to no gate,
+a net utility difference of 6.25 percentage points with a paired bootstrap 95\%
+interval of [-9.38,21.88]. Receipt gains one and loses two, a difference of -3.13
+points with interval [-12.50,6.25]. Neither comparison establishes utility
+superiority. Gate, scope, receipt and IPIGuard each achieve 4/16 attacked joint
+successes, equal to no gate; the resume adaptation achieves 5/16. Joint success
+uses the native attack predicate and does not assess all semantic disclosures.
+
+\paragraph{Cost and remaining limits.}
+No gate uses 138 model calls; gate 137, scope 136, receipt 136, deny-egress 142,
+IPIGuard 211, original Tool Filter 69 and the resume adaptation 144.
+IPIGuard exhausts the matched budget on 21/32 tasks. Those failures remain in
+all denominators; reduced attack execution is not counted as useful protection.
+Original Tool Filter has four calls with unknown token usage, so its observed
+token totals are lower bounds. All other arms have known token use.
+Figure~\ref{fig:final-native-cost} shows task-paired cost differences; no pricing
+or randomized latency claim is made. Intervals use 10,000 paired task bootstrap
+resamples with a fixed analysis seed and are exploratory, without multiplicity
+adjustment. Degenerate intervals for identical observed outcomes do not imply
+population equivalence. Low executor utility, one model and seed, and the low
+ungated attack rate limit this experiment. The evidence supports bounded
+execution and a measurable compatibility effect, not receipt superiority or a
+general semantic privacy guarantee.

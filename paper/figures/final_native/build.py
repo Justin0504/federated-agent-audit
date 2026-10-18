@@ -58,9 +58,10 @@ def main():
         ax.set_axisbelow(True)
         ax.tick_params(axis="y", length=0)
     axes[0].set_yticks(range(8), list(LABELS.values()))
+    axes[0].tick_params(axis="y", labelleft=True)
     axes[0].invert_yaxis()
     fig.subplots_adjust(left=.20, right=.985, top=.88, bottom=.18, wspace=.25)
-    fig.text(.20, .04, "Points: observed rates; bars: Wilson95% intervals. Joint = task success and native attack failure.\nOne14B model, one seed; native attack predicates do not cover all semantic privacy leakage.", fontsize=8)
+    fig.text(.20, .04, "Points: observed rates; bars: Wilson 95% intervals. Joint = task success and native attack failure.\nOne 14B model, one seed; native attack predicates do not cover all semantic privacy leakage.", fontsize=8)
     for ext in ("pdf", "svg", "png"):
         fig.savefig(args.out / ("formal_privacy_utility." + ext), dpi=220, facecolor="white")
     plt.close(fig)
@@ -82,6 +83,7 @@ def main():
                 ax.errorbar(x / scale, i, xerr=[[max(0, x-lo) / scale], [max(0, hi-x) / scale]],
                             fmt="o", color=color, capsize=3)
             if v["paired_unknown"]:
+                ax.annotate(f'n={v["paired_known"]}', (x / scale, i), xytext=(0, 9), textcoords="offset points", fontsize=7, ha="center")
                 unknown_labels.append(f'{LABELS[arm]} / {field}: {v["paired_unknown"]} unknown pairs')
         ax.axvline(0, color="#AAA39A", linewidth=.8, linestyle="--")
         ax.set_title(title, fontsize=9, loc="left", pad=12)
@@ -91,9 +93,10 @@ def main():
         ax.tick_params(axis="y", length=0)
         ax.locator_params(axis="x", nbins=4)
     axes[0].set_yticks(range(8), list(LABELS.values()))
+    axes[0].tick_params(axis="y", labelleft=True)
     axes[0].invert_yaxis()
     fig.subplots_adjust(left=.20, right=.985, top=.88, bottom=.18, wspace=.35)
-    fig.text(.20, .04, "Difference versus no gate on the same task; bars: paired bootstrap95% intervals.\nTiming is observational. Unknown pairs are excluded and enumerated in the accompanying audit file.", fontsize=8)
+    fig.text(.20, .04, "Difference versus no gate on the same task; bars: paired bootstrap 95% intervals.\nTiming is observational. Unknown pairs are excluded and enumerated in the accompanying audit file.", fontsize=8)
     (args.out / "cost_unknown_pairs.json").write_text(json.dumps(unknown_labels, indent=2))
     for ext in ("pdf", "svg", "png"):
         fig.savefig(args.out / ("formal_paired_cost." + ext), dpi=220, facecolor="white")
