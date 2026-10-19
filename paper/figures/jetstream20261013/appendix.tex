@@ -1,4 +1,3 @@
-\clearpage
 \section{Deployment case study: policy freshness and observed-event coverage}
 \label{app:jetstream}
 We deployed a research harness on Jetstream with separate business and audit
@@ -7,7 +6,7 @@ and model prompts remain on the business side. These experiments exercise the
 reporting and authorization substrate, not the semantic detectors evaluated
 above. A signature authenticates an issuer's claim, not its truth or completeness.
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{figures/jetstream20261013/01_deployment.pdf}
 \caption{Deployed research pipeline. Missing semantic evidence is reported as
@@ -27,8 +26,7 @@ A real report-service outage preserved committed outbox records for explicitly
 triggered recovery. These observations expose an availability tradeoff, rather
 than establishing population-level privacy effectiveness.
 
-\clearpage
-\begin{figure}[ht]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{figures/jetstream20261013/02_policy_tradeoff.pdf}
 \caption{Permission freshness regression. Counts reflect authored mutations.
@@ -52,15 +50,13 @@ do not use the pilot to estimate semantic audit recall or general task success.
 Independent human semantic review has not been completed. These observations
 establish a working research harness, not production readiness.
 
-\clearpage
-\begin{figure}[ht]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{figures/jetstream20261013/03_live_limitations.pdf}
 \caption{Pilot outcomes. Keyword presence is an automatic proxy, not a semantic
 judgment. Raw responses expose misattribution despite a positive proxy.}
 \label{fig:jetstream-limitations}
 \end{figure}
-\clearpage
 
 \paragraph{Development follow-up: retrieval scope and policy freshness.}
 A second frozen run reused the four development tasks with four configurations:

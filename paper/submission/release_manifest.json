@@ -1,15 +1,15 @@
 {
-  "pages": 46,
+  "pages": 43,
   "sha256": {
     "core_narrative.tex": "2302f82b081bcaa3c52ab83a3189c7ec406560263a347bed4d39345dd6d23f18",
-    "appendix_audit_details.tex": "1f9080e2735bcb344708f647ddf3b356e6b166d39f0e115afd2b0b09daf2f2a1",
+    "appendix_audit_details.tex": "8a6191111d3c2ea43f449a884a4fa97f80f698d40bd85bda5c7c6590a0547594",
     "appendix_release_details.tex": "91302ae28825f4818ffd350d55ce589a7512bcf661804c146b3c16c02fb2cefc",
-    "appendix_development.tex": "ec8744cab591146c48f7867ffe6c5ca64cd90b8f5bce5a7745cd23b8898bfbd9",
-    "appendix_detector_studies.tex": "0f98fff13f78b5806a3350e69df2b90c564d9a811aa4f99aa3585b696ea10f98",
+    "appendix_development.tex": "eed544b9b054227412715d08f7a7d7a7cc3b72fb458cda36032b3709a51fdda0",
+    "appendix_detector_studies.tex": "94e66e9ce60fd1d015037b5bfa0e98827d19023d31da8a72f671cadd99391cd1",
     "core_case_figure.tex": "bfc7b42e92f5d0fdca227e6aadb6a6310dfc89cac0da3a54aedf8aa67214dca3",
     "core_outcome_figure.tex": "6126d75decd51f2797869fc36e9f9da8b82b1743a30c7daf63e5c2a4bd08e74e",
     "appendix_cost_figure.tex": "eec8db3dbf61423c61daaef4d7cb98f9bef5bd7824ac5fd44a2c08c0cc90d9cb",
-    "main.tex": "a5c4599d2a2751aced7febc1558076a164cc943d2598762369d765eedadbf425",
+    "main.tex": "5c1593226c7369058b76a69a2ee39f340da00b0df6b610b94474eae8ee90014a",
     "paired_protocol.tex": "c2c33244e2f5594b5f00d22bbf3ff7a43f63a56b7683ebd46be80b7969bc7af1",
     "final_native_results.tex": "dc9670dde002d392651f57c4f407c69ef7f7557adfa3f4ccd8f3c9023ab756b3",
     "final_native_appendix.tex": "de8b485c694090fbee0cc349dcea79fa3b9cc2f5b2b4681a278ce15dda142d0d",
@@ -17,8 +17,8 @@
     "agentdojo_external.tex": "e5ec4a8a45f1c3f356d1b5fc87adbc88688118d847ec9ccb4d90aa7495798088",
     "historical_measurements.tex": "60216591cdbd988ff7787f15063fec59cb3cefc40b1319c112a4406040c98eb0",
     "references.bib": "d390bf007422fc8376b320d73882ab64b76d289a7fbfd6d9801df801901683af",
-    "main.pdf": "1ac7739e24dddc998fe51a36b8424ba8454d38fbfaa9709db310229bc3789ab4",
-    "arxiv_submission.zip": "dc3b52d6508b03afceef28dc15062307bf18d91a9f4302d9687ff20f65db0cd6",
-    "ARXIV.md": "ee9a919a5766130bf32d37eaad07925898b4a42189572a7783172dee29f7c3e0"
+    "main.pdf": "0602c0bd7b3becaa0d325fa4d8e5d3913480d7febe1c3023b3e5b9e247ff07d0",
+    "arxiv_submission.zip": "cb422084fe6a0d68a8e91d0ce6b4c5898b5d231ebe8a2890b96e6352d369eb48",
+    "ARXIV.md": "0363f84368d742d76e673a2ae706f981494386afa20a3e44bc2d17c533f7466e"
   }
 }

@@ -64,9 +64,10 @@ the attribute rate in our own favour by 2--7\,pp. What remains is the balance, t
 credit score, the diagnosis. The full table is in the artifact
 (\texttt{a2a\_prompt\_conditions.py}).
 
+\ifdefined\Needspace\Needspace{0.78\textheight}\fi
 \section{Per-model results}\label{app:permodel}
 
-\begin{table}[h]\centering\small
+\begin{table}[htbp]\centering\small
 \setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.08}
 \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}p{36mm}p{31mm}rrrr@{}}
 \toprule
@@ -97,17 +98,6 @@ Model & condition & leak & 95\% CI & ident. & attrib. \\
                    & categories & 86\% & [74, 96] & 49\% & 86\% \\
                    & policy & 74\% & [58, 88] & 42\% & 54\% \\
 \addlinespace
-\bottomrule
-\end{tabular*}
-\caption{Instruction sweep for the first five model configurations. Each cell contains 72 trials. Logos identify model families or providers. The remaining configurations and interval definitions appear in Table~\ref{tab:permodel}.}
-\end{table}
-\clearpage
-\begin{table}[ht]\centering\small
-\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.08}
-\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}p{36mm}p{31mm}rrrr@{}}
-\toprule
-Model & condition & leak & 95\% CI & ident. & attrib. \\
-\midrule
 \modellogo{qwen}Qwen2.5-14B        & permissive & 100\% & [95, 100] & 88\% & 93\% \\
                    & no invitation & 100\% & [95, 100] & 90\% & 92\% \\
                    & categories & 92\% & [82, 99] & 60\% & 86\% \\
@@ -118,6 +108,16 @@ Model & condition & leak & 95\% CI & ident. & attrib. \\
                    & categories & 93\% & [83, 100] & 21\% & 93\% \\
                    & policy & 75\% & [60, 88] & 21\% & 71\% \\
 \addlinespace
+\bottomrule
+\end{tabular*}
+\caption{Instruction sweep for the first seven model configurations. Each cell contains 72 trials. Logos identify model families or providers. The remaining configurations and interval definitions appear in Table~\ref{tab:permodel}.}
+\end{table}
+\begin{table}[htbp]\centering\small
+\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.08}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}p{36mm}p{31mm}rrrr@{}}
+\toprule
+Model & condition & leak & 95\% CI & ident. & attrib. \\
+\midrule
 \modellogo{mistral}Mistral-Small-24B  & permissive & 100\% & [95, 100] & 75\% & 93\% \\
                    & no invitation & 100\% & [95, 100] & 83\% & 90\% \\
                    & categories & 92\% & [81, 100] & 19\% & 90\% \\
@@ -143,9 +143,8 @@ Model & condition & leak & 95\% CI & ident. & attrib. \\
 \label{tab:permodel}
 \label{tab:app-permodel}
 \end{table}
-\clearpage
 
-\begin{table}[h]\centering\small
+\begin{table}[htbp]\centering\small
 \begin{tabular}{lcccc}
 \toprule
 Model & hop 1 & hop 2 & hop 3 & hop 4 \\

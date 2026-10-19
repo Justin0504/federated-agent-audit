@@ -8,6 +8,7 @@
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{enumitem}
+\usepackage{float,needspace,placeins}
 \setlength{\emergencystretch}{2em} % absorb the occasional tight line
 \hypersetup{colorlinks=true,linkcolor=figindigo,citecolor=figindigo,urlcolor=figindigo}
 \usepackage[font=small,labelfont=bf]{caption}
@@ -39,6 +40,7 @@ Center-Blind Auditing for Multi-Tenant Agent Privacy}}
 % Float-only pages start at the same top baseline as text pages.
 \makeatletter
 \setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{14pt}
 \setlength{\@fpbot}{0pt plus 1fil}
 \makeatother
 \begin{document}
@@ -142,9 +144,21 @@ minimal handoff integration make these distinctions reusable.
 \input{appendix_development}
 \input{appendix_detector_studies}
 \input{historical_measurements}
+% Keep per-model tables beside their headings, without leaking into the next section.
+\begingroup
+\let\savedtable\table
+\renewcommand{\table}[1][]{\savedtable[H]}
 \input{figures/appendix}
+\endgroup
+% Supplementary diagrams follow their explanatory text in source order.
+\FloatBarrier
+\begingroup
+\let\savedfigure\figure
+\renewcommand{\figure}[1][]{\savedfigure[H]}
 \input{figures/revision_appendix}
 \input{figures/jetstream20261013/appendix}
+\endgroup
+\FloatBarrier
 
 \bibliographystyle{plain}
 \bibliography{references}

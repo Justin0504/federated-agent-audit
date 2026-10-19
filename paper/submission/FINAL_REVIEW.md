@@ -5,7 +5,7 @@ methods, outcome selection or changes to frozen measurements.
 
 ## Checked
 - Main narrative ends on page 8 including the cover; appendix starts on page 9.
-  Full document: 46 pages. USC mark remains in the upper-right cover header.
+  Full document: 43 pages. USC mark remains in the upper-right cover header.
 - Active LaTeX input graph: 28 files, 66 unique labels and 38 referenced targets;
   no missing or duplicated targets. Final compiler log has no undefined references,
   undefined citations or overfull boxes. One automatic h-to-ht float adjustment
@@ -47,3 +47,17 @@ nine unknown outcomes. Unknown token usage remains a lower bound, not zero cost.
 This is a local build and evidence-consistency check, not certification of the
 arXiv server's TeX environment or a guarantee of conference acceptance. Inspect
 the server-generated preview before submitting. No upload or PR merge performed.
+
+## Full-document layout pass
+- Removed unnecessary appendix page breaks; preserved the cover/main boundary
+  and full task matrix. Main narrative remains 8 pages; appendix begins on 9.
+- Kept supplementary figures with their explanations and before References;
+  fixed float-page spacing instead of stretching gaps between figures.
+- Balanced the per-model tables as seven and four configurations, retaining
+  all data rows and model marks; kept the section heading with the first table.
+- Figure widths and aspect ratios are preserved, with shared diagram scaling
+  and equal-width live outcome/cost panels; no font shrinkage or data changes.
+- Rendered the final document; pages 1–34 are pixel-identical to the reviewed
+  first reflow, and revised final appendix pages were inspected individually.
+- Natural end-of-section and indivisible-figure whitespace is retained rather
+  than filling it with stretched text, cropped graphics or unrelated floats.
