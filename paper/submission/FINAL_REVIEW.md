@@ -79,3 +79,9 @@ the server-generated preview before submitting. No upload or PR merge performed.
 Figure 1 now carries a compact version of Figure 2 on its left: illustrative Tuesday visits and clinic location, local labels, and linked central checks. The separate business release path remains explicit. Figure 2 anchors icons to the existing worked example (Figure 9), report fields and the release interface, with model-source logos scoped to their respective studies. No new experimental evidence or deployment claim is introduced. The cover table preserves all eight frozen task, attack and call counts, with visual cost bars.
 
 Rebuilt the manuscript and independently compiled the staged arXiv source package; 43 pages retained. Inspected rendered pages 1 and 3, shortened two labels to prevent card overflow, and found no overfull boxes or undefined references in the build log. ZIP CRC and embedded figure-source equality verified.
+
+## Contribution and experimental-design cover
+
+Replaced the repeated cover method table with three explicitly separated evidence cards: 20 authored tasks/five controls, 1,132 archived traces/81 tasks, and 32 development-disjoint tasks/eight methods. Left panel names the metadata audit and structured release interfaces and visualizes their different inputs and outputs. Provider logos are scoped to each study. Counts and caveats are checked against core_narrative.tex; clean replay utility loss and live attack uncertainty remain visible. Full per-method results remain in the paper. No experiments or methods added.
+
+The 43-page manuscript and staged arXiv source package compile; cover inspected at 1800px, with no text overlap or clipping. ZIP CRC and cover-source equality verified.
