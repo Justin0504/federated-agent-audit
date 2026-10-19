@@ -1,7 +1,7 @@
 {
   "pages": 46,
   "sha256": {
-    "core_narrative.tex": "baa57985f5d7090c85470ff598424be12022eafbe85a09266c4600d8a0e81e1f",
+    "core_narrative.tex": "2302f82b081bcaa3c52ab83a3189c7ec406560263a347bed4d39345dd6d23f18",
     "appendix_audit_details.tex": "1f9080e2735bcb344708f647ddf3b356e6b166d39f0e115afd2b0b09daf2f2a1",
     "appendix_release_details.tex": "91302ae28825f4818ffd350d55ce589a7512bcf661804c146b3c16c02fb2cefc",
     "appendix_development.tex": "ec8744cab591146c48f7867ffe6c5ca64cd90b8f5bce5a7745cd23b8898bfbd9",
@@ -17,8 +17,8 @@
     "agentdojo_external.tex": "e5ec4a8a45f1c3f356d1b5fc87adbc88688118d847ec9ccb4d90aa7495798088",
     "historical_measurements.tex": "60216591cdbd988ff7787f15063fec59cb3cefc40b1319c112a4406040c98eb0",
     "references.bib": "d390bf007422fc8376b320d73882ab64b76d289a7fbfd6d9801df801901683af",
-    "main.pdf": "c6c66d2487865f379a843a8ca7a90f0f10f96eea6b697d3e6ae870d03519df3b",
-    "arxiv_submission.zip": "c9c78c528e5afbda6b8a5bdd007073216c038c74363ba2e86576c87b93450436",
+    "main.pdf": "1ac7739e24dddc998fe51a36b8424ba8454d38fbfaa9709db310229bc3789ab4",
+    "arxiv_submission.zip": "dc3b52d6508b03afceef28dc15062307bf18d91a9f4302d9687ff20f65db0cd6",
     "ARXIV.md": "ee9a919a5766130bf32d37eaad07925898b4a42189572a7783172dee29f7c3e0"
   }
 }

@@ -27,7 +27,9 @@ methods, outcome selection or changes to frozen measurements.
   no whole-report DP guarantee follows from perturbing one metadata field.
 - Removed the repeated external-replay figure from the appendix and cross-referenced
   the main figure. Kept appendix headings before their associated floating figures.
-- Kept deployment, reuse, limitations and proposed research directions together on page 8.
+- Removed the forced page break before deployment discussion: it now flows naturally
+  across pages 7–8, filling the large page-7 gap without shrinking text or figures.
+  Re-inspected both pages at full resolution; appendix still starts on page 9.
 - Rewrote the introduction contributions to include all three evidence groups and
   the formal eight-method comparison. Named Jetstream/A100 runtime, PostgreSQL,
   Qdrant and LangGraph while distinguishing controlled data from customer deployment.
