@@ -61,3 +61,15 @@ the server-generated preview before submitting. No upload or PR merge performed.
   first reflow, and revised final appendix pages were inspected individually.
 - Natural end-of-section and indivisible-figure whitespace is retained rather
   than filling it with stretched text, cropped graphics or unrelated floats.
+
+## Cover density and model-coverage follow-up
+- Replaced the sparse two-box teaser with separate business/release and metadata
+  audit paths; the complete eight-arm table now includes total model calls.
+  Teaser task/call counts checked against frozen formal-v31 analysis.
+- Removed the pilot-only model logo from the generic architecture. Table 1 now
+  separates model coverage by evidence type and identifies historical 11-config
+  coverage separately; no claim of multi-model formal validation is introduced.
+- Re-rendered and inspected all eight main pages. A float barrier keeps live
+  figures before the deployment discussion, now together on page 8. This
+  supersedes the earlier page-7 discussion placement. Appendix begins on 9;
+  full PDF remains 43 pages. Source archive independently compiled and checked.

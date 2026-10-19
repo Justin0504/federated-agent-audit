@@ -85,16 +85,17 @@ on archived actions; live tasks measure execution under fixed budgets. We do
 not pool these units or equate native attack failure with semantic privacy.
 
 \begin{table}[t]\centering\small
-\begin{tabular}{@{}p{.22\linewidth}p{.28\linewidth}p{.42\linewidth}@{}}
+\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.14}
+\begin{tabular}{@{}p{.18\linewidth}p{.22\linewidth}p{.28\linewidth}p{.26\linewidth}@{}}
 \toprule
-Evidence & Unit and scale & Principal limitation\\
+Evidence & Unit and scale & Model coverage & Interpretation boundary\\
 \midrule
-Structured transfer & 20 authored tasks; five gates on the same proposals & Exact fields and proxy scoring; no independent human semantic labels\\
-External replay & 1,132 trajectories from 81 tasks; five controls & Stops at the first block; no recovery or adaptive replanning\\
-Live comparison & 32 tasks; eight methods; 256 episodes & One pinned 14B model and seed; sparse successful attacks\\
+Structured release & 20 tasks; five gates & \modellogo{qwen}Qwen2.5-3B & Shared proposals; exact-field proxies\\
+External replay & 1,132 traces; 81 tasks; five controls & \modellogo{openai}GPT-4o / GPT-4-Turbo; \modellogo{claude}Claude 3.5; \modellogo{meta}Llama 3 & Archived actions; no replanning after block\\
+Live comparison & 32 tasks; eight methods; 256 episodes & \modellogo{qwen}Qwen2.5-14B Q4\_K\_M & One pinned model/seed; sparse attacks\\
 \bottomrule
 \end{tabular}
-\caption{Three distinct evidence sources. Repeated controls and archived model variants are not additional independent tasks.}
+\caption{Core evidence, separated by execution mode. Logos identify families/providers, not a shared multi-model run. Historical studies additionally cover 11 configurations across Phi, Mistral, Qwen, Llama, Gemma, GPT and Claude (Appendices~\ref{app:historical} and~\ref{app:permodel}); missing backend provenance limits model-ranking claims. Repeated controls and model variants are not independent tasks.}
 \label{tab:evidence-scope}
 \end{table}
 
@@ -190,6 +191,7 @@ reports paired cost intervals; Figure~\ref{fig:full-task-matrix} shows every tas
 Timing is observational, not randomized, and no currency-cost claim is made.
 
 % Continue naturally after results; avoid a half-empty forced page.
+\FloatBarrier
 \section{Deployment, reuse and research directions}
 \label{sec:deployment-reuse}
 \paragraph{A deployed research environment.}

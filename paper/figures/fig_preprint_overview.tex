@@ -1,38 +1,53 @@
-% Non-floating cover overview: shared icons, physical design grid, measured counts.
+% Cover: evidence boundary and complete frozen comparison; no pooled model claims.
 \begin{center}
 \diagramcontent{%
 \begin{tikzpicture}[x=1mm,y=1mm]
-\path[use as bounding box] (0,0) rectangle (184,67);
-\node[figtitle,anchor=west] at (1,64) {A\quad What the center observes};
-\node[figtitle,anchor=west] at (94,64) {B\quad What the live tasks establish};
-\draw[figzone,fill=figamber!5] (1,25) rectangle (37,58);
-\node at (10,47) {\semanticicon{agent}{10mm}};
-\node at (28,47) {\semanticicon{memory}{9mm}};
-\node[figlabel,align=center] at (19,34) {Private runtime\\Raw messages stay local};
-\draw[figzone,fill=figindigo!4] (46,25) rectangle (83,58);
-\node at (56,47) {\semanticicon{report}{9mm}};
-\node at (74,47) {\semanticicon{auditor}{9mm}};
-\node[figlabel,align=center] at (64,34) {Central audit\\Labels + hashes + roles};
-\draw[figflow] (37,46) -- (46,46);
-\node[fignote,align=center] at (42,19) {Local release checks are separate from central detection.\\Metadata can leak; labels can be wrong or incomplete.};
-\node[figlabel,anchor=west] at (1,5) {Replay: 1,132 archived trajectories; no recovery after blocking.};
-% Bars encode task completion only; attack outcome stays a separate column.
-\node[fignote,anchor=west] at (94,57) {Method};
-\node[fignote,anchor=west] at (135,57) {Tasks /32};
-\node[fignote,anchor=east] at (183,57) {Attacks /16};
-\foreach \name/\n/\a/\y in {No gate/10/1/51,Gate + replan/10/0/45,Scope + replan/10/0/39,Receipt + replan/9/0/33,Deny egress/8/0/27,Tool Filter/0/0/21,IPIGuard/8/0/15,Filter + resume/12/0/9}{
-\node[figlabel,anchor=west] at (94,\y) {\name};
-\fill[figrule!50] (136,\y-1.3) rectangle (161,\y+1.3);
-\pgfmathsetmacro{\barend}{136+25*\n/32}
-\fill[figemerald] (136,\y-1.3) rectangle (\barend,\y+1.3);
-\node[figlabel,anchor=west] at (163,\y) {\n};
-\node[figlabel,anchor=east] at (181,\y) {\a};
+\path[use as bounding box] (0,0) rectangle (184,76);
+\node[figtitle,anchor=west] at (1,73) {A\quad Two paths, different evidence};
+\node[figtitle,anchor=west] at (94,73) {B\quad Task success, attacks and cost};
+% Business path: release checks belong to the local runtime.
+\draw[figzone,fill=figamber!5] (1,39) rectangle (88,68);
+\node[fignote,anchor=west] at (3,64.5) {PRIVATE RUNTIME / BUSINESS PATH};
+\node at (9,55) {\semanticicon{agent}{6mm}};
+\node[figlabel,align=center] at (16,45) {Agent + data};
+\node at (41,55) {\semanticicon{memory}{6mm}};
+\node[figlabel,align=center] at (44,45) {Release check};
+\node at (74,55) {\semanticicon{agent}{6mm}};
+\node[figlabel,align=center] at (74,45) {Recipient};
+\draw[figflow] (20,55)--(34,55);
+\draw[figflow] (51,55)--(67,55);
+\node[fignote,anchor=west] at (3,35) {Release evidence: authority / relevance / support};
+% Audit path stays separate from business-message transport.
+\draw[figflow,draw=figindigo,dashed] (3,39)--(3,29);
+\draw[figzone,fill=figindigo!4] (1,13) rectangle (88,29);
+\node at (8,22) {\semanticicon{report}{5.5mm}};
+\node[figlabel,anchor=west] at (15,24) {Local labels + hashes + roles};
+\node[fignote,anchor=west] at (15,18) {Center: disclosure / purpose / hops / inference};
+\node[fignote,anchor=west] at (1,9) {Raw text stays local; metadata is not secrecy.};
+% Eight fixed methods: common denominators, observed counts, no ranking.
+\fill[figwash] (94,61) rectangle (184,68);
+\node[fignote,anchor=west] at (95,64.5) {Method};
+\node[fignote,anchor=east] at (148,64.5) {Task /32};
+\node[fignote,anchor=east] at (166,64.5) {Atk /16};
+\node[fignote,anchor=east] at (183,64.5) {Calls};
+\foreach \name/\n/\a/\c/\y in {No gate/10/1/138/57.5,Gate + replan/10/0/137/52,Scope + replan/10/0/136/46.5,Receipt + replan/9/0/136/41,Deny egress/8/0/142/35.5,Tool Filter/0/0/69/30,IPIGuard/8/0/211/24.5,Filter + resume/12/0/144/19}{
+\draw[figgrid] (94,\y-2.6)--(184,\y-2.6);
+\node[figlabel,anchor=west] at (95,\y) {\name};
+\fill[figrule!45] (133,\y-1) rectangle (141,\y+1);
+\pgfmathsetmacro{\barend}{133+8*\n/32}
+\fill[figemerald] (133,\y-1) rectangle (\barend,\y+1);
+\node[figlabel,anchor=east] at (148,\y) {\n};
+\node[figlabel,anchor=east] at (165,\y) {\a};
+\node[figlabel,anchor=east] at (182,\y) {\c};
 }
+\node[fignote,anchor=west] at (94,12.5) {Pinned 14B / one seed / 32 task-level clusters};
+\node[fignote,anchor=west] at (94,8.5) {0/16 attacks: upper 95\% bound = 19.4\%};
+\draw[figgrid] (1,5)--(184,5);
+\node[figlabel,anchor=west] at (1,1) {20 authored tasks};
+\node[figlabel,anchor=center] at (89,1) {1,132 external replays};
+\node[figlabel,anchor=east] at (183,1) {256 live executions};
 \end{tikzpicture}}
 \end{center}
 \refstepcounter{figure}\label{fig:preprint-overview}
 {\small\noindent\textbf{Figure~\thefigure: Auditing evidence is not proof of safe task completion.}
-Left: the proposed evidence boundary. Right: the frozen 14B live comparison
-(32 tasks, eight methods, one seed); all eight methods are shown. Zero attacks
-out of 16 has a Wilson 95\% upper bound of 19.4\%. Resume denotes an explicit
-Tool Filter adaptation. Full uncertainty and paired costs appear in the evaluation.\par}
+Left: separate business and audit paths. Right: all eight live methods; calls include planning and repair. Resume adapts Tool Filter. Evidence groups are not pooled. Native attack failure is not semantic privacy; Section~\ref{sec:eval} reports uncertainty and failures.\par}

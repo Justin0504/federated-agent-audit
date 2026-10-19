@@ -17,9 +17,9 @@
 \draw[figflow] (15,68) -- (22,68);\draw[figflow,<->] (36,68) -- (44,68);
 \draw[figzone,fill=white] (4,30) rectangle (57,54);
 \node at (11,43) {\semanticicon{encoder}{10mm}};
-\node[figlabel,anchor=west] at (19,48) {Frozen causal-LM inference};
+\node[figlabel,anchor=west] at (19,48) {Model inference runtime};
 \node[figlabel,anchor=west] at (19,42) {Context $\rightarrow$ tool proposal};
-\node[figlabel,anchor=west] at (19,35) {\modellogo{qwen}Qwen2.5-3B (pilot)};
+\node[figlabel,anchor=west] at (19,35) {Study-specific backend};
 \draw[figflow] (29,56) -- (29,54);
 % Local derivation is not confused with a learned central model.
 \node at (73,69) {\semanticicon{message}{8mm}};
@@ -59,5 +59,5 @@
 \node[figlabel,anchor=west] at (160,9) {Recipient};
 \node[fignote,anchor=west] at (0,-6) {Separate paths: business content to recipients; metadata reports to the center. No training loop is claimed.};
 \end{tikzpicture}}
-\caption{Runtime, evidence derivation and audit are separate mechanisms. The model block depicts frozen inference, with the pinned Qwen pilot backend as a concrete example; it is not a new neural architecture or federated training scheme. Local labels populate a report graph, while a separate, restricted release gate mediates supported business actions. Neither report authentication nor the absence of raw text establishes semantic confidentiality.}\label{fig:arch}
+\caption{Runtime, evidence derivation and audit are separate mechanisms. The model block is backend-neutral; checkpoints and budgets are fixed within each study. The 3B deployment pilot and the 14B formal comparison are separate experiments, not a new neural architecture or federated training scheme. Local labels populate a report graph, while a separate, restricted release gate mediates supported business actions. Neither report authentication nor the absence of raw text establishes semantic confidentiality.}\label{fig:arch}
 \end{widefigure}
