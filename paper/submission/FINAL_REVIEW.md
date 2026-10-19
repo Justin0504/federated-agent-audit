@@ -73,3 +73,9 @@ the server-generated preview before submitting. No upload or PR merge performed.
   figures before the deployment discussion, now together on page 8. This
   supersedes the earlier page-7 discussion placement. Appendix begins on 9;
   full PDF remains 43 pages. Source archive independently compiled and checked.
+
+## Concrete architecture and dense cover follow-up
+
+Figure 1 now carries a compact version of Figure 2 on its left: illustrative Tuesday visits and clinic location, local labels, and linked central checks. The separate business release path remains explicit. Figure 2 anchors icons to the existing worked example (Figure 9), report fields and the release interface, with model-source logos scoped to their respective studies. No new experimental evidence or deployment claim is introduced. The cover table preserves all eight frozen task, attack and call counts, with visual cost bars.
+
+Rebuilt the manuscript and independently compiled the staged arXiv source package; 43 pages retained. Inspected rendered pages 1 and 3, shortened two labels to prevent card overflow, and found no overfull boxes or undefined references in the build log. ZIP CRC and embedded figure-source equality verified.

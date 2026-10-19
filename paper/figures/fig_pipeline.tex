@@ -1,63 +1,64 @@
-% Editable dense architecture, common 184mm design grid.
+% Editable architecture grounded in the existing worked example; not a new trace.
 \begin{widefigure}[t]\centering
 \diagramcontent{%
 \begin{tikzpicture}[x=1mm,y=1mm]
-\node[figtitle,anchor=west] at (0,91) {FROM PRIVATE AGENT CONTEXT TO REPORTED GOVERNANCE EVIDENCE};
-\draw[figzone,fill=figamber!5,draw=figamber!45] (0,24) rectangle (61,85);
-\draw[figzone,fill=figindigo!4,draw=figindigo!45] (66,24) rectangle (122,85);
-\draw[figzone,fill=figemerald!5,draw=figemerald!45] (128,24) rectangle (178,85);
-\node[figtitle,anchor=west] at (3,80) {A\quad Private agent runtime};
-\node[figtitle,anchor=west] at (69,80) {B\quad Local evidence};
-\node[figtitle,anchor=west] at (131,80) {C\quad Metadata audit};
-% Concrete runtime objects, and a frozen inference block.
-\node at (9,68) {\semanticicon{memory}{10mm}};
-\node at (29,68) {\semanticicon{agent}{11mm}};
-\node at (51,68) {\semanticicon{tools}{10mm}};
-\node[fignote] at (9,59) {memory};\node[fignote] at (29,59) {agent};\node[fignote] at (51,59) {tools};
-\draw[figflow] (15,68) -- (22,68);\draw[figflow,<->] (36,68) -- (44,68);
-\draw[figzone,fill=white] (4,30) rectangle (57,54);
-\node at (11,43) {\semanticicon{encoder}{10mm}};
-\node[figlabel,anchor=west] at (19,48) {Model inference runtime};
-\node[figlabel,anchor=west] at (19,42) {Context $\rightarrow$ tool proposal};
-\node[figlabel,anchor=west] at (19,35) {Study-specific backend};
-\draw[figflow] (29,56) -- (29,54);
-% Local derivation is not confused with a learned central model.
-\node at (73,69) {\semanticicon{message}{8mm}};
-\draw[figflow] (78,69) -- (83,69);
-\node[figchip=figindigo] at (100,69) {Lexical / LLM tagger};
-\draw[figflow] (100,64) -- (100,59);
-\draw[figzone,fill=white] (70,31) rectangle (118,58);
-\node at (75,53) {\semanticicon{report}{6mm}};
-\node[figmono,anchor=west] at (81,53) {report $E$};
-\node[figmono,anchor=west] at (73,46) {$s$, owner, recipient, purpose};
-\node[figmono,anchor=west] at (73,40) {tags, hops, provenance};
-\node[figmono,anchor=west] at (73,34) {hash + report MAC};
-\draw[figflow] (61,69) -- (66,69);
-\draw[figbound] (125,22) -- (125,85);
-\draw[figcross] (122,51) -- (128,51);
-% A small actual relational view, not another paragraph.
-\foreach \x/\y/\c/\t in {139/69/figamber/s,166/69/figindigo/r_1,152/57/figemerald/r_2}{
- \node[circle,draw=\c,fill=\c!12,minimum size=6mm,font=\scriptsize] (n\t) at (\x,\y) {$\t$};}
-\draw[figflow] (142,69) -- (163,69);
-\draw[figflow] (141,66) -- (149,60);\draw[figflow] (165,66) -- (155,60);
-\node[fignote] at (152,75) {subject-linked edges};
-\node[figchip=figrose,minimum width=20mm] at (141,45) {disclosure};
-\node[figchip=figamber,minimum width=20mm] at (165,45) {purpose};
-\node[figchip=figindigo,minimum width=20mm] at (141,35) {hop / TTL};
-\node[figchip=figemerald,minimum width=20mm] at (165,35) {inference};
-% Parallel business route.
-\draw[figzone,fill=figrose!4,draw=figrose!40] (0,0) rectangle (178,19);
-\node at (7,9) {\semanticicon{agent}{9mm}};
-\node[figlabel,anchor=west] at (14,9) {Sender};
-\draw[figflow,draw=figrose] (30,9) -- (55,9);
-\node[fignote,anchor=south] at (42,10) {content};
-\node at (65,9) {\semanticicon{gate}{10mm}};
-\node[figlabel,anchor=west] at (73,13) {Scoped release gate};
-\node[fignote,anchor=west] at (73,6) {authority / case / source support};
-\draw[figflow,draw=figrose] (122,9) -- (145,9);
-\node at (153,9) {\semanticicon{agent}{9mm}};
-\node[figlabel,anchor=west] at (160,9) {Recipient};
-\node[fignote,anchor=west] at (0,-6) {Separate paths: business content to recipients; metadata reports to the center. No training loop is claimed.};
+\node[figtitle,anchor=west] at (0,93) {ONE HANDOFF, TWO PATHS: BUSINESS CONTENT AND AUDIT EVIDENCE};
+\foreach \x/\w/\c in {0/59/figamber,64/59/figindigo,129/49/figemerald}{
+\draw[figzone,fill=\c!4,draw=\c!45] (\x,25) rectangle (\x+\w,88);}
+\node[figtitle,anchor=west] at (3,83) {A\quad Private runtime};
+\node[figtitle,anchor=west] at (67,83) {B\quad Evidence extraction};
+\node[figtitle,anchor=west] at (132,83) {C\quad Central checks};
+% Concrete local message artifacts, from the paper's existing worked example.
+\node at (7,73) {\semanticicon{calendar}{7mm}};
+\node[figlabel,anchor=west] at (13,75) {``Every Tuesday afternoon''};
+\node[fignote,anchor=west] at (13,70) {standing appointment, 8 weeks};
+\node at (7,61) {\semanticicon{location}{7mm}};
+\node[figlabel,anchor=west] at (13,63) {``Near the oncology center''};
+\node[fignote,anchor=west] at (13,58) {a second message, same subject};
+\draw[figgrid] (3,53)--(56,53);
+\node at (8,44) {\semanticicon{agent}{7mm}};
+\node[figlabel,anchor=west] at (15,47) {Agent + tools + context};
+\node[fignote,anchor=west] at (15,41) {Policy stays outside the model};
+\node[figchip=figamber,anchor=west] at (3,31) {Raw messages remain local};
+% Actual field names and retained example values.
+\node[figchip=figindigo] at (93,74) {Lexical / LLM tagger};
+\draw[figflow] (93,70)--(93,65);
+\draw[figzone,fill=white] (67,29) rectangle (120,64);
+\node[figmono,anchor=west] at (70,60) {Part.metadata / privacy label};
+\node[figmono,anchor=west] at (70,54) {category: schedule};
+\node[figmono,anchor=west] at (70,48) {inferred: health (+ location)};
+\node[figmono,anchor=west] at (70,42) {sensitivity: 4};
+\node[fignote,anchor=west] at (70,36) {+ subject / owner / recipient};
+\node[fignote,anchor=west] at (70,31) {+ hash / provenance / report MAC};
+\draw[figflow] (59,74)--(64,74);
+\draw[figbound] (126,25)--(126,88);
+\draw[figcross] (123,56)--(129,56);
+% Named nodes replace semantically empty r1/r2 graph nodes.
+\node[circle,draw=figamber,fill=figamber!10,minimum size=6mm,font=\scriptsize] (s) at (140,71) {$s$};
+\node[circle,draw=figindigo,fill=figindigo!8,minimum size=6mm,font=\scriptsize] (r) at (165,71) {$r$};
+\draw[figflow,bend left=25] (s) to node[above,font=\scriptsize] {$m_1$} (r);
+\draw[figflow,bend right=25] (s) to node[below,font=\scriptsize] {$m_2$} (r);
+\node[fignote] at (140,63) {subject};\node[fignote] at (165,63) {recipient};
+\node[figlabel,anchor=west] at (132,55) {Check across linked reports};
+\node[figchip=figrose,minimum width=20mm] at (141,47) {disclosure};
+\node[figchip=figamber,minimum width=20mm] at (166,47) {purpose};
+\node[figchip=figindigo,minimum width=20mm] at (141,38) {hop / TTL};
+\node[figchip=figemerald,minimum width=20mm] at (166,38) {inference};
+\node[fignote,align=center] at (153,29) {Reports are not ground truth};
+% Separate implemented release mechanism, not a claim of semantic enforcement.
+\draw[figzone,fill=figrose!3] (0,3) rectangle (178,21);
+\node at (7,12) {\semanticicon{message}{7mm}};
+\node[figlabel,anchor=west] at (14,15) {Proposed action};
+\node[fignote,anchor=west] at (14,9) {source / version / field / value};
+\draw[figflow,draw=figrose] (58,12)--(67,12);
+\node at (74,12) {\semanticicon{gate}{8mm}};
+\node[figlabel,anchor=west] at (81,15) {Trusted release check};
+\node[fignote,anchor=west] at (81,9) {scope / freshness / exact support};
+\draw[figflow,draw=figrose] (133,12)--(141,12);
+\node[figlabel,align=center] at (159,12) {allow / deny / unknown};
+\node[fignote,anchor=west] at (0,-3) {Model coverage is study-specific (Table 1):};
+\node[figlabel,anchor=west] at (70,-3) {\modellogo{qwen}live / authored};
+\node[figlabel,anchor=west] at (114,-3) {\modellogo{openai}\modellogo{claude}\modellogo{meta}archived replay};
 \end{tikzpicture}}
-\caption{Runtime, evidence derivation and audit are separate mechanisms. The model block is backend-neutral; checkpoints and budgets are fixed within each study. The 3B deployment pilot and the 14B formal comparison are separate experiments, not a new neural architecture or federated training scheme. Local labels populate a report graph, while a separate, restricted release gate mediates supported business actions. Neither report authentication nor the absence of raw text establishes semantic confidentiality.}\label{fig:arch}
+\caption{Concrete messages anchor the architecture; they illustrate the existing worked example in Figure~\ref{fig:desens}, not a new execution. The center links locally derived reports without raw text. A separate structured release mechanism checks supported actions. Logos denote study-specific backends or archived trace sources, not a shared deployment. Labels can be wrong and metadata can leak; neither an authenticated report nor a missing alert establishes semantic confidentiality.}\label{fig:arch}
 \end{widefigure}

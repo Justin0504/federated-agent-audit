@@ -3,27 +3,31 @@
 \diagramcontent{%
 \begin{tikzpicture}[x=1mm,y=1mm]
 \path[use as bounding box] (0,0) rectangle (184,76);
-\node[figtitle,anchor=west] at (1,73) {A\quad Two paths, different evidence};
+\node[figtitle,anchor=west] at (1,73) {A\quad From messages to audit evidence};
 \node[figtitle,anchor=west] at (94,73) {B\quad Task success, attacks and cost};
-% Business path: release checks belong to the local runtime.
-\draw[figzone,fill=figamber!5] (1,39) rectangle (88,68);
-\node[fignote,anchor=west] at (3,64.5) {PRIVATE RUNTIME / BUSINESS PATH};
-\node at (9,55) {\semanticicon{agent}{6mm}};
-\node[figlabel,align=center] at (16,45) {Agent + data};
-\node at (41,55) {\semanticicon{memory}{6mm}};
-\node[figlabel,align=center] at (44,45) {Release check};
-\node at (74,55) {\semanticicon{agent}{6mm}};
-\node[figlabel,align=center] at (74,45) {Recipient};
-\draw[figflow] (20,55)--(34,55);
-\draw[figflow] (51,55)--(67,55);
-\node[fignote,anchor=west] at (3,35) {Release evidence: authority / relevance / support};
-% Audit path stays separate from business-message transport.
-\draw[figflow,draw=figindigo,dashed] (3,39)--(3,29);
-\draw[figzone,fill=figindigo!4] (1,13) rectangle (88,29);
-\node at (8,22) {\semanticicon{report}{5.5mm}};
-\node[figlabel,anchor=west] at (15,24) {Local labels + hashes + roles};
-\node[fignote,anchor=west] at (15,18) {Center: disclosure / purpose / hops / inference};
-\node[fignote,anchor=west] at (1,9) {Raw text stays local; metadata is not secrecy.};
+% Compact architecture: tangible messages, report fields, linked checks.
+\foreach \x/\w/\c in {1/28/figamber,32/29/figindigo,64/25/figemerald}{
+\draw[figzone,fill=\c!5,draw=\c!35] (\x,24) rectangle (\x+\w,68);}
+\node[figtitle] at (15,64) {Runtime};
+\node[figtitle] at (46,64) {Evidence};
+\node[figtitle] at (76.5,64) {Auditor};
+\node at (9,56) {\semanticicon{calendar}{5mm}};
+\node at (21,56) {\semanticicon{location}{5mm}};
+\node[figlabel,align=center] at (15,47) {Tuesday visits\\+ clinic location};
+\node at (15,35) {\semanticicon{agent}{7mm}};
+\node[fignote] at (15,27) {Private context};
+\node at (46,55) {\semanticicon{report}{6mm}};
+\node[figmono,align=left] at (46.5,42) {schedule\\health hint\\subject + owner};
+\node[fignote] at (46.5,28) {hash + provenance};
+\node at (76,54) {\semanticicon{graph}{7mm}};
+\node[figlabel,align=center] at (76.5,39) {Disclosure\\Purpose\\Hops / inference};
+\draw[figflow] (29,54)--(32,54);\draw[figcross] (61,54)--(64,54);
+\draw[figbound] (62.5,25)--(62.5,68);
+\draw[figzone,fill=figrose!4] (1,10) rectangle (89,21);
+\node at (7,15.5) {\semanticicon{gate}{5mm}};
+\node[figlabel,anchor=west] at (13,17) {Separate business release};
+\node[fignote,anchor=west] at (13,12.5) {scope / freshness / exact source support};
+\node[fignote,anchor=west] at (1,7) {Illustrative messages; raw content stays local.};
 % Eight fixed methods: common denominators, observed counts, no ranking.
 \fill[figwash] (94,61) rectangle (184,68);
 \node[fignote,anchor=west] at (95,64.5) {Method};
@@ -37,7 +41,10 @@
 \pgfmathsetmacro{\barend}{133+8*\n/32}
 \fill[figemerald] (133,\y-1) rectangle (\barend,\y+1);
 \node[figlabel,anchor=east] at (148,\y) {\n};
+\ifnum\a>0\fill[figrose!12] (157,\y-2) rectangle (167,\y+2);\fi
 \node[figlabel,anchor=east] at (165,\y) {\a};
+\pgfmathsetmacro{\costend}{169+14*\c/220}
+\fill[figamber!15] (169,\y-1.7) rectangle (\costend,\y+1.7);
 \node[figlabel,anchor=east] at (182,\y) {\c};
 }
 \node[fignote,anchor=west] at (94,12.5) {Pinned 14B / one seed / 32 task-level clusters};
