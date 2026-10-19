@@ -6,7 +6,7 @@ methods, outcome selection or changes to frozen measurements.
 ## Checked
 - Main narrative ends on page 8 including the cover; appendix starts on page 9.
   Full document: 46 pages. USC mark remains in the upper-right cover header.
-- Active LaTeX input graph: 28 files, 65 unique labels and 38 referenced targets;
+- Active LaTeX input graph: 28 files, 66 unique labels and 38 referenced targets;
   no missing or duplicated targets. Final compiler log has no undefined references,
   undefined citations or overfull boxes. One automatic h-to-ht float adjustment
   is harmless; embedded PDF-version notices do not indicate missing resources.
@@ -27,7 +27,13 @@ methods, outcome selection or changes to frozen measurements.
   no whole-report DP guarantee follows from perturbing one metadata field.
 - Removed the repeated external-replay figure from the appendix and cross-referenced
   the main figure. Kept appendix headings before their associated floating figures.
-- Kept limitations together on page 8 instead of splitting them across a figure page.
+- Kept deployment, reuse, limitations and proposed research directions together on page 8.
+- Rewrote the introduction contributions to include all three evidence groups and
+  the formal eight-method comparison. Named Jetstream/A100 runtime, PostgreSQL,
+  Qdrant and LangGraph while distinguishing controlled data from customer deployment.
+- Added explicitly prospective evidence interoperability, authority-preserving
+  recovery, and persistent-memory research targets without changing methods or data.
+- Re-rendered all main-text pages and the appendix transition after this prose revision.
 
 ## Conclusions deliberately not claimed
 No general semantic confidentiality, utility superiority, production readiness,

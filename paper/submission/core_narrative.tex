@@ -147,8 +147,9 @@ complete controls, suite breakdowns and discrepancy audit. These losses qualify
 the eight-of-eight benign retention in the authored set.
 
 \subsection{Live execution: low attack counts are not a safety ranking}
-Following development, we freeze Qwen2.5-14B-Instruct Q4\_K\_M, a shared system
-instruction and budgets of 12 model calls, 12 actions, 1,024 output tokens per
+The live executor runs on a Jetstream A100 with llama.cpp b11624. Following
+development, we freeze Qwen2.5-14B-Instruct Q4\_K\_M, a shared system instruction
+and budgets of 12 model calls, 12 actions, 1,024 output tokens per
 call and an 8,192-token context. Setup and planning consume the same call budget.
 The final development gate requires at least two of three ungated clean twins
 to succeed and known outcomes; the 72-episode validation passes. All earlier
@@ -189,30 +190,60 @@ reports paired cost intervals; Figure~\ref{fig:full-task-matrix} shows every tas
 Timing is observational, not randomized, and no currency-cost claim is made.
 
 \clearpage
-\section{Limitations, related work and reuse}
-The evidence supports scoped checks and exposes the cost of intervention. It
-does not establish general semantic confidentiality, receipt superiority or
-production readiness. False labels, omitted events, malicious authorized issuers,
-source errors, correlated inference and unmediated channels remain open. The
-center cannot independently verify judgments whose supporting content it does
-not receive. A MAC authenticates a statement; it does not validate that judgment.
+\section{Deployment, reuse and research directions}
+\label{sec:deployment-reuse}
+\paragraph{A deployed research environment.}
+On Jetstream we separated business and audit PostgreSQL instances, a private
+report service and Qdrant retrieval; raw records and prompts stayed on the
+business side. A controlled regression exercised 1,872 operations over 2, 8 and
+16 logical tenants, concurrency levels 1 and 4, and three repetitions. It tests
+permission freshness and reporting, not 1,872 independent semantic tasks.
+Delivery-time checks blocked the constructed revoked accesses, but also withheld
+otherwise authorized operations when policy access failed. An actual stopped
+report-service container tested outbox preservation for triggered recovery.
+Appendix~\ref{app:jetstream} gives the configuration and failure accounting.
 
-AgentLeak~\cite{agentleak} and Sum-Leaks~\cite{sumleaks} motivate checking internal
-channels and compositional inference. AgentDojo supplies independent executable
-tasks and attack predicates. Our metadata interface complements local enforcement
-and tracing; it does not show that existing DLP tools cannot execute locally or
-redact central logs. Comparisons against Presidio~\cite{presidio} and configured
-model judges are integration-specific and retained in
-Appendix~\ref{app:detector-studies}. Historical model aliases lack consistent
-provider-version provenance and cannot support precise capability rankings.
+A LangGraph pilot connects retrieval to two model roles using synthetic business
+records. Its failures motivate the authorization--relevance--support separation:
+withholding a revoked record did not prevent another customer's reference from
+being substituted or an unsupported refund statement. This is a real software
+stack with controlled data, not a customer deployment. AgentDojo's mail, Slack
+and travel tools likewise execute in benchmark environments; we did not test
+production accounts, real users or end-to-end service-level objectives.
 
-The reusable contribution is an explicit evidence boundary and an evaluation
-that keeps audit findings, attack outcomes, task completion and cost separate.
-The accompanying single-handoff example mirrors existing application messages
-into \texttt{AuditSession} without model or network calls. It observes rather
-than enforces; its aggregate output is not an independent task-success checker.
-Code, frozen numeric evidence and the complete result matrix support inspection
-of failures as well as successes. Stronger semantic and deployment claims require
-independent labels, more capable executors, additional models and adversaries,
-and complete mediation of the release path.
+\paragraph{What applications can reuse now.}
+An application can mirror a handoff into \texttt{AuditSession}, supply trusted
+policy labels and receive scoped findings without replacing its agent planner.
+The minimal example in Appendix~\ref{sec:complete-task-evidence} makes no model
+or network calls and does not enforce delivery. Enforcement requires a separate,
+fully mediated release boundary; the transactional adapter tests a database
+mailbox commit, not external delivery. Researchers can reuse the frozen task
+matrix and paired outcome/cost reporting to compare controls while retaining
+failures, abstentions and unknown costs.
+
+\paragraph{Limits and relation to prior work.}
+AgentLeak~\cite{agentleak} and Sum-Leaks~\cite{sumleaks} motivate internal-channel
+and compositional checks; AgentDojo supplies executable tasks. Our metadata
+interface complements local enforcement and tracing. Presidio~\cite{presidio}
+comparisons in Appendix~\ref{app:detector-studies} concern specific integrations;
+DLP can also run locally. Neither our measurements nor authenticated reports
+establish general semantic confidentiality, production readiness or utility
+superiority. False labels, omitted events, source errors, correlated inference
+and bypass channels remain open. Historical model aliases cannot support precise
+capability rankings.
+
+\paragraph{Research directions arising from the failures.}
+\emph{Interoperable evidence:} extend the experimental A2A metadata interface
+with scoped authorization, relevance and support outcomes and explicit missing
+obligations. Cross-framework conformance tests should distinguish incompatible
+policies from missing evidence; adoption and semantic conformance remain untested.
+\emph{Recovery without broader authority:} after a refusal, replan using permitted
+sources or request an explicit policy change. Evaluate privacy, completed tasks
+and repair cost together against deny-all and unchanged-authority controls;
+our prefix replay cannot establish this recovery benefit.
+\emph{Persistent memory and composition:} test repeated queries, retention windows
+and revocation after information has entered agent memory. Use independent
+recipient attacks and adjudicated semantic labels to measure cumulative leakage;
+a later permission check cannot retract previously disclosed information.
+These are proposed research targets, not additional capabilities validated here.
 \label{sec:main-end}

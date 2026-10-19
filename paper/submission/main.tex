@@ -108,38 +108,29 @@ restrict a central observer from collecting raw messages across organizational
 boundaries. We ask what this observer can conclude from local reports, and
 which conclusions require stronger checks at the point of release.
 
-The A2A data model supplies messages, parts, metadata and extension mechanisms.
-Our extension uses these mechanisms to state governance roles and constraints
-explicitly. It does not change the underlying transport or establish a standard
-adopted by A2A. Its purpose is to make the evidence and assumptions consumed by
-our auditor explicit and testable.
-
 We study the evidence available to a central auditor that does not receive raw
 agent messages. Local components derive governance labels, while the center
 checks their relationships. This separation limits content collection but does
 not establish label correctness or eliminate metadata leakage. Our contributions
 are threefold:
 \begin{enumerate}
-\item \textbf{Separate measurements of privacy and utility.} A frozen
-20-task structured experiment and 1,132 external archived AgentDojo trajectories
-measure successful tasks separately from privacy violations, unknowns and
-interventions. External replay exposes a utility cost hidden by the smaller
-self-authored set. Historical model comparisons remain exploratory appendices.
-\item \textbf{A metadata interface and scoped audit mechanisms.} The
-\ext{} extension separates data subject, owning principal and acting agent.
-Four detectors consume local labels for disclosure, purpose, forwarding and
-inference checks. We characterize inference under an explicit gain model and
-state only conditional representation-capacity and report-authenticity results;
-neither proves semantic confidentiality or complete observation.
-\item \textbf{Failure-driven release checks and reproducible evaluation.}
-Controlled deployment experiments distinguish stale authorization, irrelevant
-context and unsupported generated claims. We implement a restricted structured
-release gate and a transactional database adapter, then evaluate their checks,
-abstentions and retained task outputs separately. Section~\ref{sec:methodology}
-reports what these mechanisms establish and what remains outside their scope.
+\item \textbf{An explicit boundary for audit evidence.} The experimental
+\ext{} interface separates data subject, owner and acting agent, and supports
+four metadata-based checks. We distinguish authorization, case relevance and
+factual support: evidence for one is not evidence for all three. Conditional
+bounds describe representation capacity and report authenticity, not semantic secrecy.
+\item \textbf{Executable release checks with deployment counterexamples.}
+A restricted structured gate and transactional database adapter check freshness,
+scope and exact source support. A deployed retrieval workflow exposes why an
+up-to-date permission check can still release the wrong case or an unsupported
+claim. The implementation returns unknown when required evidence is absent.
+\item \textbf{Paired evidence for privacy, utility and cost.} We separate
+20 authored structured tasks, 1,132 archived AgentDojo trajectories, and a live
+32-task, eight-method comparison (256 episodes). Replay reveals utility losses;
+the live comparison exposes sparse attacks and execution failures rather than
+establishing a defense ranking. Frozen summaries, a complete task matrix and a
+minimal handoff integration make these distinctions reusable.
 \end{enumerate}
-The SDK also supports same-organization multi-agent deployments. The deployed
-experiments are research harnesses; they do not establish production readiness.
 
 
 \input{core_narrative}
