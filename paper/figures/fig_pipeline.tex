@@ -1,34 +1,63 @@
-% Shared, editable TikZ. Data: codex_pack/figure_data.json.
+% Editable dense architecture, common 184mm design grid.
 \begin{widefigure}[t]\centering
-\resizebox{\linewidth}{!}{%
+\diagramcontent{%
 \begin{tikzpicture}[x=1mm,y=1mm]
-\node[figtitle, anchor=west] at (0,55) {BUSINESS PLANE};
-\node[figlabel, anchor=center] at (5,43) {\icon{agent}{ink}{5mm}};
-\node[figtitle, anchor=west] at (12,43) {Sending agent};
-\draw[figflow,draw=figrose,line width=1pt] (48,43) -- (129,43);
-\node[figlabel,text=figrose, anchor=south] at (88,46) {A2A message content};
-\node[figlabel, anchor=center] at (136,43) {\icon{agent}{ink}{5mm}};
-\node[figtitle, anchor=west] at (143,43) {Recipient};
-\node[figtitle, anchor=west] at (0,29) {AUDIT PLANE};
-\draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (0,0) rectangle (72,23);
-\node[figlabel, anchor=center] at (6,17) {\icon{tag}{indigo}{4mm}};
-\node[figtitle, anchor=west] at (12,17) {Local observation};
-\node[figlabel, anchor=west] at (4,10) {Content is input to tagging and hashing.};
-\node[figlabel, anchor=west] at (4,4) {Output: label, hash and routing principals.};
-\draw[figflow,draw=figrose] (37,38) -- (37,24);
-\draw[figbound] (89,-3) -- (89,26);
-\node[fignote, anchor=south] at (89,27) {report boundary};
-\draw[figcross] (73,13) -- (104,13);
-\node[fignote, anchor=south] at (88,15) {metadata};
-\draw[figstop] (73,3) -- (86,3);
-\draw[figstop] (86,1) -- (86,5);
-\node[fignote,text=figrose, anchor=north] at (87,-5) {raw text stops};
-\draw[draw=figemerald!50, fill=figemerald!3, rounded corners=1mm, line width=.6pt] (105,0) rectangle (178,23);
-\node[figlabel, anchor=center] at (111,17) {\icon{detector}{emerald}{4mm}};
-\node[figtitle, anchor=west] at (117,17) {Metadata graph audit};
-\node[figlabel, anchor=west] at (109,10) {Disclosure / purpose / hop / inference};
-\node[figlabel, anchor=west] at (109,4) {Violations refer to edges and subjects.};
-\node[fignote, anchor=west] at (0,-13) {No raw-text field in audit reports. Labels, linkability and hash guessing remain privacy-relevant.};
+\node[figtitle,anchor=west] at (0,91) {FROM PRIVATE AGENT CONTEXT TO REPORTED GOVERNANCE EVIDENCE};
+\draw[figzone,fill=figamber!5,draw=figamber!45] (0,24) rectangle (61,85);
+\draw[figzone,fill=figindigo!4,draw=figindigo!45] (66,24) rectangle (122,85);
+\draw[figzone,fill=figemerald!5,draw=figemerald!45] (128,24) rectangle (178,85);
+\node[figtitle,anchor=west] at (3,80) {A\quad Private agent runtime};
+\node[figtitle,anchor=west] at (69,80) {B\quad Local evidence};
+\node[figtitle,anchor=west] at (131,80) {C\quad Metadata audit};
+% Concrete runtime objects, and a frozen inference block.
+\node at (9,68) {\semanticicon{memory}{10mm}};
+\node at (29,68) {\semanticicon{agent}{11mm}};
+\node at (51,68) {\semanticicon{tools}{10mm}};
+\node[fignote] at (9,59) {memory};\node[fignote] at (29,59) {agent};\node[fignote] at (51,59) {tools};
+\draw[figflow] (15,68) -- (22,68);\draw[figflow,<->] (36,68) -- (44,68);
+\draw[figzone,fill=white] (4,30) rectangle (57,54);
+\node at (11,43) {\semanticicon{encoder}{10mm}};
+\node[figlabel,anchor=west] at (19,48) {Frozen causal-LM inference};
+\node[figlabel,anchor=west] at (19,42) {Context $\rightarrow$ tool proposal};
+\node[figlabel,anchor=west] at (19,35) {\modellogo{qwen}Qwen2.5-3B (pilot)};
+\draw[figflow] (29,56) -- (29,54);
+% Local derivation is not confused with a learned central model.
+\node at (73,69) {\semanticicon{message}{8mm}};
+\draw[figflow] (78,69) -- (83,69);
+\node[figchip=figindigo] at (100,69) {Lexical / LLM tagger};
+\draw[figflow] (100,64) -- (100,59);
+\draw[figzone,fill=white] (70,31) rectangle (118,58);
+\node at (75,53) {\semanticicon{report}{6mm}};
+\node[figmono,anchor=west] at (81,53) {report $E$};
+\node[figmono,anchor=west] at (73,46) {$s$, owner, recipient, purpose};
+\node[figmono,anchor=west] at (73,40) {tags, hops, provenance};
+\node[figmono,anchor=west] at (73,34) {hash + report MAC};
+\draw[figflow] (61,69) -- (66,69);
+\draw[figbound] (125,22) -- (125,85);
+\draw[figcross] (122,51) -- (128,51);
+% A small actual relational view, not another paragraph.
+\foreach \x/\y/\c/\t in {139/69/figamber/s,166/69/figindigo/r_1,152/57/figemerald/r_2}{
+ \node[circle,draw=\c,fill=\c!12,minimum size=6mm,font=\scriptsize] (n\t) at (\x,\y) {$\t$};}
+\draw[figflow] (142,69) -- (163,69);
+\draw[figflow] (141,66) -- (149,60);\draw[figflow] (165,66) -- (155,60);
+\node[fignote] at (152,75) {subject-linked edges};
+\node[figchip=figrose,minimum width=20mm] at (141,45) {disclosure};
+\node[figchip=figamber,minimum width=20mm] at (165,45) {purpose};
+\node[figchip=figindigo,minimum width=20mm] at (141,35) {hop / TTL};
+\node[figchip=figemerald,minimum width=20mm] at (165,35) {inference};
+% Parallel business route.
+\draw[figzone,fill=figrose!4,draw=figrose!40] (0,0) rectangle (178,19);
+\node at (7,9) {\semanticicon{agent}{9mm}};
+\node[figlabel,anchor=west] at (14,9) {Sender};
+\draw[figflow,draw=figrose] (30,9) -- (55,9);
+\node[fignote,anchor=south] at (42,10) {content};
+\node at (65,9) {\semanticicon{gate}{10mm}};
+\node[figlabel,anchor=west] at (73,13) {Scoped release gate};
+\node[fignote,anchor=west] at (73,6) {authority / case / source support};
+\draw[figflow,draw=figrose] (122,9) -- (145,9);
+\node at (153,9) {\semanticicon{agent}{9mm}};
+\node[figlabel,anchor=west] at (160,9) {Recipient};
+\node[fignote,anchor=west] at (0,-6) {Separate paths: business content to recipients; metadata reports to the center. No training loop is claimed.};
 \end{tikzpicture}}
-\caption{Separate business and audit paths. Agent-to-agent messages carry content; the report-only audit path carries locally derived metadata. The center checks policy over that graph without receiving message text. What crosses is bounded by Lemma~\ref{lem:blind}: a hash and $O(\log)$ bits of label, which cannot be inverted to content.}\label{fig:arch}
+\caption{Runtime, evidence derivation and audit are separate mechanisms. The model block depicts frozen inference, with the pinned Qwen pilot backend as a concrete example; it is not a new neural architecture or federated training scheme. Local labels populate a report graph, while a separate, restricted release gate mediates supported business actions. Neither report authentication nor the absence of raw text establishes semantic confidentiality.}\label{fig:arch}
 \end{widefigure}

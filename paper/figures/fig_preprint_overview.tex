@@ -1,0 +1,38 @@
+% Non-floating cover overview: shared icons, physical design grid, measured counts.
+\begin{center}
+\diagramcontent{%
+\begin{tikzpicture}[x=1mm,y=1mm]
+\path[use as bounding box] (0,0) rectangle (184,67);
+\node[figtitle,anchor=west] at (1,64) {A\quad What the center observes};
+\node[figtitle,anchor=west] at (94,64) {B\quad What the live tasks establish};
+\draw[figzone,fill=figamber!5] (1,25) rectangle (37,58);
+\node at (10,47) {\semanticicon{agent}{10mm}};
+\node at (28,47) {\semanticicon{memory}{9mm}};
+\node[figlabel,align=center] at (19,34) {Private runtime\\Raw messages stay local};
+\draw[figzone,fill=figindigo!4] (46,25) rectangle (83,58);
+\node at (56,47) {\semanticicon{report}{9mm}};
+\node at (74,47) {\semanticicon{auditor}{9mm}};
+\node[figlabel,align=center] at (64,34) {Central audit\\Labels + hashes + roles};
+\draw[figflow] (37,46) -- (46,46);
+\node[fignote,align=center] at (42,19) {Local release checks are separate from central detection.\\Metadata can leak; labels can be wrong or incomplete.};
+\node[figlabel,anchor=west] at (1,5) {Replay: 1,132 archived trajectories; no recovery after blocking.};
+% Bars encode task completion only; attack outcome stays a separate column.
+\node[fignote,anchor=west] at (94,57) {Method};
+\node[fignote,anchor=west] at (135,57) {Tasks /32};
+\node[fignote,anchor=east] at (183,57) {Attacks /16};
+\foreach \name/\n/\a/\y in {No gate/10/1/51,Gate + replan/10/0/45,Scope + replan/10/0/39,Receipt + replan/9/0/33,Deny egress/8/0/27,Tool Filter/0/0/21,IPIGuard/8/0/15,Filter + resume/12/0/9}{
+\node[figlabel,anchor=west] at (94,\y) {\name};
+\fill[figrule!50] (136,\y-1.3) rectangle (161,\y+1.3);
+\pgfmathsetmacro{\barend}{136+25*\n/32}
+\fill[figemerald] (136,\y-1.3) rectangle (\barend,\y+1.3);
+\node[figlabel,anchor=west] at (163,\y) {\n};
+\node[figlabel,anchor=east] at (181,\y) {\a};
+}
+\end{tikzpicture}}
+\end{center}
+\refstepcounter{figure}\label{fig:preprint-overview}
+{\small\noindent\textbf{Figure~\thefigure: Auditing evidence is not proof of safe task completion.}
+Left: the proposed evidence boundary. Right: the frozen 14B live comparison
+(32 tasks, eight methods, one seed); all eight methods are shown. Zero attacks
+out of 16 has a Wilson 95\% upper bound of 19.4\%. Resume denotes an explicit
+Tool Filter adaptation. Full uncertainty and paired costs appear in the evaluation.\par}

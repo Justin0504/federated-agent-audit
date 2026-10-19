@@ -1,30 +1,44 @@
-% Shared, editable TikZ. Data: codex_pack/figure_data.json.
+% Stored example values preserved; more visual composition, no new measurements.
 \begin{widefigure}[t]\centering
-\resizebox{\linewidth}{!}{%
+\diagramcontent{%
 \begin{tikzpicture}[x=1mm,y=1mm]
-\node[figtitle, anchor=west] at (0,61) {ONE SUBJECT, TWO SCHEDULING FRAGMENTS};
-\node[figtitle, anchor=west] at (2,53) {Local messages};
-\node[figtitle, anchor=west] at (80,53) {Emitted metadata (selected fields)};
-\draw[draw=figrose!50, fill=figrose!3, rounded corners=1mm, line width=.6pt] (0,30) rectangle (70,48);
-\node[figlabel, anchor=west] at (3,42) {Standing appointment every Tuesday};
-\node[figlabel, anchor=west] at (3,36) {afternoon for the next 8 weeks.};
-\draw[draw=figamber!50, fill=figamber!3, rounded corners=1mm, line width=.6pt] (79,30) rectangle (178,48);
-\node[figmono, anchor=west] at (82,43) {\texttt{hash: 303a15068941cca9}};
-\node[figmono, anchor=west] at (82,37) {\texttt{category: [schedule]; sensitivity: 4}};
-\node[figmono,text=figindigo, anchor=west] at (82,31.5) {\texttt{inferred\_categories: [health]}};
-\draw[figcross] (71,39) -- (78,39);
-\draw[draw=figrose!50, fill=figrose!3, rounded corners=1mm, line width=.6pt] (0,8) rectangle (70,26);
-\node[figlabel, anchor=west] at (3,20) {Can only meet somewhere near};
-\node[figlabel, anchor=west] at (3,14) {the oncology center.};
-\draw[draw=figamber!50, fill=figamber!3, rounded corners=1mm, line width=.6pt] (79,8) rectangle (178,26);
-\node[figmono, anchor=west] at (82,21) {\texttt{hash: f1a39ba19d396523}};
-\node[figmono, anchor=west] at (82,15) {\texttt{category: [schedule]; sensitivity: 4}};
-\node[figmono,text=figindigo, anchor=west] at (82,9.5) {\texttt{inferred\_categories: [health, location]}};
-\draw[figcross] (71,17) -- (78,17);
-\draw[draw=figemerald!50, fill=figemerald!3, rounded corners=1mm, line width=.6pt] (0,-16) rectangle (178,1);
-\node[figlabel, anchor=center] at (7,-7) {\icon{infer}{emerald}{5mm}};
-\node[figtitle, anchor=west] at (14,-5) {Shared subject + recipient \quad $\Rightarrow$ \quad aggregate health evidence};
-\node[figlabel, anchor=west] at (14,-11) {Illustrated uniform rule: $p_0=0.1,\ \lambda=3,\ k=2 \Rightarrow P(A\mid k)=0.50 > 0.40$.};
+\node[figtitle,anchor=west] at (0,81) {A WORKED EXAMPLE: TWO MESSAGES, ONE SUBJECT, ACCUMULATED EVIDENCE};
+\node[figtitle,anchor=west] at (1,73) {A\quad Local messages};
+\node[figtitle,anchor=west] at (64,73) {B\quad Selected report fields};
+\node[figtitle,anchor=west] at (132,73) {C\quad Inference rule};
+\draw[figzone,fill=figrose!4,draw=figrose!45] (0,40) rectangle (57,68);
+\node at (7,60) {\semanticicon{calendar}{9mm}};
+\node[figlabel,anchor=west] at (14,61) {Standing appointment};
+\node[figlabel,anchor=west] at (14,55) {every Tuesday afternoon};
+\node[figlabel,anchor=west] at (4,47) {for the next 8 weeks.};
+\draw[figzone,fill=figamber!4,draw=figamber!45] (0,8) rectangle (57,36);
+\node at (7,28) {\semanticicon{location}{9mm}};
+\node[figlabel,anchor=west] at (14,29) {Can only meet somewhere};
+\node[figlabel,anchor=west] at (14,23) {near the oncology center.};
+\node[fignote,anchor=west] at (4,14) {Raw text visible only in this local view.};
+\draw[figcross] (57,54) -- (63,54);\draw[figcross] (57,22) -- (63,22);
+\foreach \y in {40,8}{\draw[figzone,fill=figindigo!3,draw=figindigo!40] (64,\y) rectangle (125,\y+28);}
+\node[figmono,anchor=west] at (67,62) {hash: 303a15068941cca9};
+\node[figmono,anchor=west] at (67,55) {schedule; sensitivity: 4};
+\node[fignote,anchor=west] at (67,46) {inferred:};
+\node[figchip=figrose] at (105,46) {health};
+\node[figmono,anchor=west] at (67,30) {hash: f1a39ba19d396523};
+\node[figmono,anchor=west] at (67,23) {schedule; sensitivity: 4};
+\node[fignote,anchor=west] at (67,14) {inferred:};
+\node[figchip=figrose] at (98,14) {health};\node[figchip=figamber] at (116,14) {location};
+\draw[figzone,fill=figemerald!4,draw=figemerald!45] (132,8) rectangle (178,68);
+\node at (143,58) {\semanticicon{graph}{10mm}};
+\node[figlabel,anchor=west] at (151,61) {same subject};
+\node[figlabel,anchor=west] at (151,55) {+ recipient};
+\draw[figflow] (125,54) -- (132,54);\draw[figflow] (125,22) -- (132,22);
+\node[fignote,anchor=west] at (136,45) {Illustrative posterior};
+\draw[figgrid] (138,21) -- (173,21);\draw[figgrid] (138,21) -- (138,42);
+\draw[fill=figamber!45,draw=none] (142,21) rectangle (150,29);
+\draw[fill=figemerald!60,draw=none] (159,21) rectangle (167,37);
+\draw[figthresh] (138,33.8) -- (173,33.8);
+\node[fignote,anchor=south] at (146,29) {0.25};\node[fignote,anchor=south] at (163,37) {0.50};
+\node[fignote] at (146,16) {$k=1$};\node[fignote] at (163,16) {$k=2$};
+\node[fignote,anchor=west] at (0,0) {$p_0=0.10$, $\lambda=3$, threshold $p_0+\delta=0.40$. Values illustrate an assumed rule, not a calibrated privacy probability.};
 \end{tikzpicture}}
-\caption{Scheduling fragments and their stored auditor output. Raw messages are shown only in the local view; selected hashes and labels are shown in the report view. Under the illustrated uniform-evidence rule, two health-tagged fragments cross the configured threshold. \S\ref{sec:eval} tests this threshold against real recipients.}\label{fig:desens}
+\caption{Scheduling fragments and their stored metadata. The report fields retain the original example hashes and tags; the center links evidence by subject and recipient. Under the illustrated uniform-likelihood rule, the second health-tagged fragment crosses the configured threshold. The bar chart is a model illustration, not a new empirical measurement.}\label{fig:desens}
 \end{widefigure}

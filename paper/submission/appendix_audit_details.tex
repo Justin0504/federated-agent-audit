@@ -1,0 +1,163 @@
+\clearpage
+\section{Protocol details, conditional bounds and authored benchmark}
+\label{app:audit-details}
+\paragraph{Report authentication and its limits.}
+A build identifier and MAC let the center check report origin and integrity.
+They do not establish that a build observed all actual inputs, produced correct
+labels, or executed in isolation. In the software baseline, a build fingerprint
+is an identifier rather than hardware evidence of execution.
+
+\begin{proposition}[Report authenticity, not semantic soundness]\label{prop:attest}
+Assume an EUF-CMA-secure MAC, an uncompromised issuer key, and a verifier that
+checks a canonical report serialization. An adversary without that key cannot
+produce an accepted message--tag pair for a new message not previously
+MACed by the issuer, except with negligible probability.
+\end{proposition}
+\begin{proof}
+Such a pair constitutes a MAC forgery under the stated security experiment.
+If the implementation authenticates a digest rather than the serialization,
+the argument additionally requires collision resistance of that digest.
+\end{proof}
+This statement allows replay of a previously authenticated report; event binding
+and deduplication are separate checks. It also allows an authorized issuer to
+sign an incorrect claim. In particular, the proposition proves neither label
+accuracy nor completeness of observation. Key isolation and trusted execution
+can strengthen provenance under additional assumptions, but do not automatically
+make the labeler correct or mediate every communication path. Canonical subject
+identifiers prevent some accidental inconsistencies, not false subject claims
+by a trusted signer. Section~\ref{sec:methodology} separates these obligations.
+
+\subsection{The \ext{} extension}\label{app:ext-detail}
+The three roles of the threat model become fields the protocol can carry. Each
+privacy-relevant \texttt{Part} carries a label under
+\texttt{Part.metadata["a2a.privacy/v1"]}:
+\[
+\textsf{PrivacyLabel} = \{\,
+\text{subject},\ \text{owner},\ \text{sensitivity}\!\in\![0,5],\ \text{category}[],
+\]
+\[
+\text{inferred\_categories}[],\ \text{purpose}[],\ \text{allowed\_recipients}[],\
+\text{ttl\_hops},\ \text{provenance\_id}\,\}.
+\]
+Identifiers are opaque (\texttt{subject:alice}, \texttt{tenant:hospital})---governance
+metadata rather than raw message text; their meanings can still reveal sensitive facts. An \texttt{AgentClearance} (an AgentCard declaration)
+states the purposes an agent is cleared for, so cross-tenant rules are checkable
+from public metadata. Two fields are central to the results:
+\textbf{inferred\_categories} is computed \emph{locally} (the local auditor sees
+content; ``near the oncology center'' $\rightarrow$ \texttt{health}) and only the
+tag travels---the signal the inference detector accumulates without the center
+reading content; \textbf{provenance\_id} is a stable datum identity assigned by the
+origin and preserved by forwarders even when they re-word the data, so hop/TTL
+tracking follows a datum across paraphrasing (a content hash breaks the moment a relay rephrases).
+Figure~\ref{fig:label} maps the implemented fields to their policy checks.
+\input{figures/fig_label}
+
+
+\subsection{The center-blind auditor and detectors}\label{app:auditor-detail}
+These labels are exactly what the auditor reads, and the content is exactly what
+it does not. The auditor desensitizes each labeled \texttt{Part} into a
+center-view edge carrying a content hash, the principals, and the
+label---no raw text (Figure~\ref{fig:desens}). It
+checks for undeclared raw-content token matches in its output, allowing declared
+label values, schema tokens and routing identifiers. This lexical check is a
+regression diagnostic, not a complete detector of semantic information leakage.
+
+\begin{lemma}[Conditional representation-capacity bound]\label{lem:blind}
+Let $S$ denote already disclosed side information. Suppose the remaining
+center-visible representation is exactly $V=(D,L)$, where $D$ has $b$ bits and
+$L$ takes values in a fixed finite alphabet $\mathcal{L}$. Then
+\[ I(M;V\mid S)\le b+\log_2|\mathcal{L}|. \]
+All visible fields not included in $S$ must be included in $(D,L)$ for this
+bound to apply; unbounded free-text labels do not meet the finite-alphabet premise.
+\end{lemma}
+\begin{proof}
+$I(M;V\mid S)\le H(V\mid S)\le H(D\mid S)+H(L\mid S)
+\le b+\log_2|\mathcal{L}|$. No zero-information assumption about a public
+hash is required.
+\end{proof}
+This elementary capacity bound is not a confidentiality or differential-privacy
+guarantee. Hashes expose equality and may permit dictionary attacks on low-entropy
+messages; labels can disclose sensitive facts directly. Repeated observations,
+routing identifiers and external knowledge require separate analysis. In
+particular, the bound does not establish computational non-reconstruction.
+\input{figures/fig_example}
+
+Here ``center-blind'' describes the absence of raw message text at the center,
+not information-theoretic secrecy of the metadata graph. Four detectors run
+over this graph:
+\begin{enumerate}[leftmargin=1.4em]
+\item \textbf{Cross-tenant disclosure}: sensitive data ($\geq\tau$) reaches a
+principal that neither owns it nor is an allowed recipient.
+\item \textbf{Purpose limitation}: data reaches an agent whose clearance purposes
+are disjoint from the data's permitted purposes.
+\item \textbf{Hop/TTL}: a datum (tracked by \texttt{provenance\_id}) is relayed
+more than \texttt{ttl\_hops} times; robust to a forwarder re-wording content.
+\item \textbf{Cross-tenant inference}: no single edge is a disclosure, but a
+recipient principal accumulates converging \texttt{inferred\_categories}
+fragments about one subject, letting it infer a sensitive category it was never
+authorized for (Figure~\ref{fig:desens}); we ground this in the bound below.
+\end{enumerate}
+
+Figure~\ref{fig:deploy} shows the report-only deployment and its authentication boundary. One property of the deployment matters for the fourth detector: fragments about one subject arrive in separate reports from separate agents, so a center that forgot every edge after answering could only compose what one report happened to bundle. The service therefore keeps a retention-bounded metadata graph per workspace (edges, never content) and runs the detectors over the retained graph plus each new report, reporting each violation once; retention is a policy knob---a longer window composes more and holds more metadata---and the cross-report case is exercised at the HTTP entry point in the test suite.
+\input{figures/fig_deploy}
+
+
+
+\paragraph{A formal inference-gain bound.} We model what a recipient infers about
+a subject's sensitive attribute $A\in\{0,1\}$ from $k$ converging fragments
+$f_1,\dots,f_k$, with prior $0<p_0=P(A{=}1)<1$, threshold $0<\delta<1-p_0$, and odds $O_0=p_0/(1-p_0)$.
+
+\begin{assumption}[Conditional independence]\label{as:ci}
+Given $A$, the fragments are independent, each with likelihood ratio
+$\lambda_i=\tfrac{P(f_i\mid A{=}1)}{P(f_i\mid A{=}0)}\ge1$; write $\lambda$ for a
+common lower bound $\lambda_i\ge\lambda>1$.
+\end{assumption}
+
+\begin{proposition}\label{prop:k}
+Under Assumption~\ref{as:ci} the posterior odds are $O_k=O_0\prod_i\lambda_i$, the
+posterior is $P(A\mid f_{1:k})=O_k/(1+O_k)$, and the inference gain
+$g(k)=P(A\mid f_{1:k})-p_0$ is strictly increasing in $k$. With uniform $\lambda$,
+the detector (fires iff $g(k)\ge\delta$) fires exactly for
+$k\ge k^{*}=\big\lceil\log_\lambda(O_\delta/O_0)\big\rceil$, where
+$O_\delta=(p_0+\delta)/(1-p_0-\delta)$.
+\end{proposition}
+\begin{proof}
+By Bayes in odds form, $O_k=O_0\prod_i\lambda_i$; since each $\lambda_i>1$, $O_k$
+is strictly increasing in $k$, and $x\mapsto x/(1+x)$ is strictly increasing, so
+$g$ is strictly increasing. With uniform $\lambda$, $g(k)\ge\delta \iff
+P(A\mid f_{1:k})\ge p_0+\delta \iff O_k\ge O_\delta \iff O_0\lambda^{k}\ge O_\delta
+\iff k\ge\log_\lambda(O_\delta/O_0)$; integrality gives the ceiling.
+\end{proof}
+For defaults $(p_0,\lambda,\delta)=(0.1,3,0.3)$, $k^{*}=2$: one hint never fires,
+two converging fragments do (posterior $0.50$, gain $0.40$), replacing the
+heuristic $1-2^{-k}$ with an explicit assumed-model quantity and a closed-form threshold (Figure~\ref{fig:gain});
+deployments tune $(p_0,\lambda,\delta)$ and may set $\lambda_i$ from the tagger's
+hint specificity (so one high-$\lambda$ fragment can suffice).
+\emph{On the assumption:} real fragments are correlated, so
+Assumption~\ref{as:ci} is an approximation --- positively-correlated (redundant)
+hints can make the product over-credit evidence. Historical recipient probes
+also exhibit detector misses, but do not isolate tagger coverage from
+misspecification of the likelihood model. The bound is an assumed-model design tool, not a calibrated or tight
+guarantee.
+
+\input{figures/fig_gain}
+
+\subsection{The A2A-MT benchmark}
+A2A-MT supplies authored multi-tenant A2A interactions with labels and hashes
+as the auditor's input. The benchmark tests consistency with template-defined
+policy labels, rather than independently adjudicated semantic confidentiality.
+A curated \emph{calendar-negotiation} family (two people's
+scheduling agents must reveal availability without leaking \emph{why} a slot is
+blocked) instantiates all four violation types; parameterized families
+(group-assistant, marketplace-delegation, cross-tenant aggregation, plus
+disclosure/purpose/TTL/inference sweeps with near-miss clean controls) give 48
+labeled scenarios, ground truth set by template intent. An LLM fills each Part
+with realistic text matching its label (labels remain the ground truth), exported
+as a shareable artifact.
+
+WeClawArena~\cite{weclaw} studies cross-user collaboration in an auditable
+sandbox. Our authored scenarios instead restrict the central observer to
+metadata. These are different observation settings; we have not performed a
+matched comparison and neither suite supplies a numerical upper bound for the
+other. The three-role schema is a design choice whose utility must be evaluated
+under explicit deployment assumptions.

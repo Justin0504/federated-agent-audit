@@ -1,0 +1,53 @@
+\begin{thebibliography}{1}
+
+\bibitem{camel2025}
+Edoardo Debenedetti, Ilia Shumailov, Tianqi Fan, Jamie Hayes, Nicholas Carlini,
+  Daniel Fabian, Christoph Kern, Chongyang Shi, and Florian Tram{\`e}r.
+\newblock Defeating prompt injections by design, 2025.
+
+\bibitem{debenedetti2024agentdojo}
+Edoardo Debenedetti, Jie Zhang, Mislav Balunovic, Luca Beurer-Kellner, Marc
+  Fischer, and Florian Tram{\`e}r.
+\newblock Agentdojo: A dynamic environment to evaluate prompt injection attacks
+  and defenses for {LLM} agents.
+\newblock In {\em The Thirty-eight Conference on Neural Information Processing
+  Systems Datasets and Benchmarks Track}, 2024.
+
+\bibitem{agentleak}
+Faouzi El~Yagoubi, Godwin Badu-Marfo, and Ranwa Al~Mallah.
+\newblock {AgentLeak}: A benchmark for internal-channel privacy leakage in
+  multi-agent {LLM} systems, 2026.
+\newblock arXiv:2602.11510.
+
+\bibitem{presidio}
+{Microsoft}.
+\newblock Presidio: Data protection and de-identification {SDK}.
+\newblock \url{https://github.com/microsoft/presidio}, 2026.
+\newblock Accessed 2026-09.
+
+\bibitem{sumleaks}
+Vaidehi Patil, Elias Stengel-Eskin, and Mohit Bansal.
+\newblock The sum leaks more than its parts: Compositional privacy risks and
+  mitigations in multi-agent collaboration, 2025.
+\newblock arXiv:2509.14284.
+
+\bibitem{flowseal2026}
+Minsun Shim, Ramisha~Raida Karim, Ruthwik Jakkula, Kaiwen Zhou, Xin Liu,
+  Xin~Eric Wang, and Zhou Li.
+\newblock Confuse the model, control the flow: Understanding and mitigating
+  privacy leakage from llm agents with information flow control, 2026.
+
+\bibitem{weclaw}
+Prince~Zizhuang Wang, Aojie Yuan, Haiyue Zhang, Xiyang Hu, Yue Zhao, and Shuli
+  Jiang.
+\newblock {WeClawArena}: An auditable sandbox and benchmark for cross-user
+  agents collaboration and security in human-centered agent networks.
+\newblock \url{https://arxiv.org/abs/2608.03499}, 2026.
+\newblock EMNLP 2026.
+
+\bibitem{fava2026}
+Yifan Zhang, Xinkui Zhao, Sai Liu, Hengxuan Lou, Guanjie Cheng, and Chang Liu.
+\newblock Fava: Formal authorization for verified agents with evidence-backed
+  permission graphs, 2026.
+
+\end{thebibliography}

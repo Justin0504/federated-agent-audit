@@ -9,19 +9,19 @@
 %           that must never cross the boundary
 %   indigo  governance metadata (privacy labels, tags) -- what we add
 %   amber   what actually crosses the trust boundary
-%   emerald verified / detected / safe
+%   emerald observed task success / positive check (not a safety guarantee)
 %   ink     structure and primary type;  slate  secondary annotation
 %
 % They are chosen to stay distinguishable in greyscale (values ~35/45/55/25%).
 % Icons come from paper/figures/icons (authored by us, no third-party licence),
 % rendered to PDF per colour by icons/build_icons.py.
 % ---------------------------------------------------------------------------
-\definecolor{figink}{HTML}{1B2733}
+\definecolor{figink}{HTML}{26323B}
 \definecolor{figslate}{HTML}{6B7885}
-\definecolor{figrose}{HTML}{B8405C}
+\definecolor{figrose}{HTML}{B64E39}
 \definecolor{figindigo}{HTML}{3D5A9E}
-\definecolor{figemerald}{HTML}{2C7A58}
-\definecolor{figamber}{HTML}{B0662A}
+\definecolor{figemerald}{HTML}{477969}
+\definecolor{figamber}{HTML}{AA752D}
 \definecolor{figrule}{HTML}{D8DEE4}
 \definecolor{figwash}{HTML}{F4F6F8}
 
@@ -79,3 +79,9 @@
 \providecommand{\figenvname}{figure}
 \newenvironment{widefigure}{\@nameuse{\figenvname}}{\@nameuse{end\figenvname}}
 \makeatother
+
+% Stable optical logo box: preserve aspect ratio and baseline at fixed type size.
+\newcommand{\modellogo}[1]{\raisebox{-1.8pt}{\makebox[14pt][c]{\includegraphics[width=11pt,height=11pt,keepaspectratio]{figures/brands/#1.pdf}}}\hspace{3pt}}
+% Common diagram design width. Keep physical text scale constant across canvases.
+\newcommand{\diagramcontent}[1]{\begingroup\pgfmathsetmacro{\diagramscale}{\linewidth/(184mm)}\scalebox{\diagramscale}{#1}\endgroup}
+\newcommand{\semanticicon}[2]{\includegraphics[height=#2]{figures/semantic_icons/#1.pdf}}

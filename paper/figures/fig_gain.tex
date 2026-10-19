@@ -1,6 +1,6 @@
 % Shared, editable TikZ. Data: codex_pack/figure_data.json.
-\begin{figure}[t]\centering
-\resizebox{\linewidth}{!}{%
+\begin{widefigure}[htbp]\centering
+\diagramcontent{%
 \begin{tikzpicture}[x=1mm,y=1mm]
 \node[figtitle, anchor=west] at (0,57) {ILLUSTRATIVE INFERENCE RULE};
 \draw[figgrid] (8,5) -- (80,5);
@@ -35,6 +35,13 @@
 \draw[figflow,draw=figamber] (27,36) -- (26,28);
 \node[figlabel, anchor=west] at (47,11) {Uniform $\lambda=3$: $k^*=2$};
 \node[fignote, anchor=west] at (0,-14) {$p_0=0.10,\ \delta=0.30$; assumed likelihood ratios.};
+
+\draw[figzone,fill=figamber!4,draw=figamber!50] (97,1) rectangle (178,52);
+\node[figtitle,anchor=west] at (101,46) {CONFIGURED RULE AND LIMITS};
+\node[figlabel,anchor=west] at (101,36) {Prior $p_0=0.10$; gain threshold $\delta=0.30$.};
+\node[figlabel,anchor=west] at (101,27) {Uniform $\lambda=3$: two hints cross the threshold.};
+\node[figlabel,anchor=west] at (101,18) {A stronger hint can cross earlier.};
+\node[fignote,anchor=west] at (101,8) {Likelihood ratios require external calibration.};
 \end{tikzpicture}}
 \caption{The inference rule in closed form. With uniform likelihood ratio three, the posterior first exceeds 0.40 after two fragments. Assigning likelihood ratio nine to one hint reaches 0.50 immediately; neither threshold establishes when a real recipient can infer the attribute.}\label{fig:gain}
-\end{figure}
+\end{widefigure}

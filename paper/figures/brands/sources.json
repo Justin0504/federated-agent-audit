@@ -1,0 +1,37 @@
+{
+  "microsoft": {
+    "package": "@lobehub/icons-static-svg@1.88.0",
+    "path": "icons/microsoft-color.svg",
+    "sha256": "5cfb0ffa3231313c2968b5e3fedfcce8e2e96c61bde4572384c3889a77a80350"
+  },
+  "mistral": {
+    "package": "@lobehub/icons-static-svg@1.88.0",
+    "path": "icons/mistral-color.svg",
+    "sha256": "722f74b289d95486b43662fe24fa883b333701296f618406cd0ed502299170b6"
+  },
+  "qwen": {
+    "package": "@lobehub/icons-static-svg@1.88.0",
+    "path": "icons/qwen-color.svg",
+    "sha256": "77f5768c66d08ce1d3d14e73373975c1bc0454be88c81523ddd0ffd7e2974029"
+  },
+  "meta": {
+    "package": "@lobehub/icons-static-svg@1.88.0",
+    "path": "icons/meta-color.svg",
+    "sha256": "adf9f2c1a646ccd3a37ca8c2e7e5985d64630cd633f4b95fba393d1d44e0578c"
+  },
+  "gemma": {
+    "package": "@lobehub/icons-static-svg@1.88.0",
+    "path": "icons/gemma-color.svg",
+    "sha256": "8cdc48e35113d2f76f602fc93977ce8b8eebe41bc66a65f532ed9c89f6a68e2d"
+  },
+  "openai": {
+    "package": "@lobehub/icons-static-svg@1.88.0",
+    "path": "icons/openai.svg",
+    "sha256": "a595df6b423920c67a7f8f73c063e4bfb72d415948097b6cac063a2366bb5186"
+  },
+  "claude": {
+    "package": "@lobehub/icons-static-svg@1.88.0",
+    "path": "icons/claude-color.svg",
+    "sha256": "a3101f3047a119aa11825ad9369510f0c472428c8c52d420e31bc62db44a8364"
+  }
+}

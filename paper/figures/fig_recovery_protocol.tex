@@ -1,0 +1,35 @@
+% Evaluation protocol schematic. No measured outcome is implied by this diagram.
+\begin{widefigure}[t]\centering
+\diagramcontent{%
+\begin{tikzpicture}[x=1mm,y=1mm]
+\node[figtitle,anchor=west] at (0,70) {POST-BLOCK RECOVERY: MATCHED STATE, FRESH ACTIONS};
+\draw[figzone,fill=figamber!5,draw=figamber!45] (0,13) rectangle (49,60);
+\node at (10,46) {\semanticicon{memory}{11mm}};
+\node[figtitle,anchor=west] at (20,49) {Archived prefix};
+\node[figlabel,anchor=west] at (20,42) {Native mock state};
+\node[figlabel,anchor=west] at (4,31) {Replay until the first policy refusal.};
+\node[fignote,anchor=west] at (4,22) {No archived final answer retained.};
+\draw[figzone,fill=figindigo!4,draw=figindigo!40] (61,37) rectangle (121,60);
+\node at (69,49) {\semanticicon{gate}{9mm}};
+\node[figtitle,anchor=west] at (78,52) {Control: halt};
+\node[figlabel,anchor=west] at (78,44) {Score the state at refusal.};
+\draw[figzone,fill=figemerald!4,draw=figemerald!45] (61,0) rectangle (121,30);
+\node at (69,19) {\semanticicon{recovery}{9mm}};
+\node[figtitle,anchor=west] at (78,23) {Treatment: continue};
+\node[figlabel,anchor=west] at (78,16) {Up to three fresh model steps};
+\node[fignote,anchor=west] at (65,6) {Same gate checks every new egress.};
+\draw[figflow] (49,40) -- (55,40) |- (61,49);
+\draw[figflow] (55,40) |- (61,17);
+\draw[figzone,fill=figamber!4,draw=figamber!40] (133,0) rectangle (178,60);
+\node at (143,48) {\semanticicon{auditor}{10mm}};
+\node[figtitle,anchor=west] at (153,49) {Evaluate};
+\node[figlabel,anchor=west] at (137,34) {Native task utility};
+\node[figlabel,anchor=west] at (137,26) {Native attack success};
+\node[figlabel,anchor=west] at (137,18) {Joint success / errors / caps};
+\node[fignote,anchor=west] at (137,8) {No checker feedback to agent.};
+\draw[figflow] (121,49) -- (133,49);
+\draw[figflow] (121,17) -- (133,17);
+\node[fignote,anchor=west] at (0,-8) {Conditional pilot, not fresh end-to-end trajectories or adaptive attackers. Tool effects are simulated.};
+\end{tikzpicture}}
+\caption{Post-block continuation protocol. The two arms start from the same reconstructed refusal state. New model proposals are executed only through the unchanged destination gate; native utility and attack predicates remain separate from the agent's feedback.}\label{fig:recovery-protocol}
+\end{widefigure}

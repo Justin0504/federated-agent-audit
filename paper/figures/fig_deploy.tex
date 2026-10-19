@@ -1,42 +1,42 @@
-% Shared, editable TikZ. Data: codex_pack/figure_data.json.
+% Dense deployment: instantiated software components, not a TEE guarantee.
 \begin{widefigure}[t]\centering
-\resizebox{\linewidth}{!}{%
+\diagramcontent{%
 \begin{tikzpicture}[x=1mm,y=1mm]
-\draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (0,30) rectangle (94,53);
-\node[figtitle, anchor=west] at (3,49) {Tenant P};
-\node[figlabel, anchor=center] at (8,39) {\icon{agent}{ink}{4mm}};
-\node[figlabel, anchor=west] at (14,39) {App agents};
-\draw[figflow,draw=figrose] (32,39) -- (39,39);
-\draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (40,33) rectangle (91,46);
-\node[figlabel, anchor=west] at (43,42) {\texttt{PrivacyTagger} + \texttt{A2AAuditor}};
-\node[figlabel, anchor=west] at (43,36) {\texttt{A2AAttestor}: report MAC};
-\draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (0,4) rectangle (94,27);
-\node[figtitle, anchor=west] at (3,23) {Tenant Q};
-\node[figlabel, anchor=center] at (8,13) {\icon{agent}{ink}{4mm}};
-\node[figlabel, anchor=west] at (14,13) {App agents};
-\draw[figflow,draw=figrose] (32,13) -- (39,13);
-\draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (40,7) rectangle (91,20);
-\node[figlabel, anchor=west] at (43,16) {\texttt{PrivacyTagger} + \texttt{A2AAuditor}};
-\node[figlabel, anchor=west] at (43,10) {\texttt{A2AAttestor}: report MAC};
-\node[figtitle, anchor=west] at (0,58) {LOCAL PROCESSING};
-\node[figtitle, anchor=west] at (114,58) {AUDIT SERVICE};
-\draw[figbound] (103,2) -- (103,55);
-\node[fignote, anchor=north] at (103,0) {report boundary};
-\draw[figcross] (94,39) -- (113,39);
-\draw[figcross] (94,13) -- (113,13);
-\node[figlabel, anchor=center] at (103,45) {$E,\;\mathrm{MAC}$};
-\draw[draw=figemerald!50, fill=figemerald!3, rounded corners=1mm, line width=.6pt] (114,4) rectangle (178,53);
-\node[figlabel, anchor=center] at (120,46) {\icon{attest}{emerald}{4mm}};
-\node[figtitle, anchor=west] at (125,46) {\texttt{A2AVerifier}};
-\node[fignote, anchor=west] at (118,39) {Key + configured fingerprint; edge digest};
-\draw[figflow] (146,35) -- (146,31);
-\node[figlabel, anchor=west] at (118,27) {Four detectors re-run per submitted report};
-\node[fignote, anchor=west] at (118,20) {Disclosure / purpose / TTL / inference};
-\draw[figflow] (146,16) -- (146,13);
-\node[figlabel, anchor=center] at (120,9) {\icon{blind}{slate}{4mm}};
-\node[figlabel, anchor=west] at (125,9) {Violations store (no raw-text field)};
-\node[fignote, anchor=west] at (0,-5) {$E$: content hash + privacy label + routing principals. Local backend required for local tagging.};
-\node[fignote, anchor=west] at (0,-10) {Single organisation: set owning principals equal; purpose and hop policies still apply.};
+\node[figtitle,anchor=west] at (0,88) {REPORT-ONLY DEPLOYMENT: TWO TENANTS, ONE AUDIT ENDPOINT};
+\foreach \y/\tenant/\tone in {45/P/figamber,8/Q/figindigo}{
+ \draw[figzone,fill=\tone!4,draw=\tone!45] (0,\y) rectangle (91,\y+32);
+ \node[figtitle,anchor=west] at (3,\y+27) {Tenant $\tenant$};
+ \node at (9,\y+15) {\semanticicon{agent}{9mm}};
+ \node at (24,\y+15) {\semanticicon{memory}{8mm}};
+ \draw[figflow] (30,\y+15) -- (36,\y+15);
+ \draw[figzone,fill=white] (37,\y+4) rectangle (87,\y+23);
+ \node at (43,\y+14) {\semanticicon{auditor}{8mm}};
+ \node[figmono,anchor=west] at (49,\y+18) {PrivacyTagger};
+ \node[figmono,anchor=west] at (49,\y+12) {A2AAuditor};
+ \node[fignote,anchor=west] at (49,\y+6) {label + hash + MAC};
+ \draw[figcross] (91,\y+15) -- (112,\y+15);
+ \node at (101,\y+20) {\semanticicon{report}{6mm}};
+}
+\draw[figbound] (107,4) -- (107,80);
+\node[fignote,anchor=south] at (107,80) {report boundary};
+\draw[figzone,fill=figemerald!4,draw=figemerald!45] (113,8) rectangle (178,77);
+\node[figtitle,anchor=west] at (116,72) {Central service};
+\node[figmono,anchor=west] at (116,65) {/api/v1/a2a/report};
+\node at (120,55) {\semanticicon{report}{8mm}};
+\node[figmono,anchor=west] at (127,57) {A2AVerifier};
+\node[fignote,anchor=west] at (127,51) {MAC / configured build};
+\node at (121,44.5) {\semanticicon{graph}{5mm}};
+\node[fignote,anchor=west] at (127,44.5) {retained workspace graph};
+\draw[figzone,fill=white] (117,23) rectangle (174,42);
+\node[figchip=figrose,minimum width=23mm] at (131,36) {disclosure};
+\node[figchip=figamber,minimum width=23mm] at (159,36) {purpose};
+\node[figchip=figindigo,minimum width=23mm] at (131,28) {hop / TTL};
+\node[figchip=figemerald,minimum width=23mm] at (159,28) {inference};
+\node at (123,15) {\semanticicon{graph}{7mm}};
+\node[figlabel,anchor=west] at (131,16) {Violation records};
+\node[fignote,anchor=west] at (131,11) {no raw-text field};
+\draw[figzone,fill=figwash] (0,-10) rectangle (178,1);
+\node[fignote,anchor=west] at (3,-4.5) {Report $E$ = hash + labels + principals. Bounded history supports cross-report checks; omitted events remain unseen.};
 \end{tikzpicture}}
-\caption{Where the report-only deployment runs. Two tenants label and hash locally and send authenticated metadata reports; the center verifies and re-runs the detectors within each submitted edge set. Reports are authenticated with a MAC under a per-build key; confinement of that key to the pinned build is the assumption Proposition~\ref{prop:attest} rests on, and a TEE is what makes it hold against a hostile tenant.}\label{fig:deploy}
+\caption{Implemented report-only deployment. Each tenant constructs and authenticates metadata locally; the center verifies the report and runs four checks over the retained workspace graph plus incoming edges. Retention time and edge-count limits bound this history. A per-build MAC establishes report authenticity under the key assumptions of Proposition~\ref{prop:attest}, not label truth or complete coverage. Hardware-backed key confinement is not evaluated here.}\label{fig:deploy}
 \end{widefigure}
