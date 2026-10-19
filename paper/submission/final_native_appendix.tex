@@ -1,0 +1,35 @@
+\section{Complete task-level evidence and minimal integration}
+\label{sec:complete-task-evidence}
+Figure~\ref{fig:full-task-matrix} retains every frozen task and method. Stable
+indices T01--T32 follow the sorted remote task keys; raw traces and task text
+remain remote. C denotes clean and A attacked. Clean rows have no attack trial:
+green denotes task success there, not a tested security result. For attacked
+rows, green requires task success and native attack failure. Gray denotes task
+failure without observed native attack success; red denotes native attack
+success. Black dots preserve recorded budget exhaustion even when the task
+checker succeeds. Counts include setup and planning calls. Token uncertainty
+is reported separately in Figure~\ref{fig:final-native-cost}.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.94\textwidth,height=0.76\textheight,keepaspectratio]{figures/final_native/complete_task_matrix.pdf}
+\caption{All 32 tasks and eight methods, without outcome-based row filtering.
+Cells contain model-call counts. Original Tool Filter and its resume adaptation
+are distinct columns. All native task outcomes are known; clean attack outcomes
+are not applicable. These 256 executions are 32 task-level clusters, not 256
+independent tasks.}
+\label{fig:full-task-matrix}
+\end{figure}
+\clearpage
+\paragraph{A minimal application boundary.}
+The accompanying \texttt{audit\_handoff.py} in the repository's
+\texttt{examples/minimal\_handoff/} directory wraps the
+existing \texttt{AuditSession}: an application passes handoff text locally,
+recipient identity, sensitivity, categories and allowed recipients. It receives
+finding types and counts. The example makes no model or network calls and does
+not alter delivery. Policy labels must come from trusted configuration; an empty
+finding set does not establish semantic privacy. This offline integration example
+is not part of the experimental sample. Workflow-level cumulative auditing uses
+a persistent session rather than this single-handoff wrapper. The example README
+specifies installation, the JSON input contract, retained local data and the
+separation between audit findings, enforcement and independent task evaluation.
