@@ -8,32 +8,32 @@
 \draw[figzone,fill=figindigo!3,draw=figindigo!30] (1,29) rectangle (91,68);
 \node[fignote,anchor=west] at (4,64) {Private agent runtimes};
 \draw[figzone,fill=white] (4,48) rectangle (35,60);
-\node at (8,55) {\semanticicon{agent}{5mm}};
+\node at (8,55) {\semanticicon{schedule_agent}{6mm}};
 \node[figlabel,anchor=west] at (13,56) {Schedule agent};
 \node[figlabel,anchor=west] at (13,51.5) {Tuesday visits};
 \draw[figzone,fill=white] (4,32) rectangle (35,44);
-\node at (8,39) {\semanticicon{agent}{5mm}};
+\node at (8,39) {\semanticicon{location_agent}{6mm}};
 \node[figlabel,anchor=west] at (13,40) {Location agent};
 \node[figlabel,anchor=west] at (13,35.5) {Oncology clinic};
 \draw[figflow] (35,54)--(40,54);
 \draw[figflow] (35,38)--(40,38);
 \draw[figzone,fill=white] (40,32) rectangle (63,60);
-\node at (45,55) {\semanticicon{report}{5mm}};
+\node at (45,55) {\semanticicon{label_report}{6mm}};
 \node[figlabel,anchor=west] at (49,55) {Labels};
 \node[figmono,align=left,anchor=west] at (42,43) {schedule\\health hint\\subject\\owner\\hash};
 \draw[figbound] (66,31)--(66,61);
 \draw[figcross] (63,47)--(71,47);
-\node at (80,55) {\semanticicon{graph}{6mm}};
+\node at (80,55) {\semanticicon{audit_graph}{7mm}};
 \node[figlabel,align=center] at (80,39.5) {Disclosure\\Purpose\\Hops\\Inference};
 \node[fignote,anchor=east] at (88,64) {Central audit};
 % Local raw text retention is a data-path property, not semantic secrecy.
 \draw[figzone,fill=figrose!3,draw=figrose!25] (1,20) rectangle (91,26);
 \node[figlabel] at (46,23) {Raw text stays local; reports still reveal metadata.};
 \draw[figzone,fill=figamber!4,draw=figamber!35] (1,1) rectangle (91,17);
-\node at (7,10) {\semanticicon{message}{5mm}};
+\node at (7,10) {\semanticicon{versioned_action}{6mm}};
 \node[figlabel,align=left,anchor=west] at (12,10) {Proposed action\\+ source version};
 \draw[figflow] (38,10)--(43,10);
-\node at (48,10) {\semanticicon{gate}{6mm}};
+\node at (48,10) {\semanticicon{release_check}{7mm}};
 \node[figlabel,align=left,anchor=west] at (54,11) {Authority / scope\\Freshness / support};
 \node[fignote,anchor=west] at (54,4) {Allow / deny / unknown};
 % Paired bars: exact rates, each metric has its own stated denominator.

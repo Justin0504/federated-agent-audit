@@ -97,3 +97,7 @@ Rendered and inspected the final cover; corrected an intermediate TikZ macro col
 Reflowed cover labels into bounded agent/report cards, with separate schedule and location roles explicitly illustrative. Raw-text retention and metadata exposure remain stated; no federated-learning or anonymization guarantee is claimed. Replaced evidence summaries with denominator-scaled paired bars for authored and replay studies, and all eight live task-success bars. Replay utility loss remains visible. No new experiments.
 
 Final cover rendered and inspected after splitting the overflowing subject/owner field. Manuscript remains 43 pages; source package independently compiles. ZIP CRC and embedded cover-source equality passed.
+
+## Role-specific cover icons
+
+Added six original editable SVG/PDF icons: calendar-badged agent, location-badged agent, label/hash report, graph inspection, versioned action, and release checklist. The cover uses 6--7mm icons with existing label spacing. No content or numerical changes. Final page 1 rendered and inspected; 43 pages retained, no overfull/undefined warnings. Staged source compiled; all six packaged icon PDFs verified byte-for-byte and ZIP CRC passed.
