@@ -1,70 +1,80 @@
-% Cover: concrete evidence interfaces and frozen live comparison.
+% Schematic audit topology and three disjoint, denominator-labelled studies.
 \begin{center}
 \diagramcontent{%
 \begin{tikzpicture}[x=1mm,y=1mm]
 \path[use as bounding box] (0,0) rectangle (184,76);
-\node[figtitle,anchor=west] at (1,73) {Private context $\rightarrow$ auditable evidence};
-\node[figtitle,anchor=west] at (96,73) {Eight methods, the same 32 tasks};
-% Each icon belongs to a concrete message, record, or decision.
-\draw[figzone,fill=figindigo!3,draw=figindigo!30] (1,30) rectangle (91,68);
-\node[figtitle,anchor=west] at (4,64) {Center-blind audit};
-\draw[figzone,fill=white] (4,37) rectangle (32,60);
-\node at (8,55) {\semanticicon{calendar}{4.5mm}};
-\node[figlabel,anchor=west] at (12,55) {Tuesday visits};
-\node at (8,48) {\semanticicon{location}{4.5mm}};
-\node[figlabel,anchor=west] at (12,48) {Oncology clinic};
-\node[fignote] at (18,40) {2 messages, 1 subject};
-\draw[figflow] (32,50)--(36,50);
-\draw[figzone,fill=white] (36,37) rectangle (63,60);
-\node at (40,55) {\semanticicon{report}{4.5mm}};
-\node[figlabel,anchor=west] at (44,55) {Local report};
-\node[figmono,align=left,anchor=west] at (37,45.5) {schedule\\health hint\\subject + owner\\hash};
-\draw[figbound] (65,35)--(65,60);
-\draw[figcross] (63,50)--(69,50);
-\node at (79,55) {\semanticicon{graph}{6mm}};
-\node[figlabel,align=center] at (79,43) {Disclosure\\Purpose\\Hops / inference};
-\node[fignote,anchor=west] at (4,33) {Metadata crosses the boundary; raw messages stay local.};
-% Measured authored outcomes, not unanchored decorative decision chips.
-\draw[figzone,fill=figamber!4,draw=figamber!35] (1,3) rectangle (91,27);
-\node[figtitle,anchor=west] at (4,23.5) {Evidence-bound release};
-\node[fignote,anchor=east] at (88,23.5) {20 authored tasks};
-\node at (8,16) {\semanticicon{message}{5mm}};
-\node[figlabel,anchor=west] at (12,16) {Action + source};
-\draw[figflow] (37,16)--(42,16);
-\node at (47,16) {\semanticicon{gate}{6mm}};
-\node[figlabel,align=left,anchor=west] at (53,16) {Authority / scope\\Freshness / support};
-\node[figchip=figemerald] at (18,7) {8 allow};
-\node[figchip=figrose] at (43,7) {3 deny};
-\node[figchip=figamber] at (72,7) {9 unknown};
-% Count-axis bars, aligned attack outcomes, and cost lollipops.
-\node[fignote,anchor=west] at (96,66.5) {\modellogo{qwen}14B\quad 16 clean + 16 attacked\quad 256 runs};
-\node[fignote,anchor=west] at (96,60.5) {Method};
-\node[fignote] at (140,60.5) {Tasks /32};
-\node[fignote] at (160.5,60.5) {Atk /16};
-\node[fignote,anchor=east] at (184,60.5) {Calls};
-\fill[figwash] (95,51.8) rectangle (184,57);
-\foreach \tick in {0,8,16}{
-\pgfmathsetmacro{\tx}{126+27*\tick/16}
-\draw[figgrid] (\tx,12.8)--(\tx,57);
-\node[fignote] at (\tx,10) {\tick};
+\node[figtitle,anchor=west] at (1,73) {Multi-agent, center-blind auditing};
+\node[figtitle,anchor=west] at (96,73) {Mechanism, replay and live evidence};
+\draw[figzone,fill=figindigo!3,draw=figindigo!30] (1,29) rectangle (91,68);
+\node[fignote,anchor=west] at (4,64) {Private agent runtimes};
+\draw[figzone,fill=white] (4,48) rectangle (35,60);
+\node at (8,55) {\semanticicon{agent}{5mm}};
+\node[figlabel,anchor=west] at (13,56) {Schedule agent};
+\node[figlabel,anchor=west] at (13,51.5) {Tuesday visits};
+\draw[figzone,fill=white] (4,32) rectangle (35,44);
+\node at (8,39) {\semanticicon{agent}{5mm}};
+\node[figlabel,anchor=west] at (13,40) {Location agent};
+\node[figlabel,anchor=west] at (13,35.5) {Oncology clinic};
+\draw[figflow] (35,54)--(40,54);
+\draw[figflow] (35,38)--(40,38);
+\draw[figzone,fill=white] (40,32) rectangle (63,60);
+\node at (45,55) {\semanticicon{report}{5mm}};
+\node[figlabel,anchor=west] at (49,55) {Labels};
+\node[figmono,align=left,anchor=west] at (42,43) {schedule\\health hint\\subject\\owner\\hash};
+\draw[figbound] (66,31)--(66,61);
+\draw[figcross] (63,47)--(71,47);
+\node at (80,55) {\semanticicon{graph}{6mm}};
+\node[figlabel,align=center] at (80,39.5) {Disclosure\\Purpose\\Hops\\Inference};
+\node[fignote,anchor=east] at (88,64) {Central audit};
+% Local raw text retention is a data-path property, not semantic secrecy.
+\draw[figzone,fill=figrose!3,draw=figrose!25] (1,20) rectangle (91,26);
+\node[figlabel] at (46,23) {Raw text stays local; reports still reveal metadata.};
+\draw[figzone,fill=figamber!4,draw=figamber!35] (1,1) rectangle (91,17);
+\node at (7,10) {\semanticicon{message}{5mm}};
+\node[figlabel,align=left,anchor=west] at (12,10) {Proposed action\\+ source version};
+\draw[figflow] (38,10)--(43,10);
+\node at (48,10) {\semanticicon{gate}{6mm}};
+\node[figlabel,align=left,anchor=west] at (54,11) {Authority / scope\\Freshness / support};
+\node[fignote,anchor=west] at (54,4) {Allow / deny / unknown};
+% Paired bars: exact rates, each metric has its own stated denominator.
+\node[figtitle,anchor=west] at (96,67.5) {20 authored tasks};
+\fill[figslate!55] (144,66.8) rectangle (147,68.2);
+\node[fignote,anchor=west] at (148,67.5) {base};
+\fill[figemerald] (165,66.8) rectangle (168,68.2);
+\node[fignote,anchor=west] at (169,67.5) {full gate};
+\foreach \lab/\before/\after/\den/\yy in {Benign success/8/8/8/61,Unsupported/4/0/20/55}{
+\node[figlabel,anchor=west] at (96,\yy) {\lab};
+\draw[figgrid] (124,\yy-2)--(161,\yy-2);
+\pgfmathsetmacro{\endbefore}{124+37*\before/\den}
+\pgfmathsetmacro{\endafter}{124+37*\after/\den}
+\fill[figslate!55] (124,\yy+.1) rectangle (\endbefore,\yy+1.4);
+\ifnum\after>0\fill[figemerald] (124,\yy-1.6) rectangle (\endafter,\yy-.3);\else\draw[figemerald,line width=.8pt] (124,\yy-1.6)--(124,\yy-.3);\fi
+\node[figlabel,anchor=east] at (184,\yy) {\before$\to$\after\,/\den};
 }
-\foreach \name/\n/\a/\c/\y/\barcolor in {No gate/10/1/138/54.5/figslate,Gate + replan/10/0/137/49/figemerald,Scope + replan/10/0/136/43.5/figemerald,Receipt + replan/9/0/136/38/figemerald,Deny egress/8/0/142/32.5/figamber,Tool Filter/0/0/69/27/figindigo,IPIGuard/8/0/211/21.5/figindigo,Filter + resume/12/0/144/16/figindigo}{
-\node[figlabel,anchor=west] at (96,\y) {\name};
-\pgfmathsetmacro{\bx}{126+27*\n/16}
-\ifnum\n>0\fill[\barcolor,rounded corners=.5mm] (126,\y-1.4) rectangle (\bx,\y+1.4);\fi
-\node[figlabel,anchor=west] at (\bx+.4,\y) {\n};
-\ifnum\a>0
-\node[figchip=figrose,inner ysep=1pt] at (160.5,\y) {\a};
-\else\node[fignote] at (160.5,\y) {0};\fi
-\pgfmathsetmacro{\cx}{168+10*\c/220}
-\draw[figrule,line width=.8pt] (168,\y)--(178,\y);
-\draw[figamber,line width=1pt] (168,\y)--(\cx,\y);
-\fill[figamber] (\cx,\y) circle (.65mm);
-\node[figlabel,anchor=east] at (184,\y) {\c};
+\draw[figgrid] (96,51)--(184,51);
+\node[figtitle,anchor=west] at (96,47.5) {1,132 archived traces};
+\node[fignote,anchor=east] at (184,47.5) {base $\to$ binding};
+\foreach \lab/\before/\after/\den/\yy in {Native attack/165/0/808/41,Clean success/198/179/324/35}{
+\node[figlabel,anchor=west] at (96,\yy) {\lab};
+\draw[figgrid] (124,\yy-2)--(161,\yy-2);
+\pgfmathsetmacro{\endbefore}{124+37*\before/\den}
+\pgfmathsetmacro{\endafter}{124+37*\after/\den}
+\fill[figslate!55] (124,\yy+.1) rectangle (\endbefore,\yy+1.4);
+\ifnum\after>0\fill[figamber] (124,\yy-1.6) rectangle (\endafter,\yy-.3);\else\draw[figamber,line width=.8pt] (124,\yy-1.6)--(124,\yy-.3);\fi
+\node[figlabel,anchor=east] at (184,\yy) {\before$\to$\after\,/\den};
 }
-\node[fignote,anchor=west] at (96,4) {One seed; 0/16 attacks has upper 95\% bound 19.4\%.};
+\draw[figgrid] (96,31)--(184,31);
+\node[figtitle,anchor=west] at (96,28) {32 live tasks $\times$ 8 methods};
+\node[fignote,anchor=east] at (184,28) {completed /32};
+\foreach \lab/\n/\yy/\bc in {No gate/10/23/figslate,Gate + replan/10/20/figemerald,Scope + replan/10/17/figemerald,Receipt + replan/9/14/figemerald,Deny egress/8/11/figamber,Tool Filter/0/8/figindigo,IPIGuard/8/5/figindigo,Filter + resume/12/2/figindigo}{
+\node[figlabel,anchor=west] at (96,\yy) {\lab};
+\fill[figwash] (127,\yy-.8) rectangle (177,\yy+.8);
+\pgfmathsetmacro{\barend}{127+50*\n/32}
+\ifnum\n>0\fill[\bc] (127,\yy-.8) rectangle (\barend,\yy+.8);\fi
+\node[figlabel,anchor=east] at (184,\yy) {\n};
+}
 \end{tikzpicture}}
 \end{center}
 \refstepcounter{figure}\label{fig:preprint-overview}
-{\small\noindent\textbf{Figure~\thefigure: Audit evidence and live task outcomes.}
-Left: illustrative message-to-report flow and measured release decisions on 20 authored tasks. Right: eight methods on development-disjoint tasks; bars show completion counts and dots show total model calls. Resume adapts Tool Filter. Evidence groups are separate; native attack failure is not semantic privacy (Section~\ref{sec:eval}).\par}
+{\small\noindent\textbf{Figure~\thefigure: Local evidence and measured tradeoffs.}
+Left: illustrative agents retain raw text locally and export labels; release checking is separate. Right: bars use the printed denominators; grey is the reference. Replay stops at first block; live runs use one 14B model/seed. Studies are separate, and metadata can leak. Native attack failure is not semantic privacy (Section~\ref{sec:eval}).\par}

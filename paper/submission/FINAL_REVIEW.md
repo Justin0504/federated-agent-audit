@@ -91,3 +91,9 @@ The 43-page manuscript and staged arXiv source package compile; cover inspected 
 Removed A/B headings. Restored all eight live methods as horizontal completion-count bars (axis 0/8/16; denominator 32), aligned native attack counts (/16), and total-call lollipops. The left panel embeds calendar/location icons in concrete illustrative message cards, a report icon alongside actual field types, and a release gate with measured 8 allow/3 deny/9 unknown decisions from the separate 20-task study. No new evidence or experiments.
 
 Rendered and inspected the final cover; corrected an intermediate TikZ macro collision before delivery. Final build remains 43 pages, with no overfull/undefined warnings. Independently compiled arXiv staging and ZIP CRC/source equality passed.
+
+## Multi-agent topology and three-study bar charts
+
+Reflowed cover labels into bounded agent/report cards, with separate schedule and location roles explicitly illustrative. Raw-text retention and metadata exposure remain stated; no federated-learning or anonymization guarantee is claimed. Replaced evidence summaries with denominator-scaled paired bars for authored and replay studies, and all eight live task-success bars. Replay utility loss remains visible. No new experiments.
+
+Final cover rendered and inspected after splitting the overflowing subject/owner field. Manuscript remains 43 pages; source package independently compiles. ZIP CRC and embedded cover-source equality passed.
