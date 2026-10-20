@@ -7,10 +7,10 @@ Agents Over-Share: Center-Blind Auditing for Multi-Tenant Agent Privacy
 Aojie (Justin) Yuan — University of Southern California
 
 ## Suggested categories
-Primary: cs.CR. Optional cross-list: cs.AI, subject to arXiv moderation.
+Primary: cs.CR (Cryptography and Security). Suggested cross-list: cs.MA (Multiagent Systems), subject to arXiv moderation.
 
 ## Comments
-43 pages, including references and appendices. The main narrative ends
+45 pages, including references and appendices. The main narrative ends
 on page 8 (including the cover); historical experiments and development
 diagnostics are in the appendices. Research code and evaluation
 artifacts: https://github.com/Justin0504/federated-agent-audit

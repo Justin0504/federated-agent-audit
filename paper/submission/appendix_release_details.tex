@@ -308,6 +308,18 @@ within its scope. The service retains a bounded workspace graph across reports, 
 establish correctness of arbitrary cross-report identity joins or independent
 observation completeness. The proposed linkage policy still requires evaluation.
 
+\paragraph{Prospective social-agent application.}
+Figure~\ref{fig:social-concept} sketches how the same evidence boundary could
+matter in WhatsApp- or Instagram-like social settings. Delegated scheduling,
+travel and summary agents may act for different group members. A permitted
+fragment can reach a new audience through a summary, quotation or cross-group
+forward; group membership and revocation change over time. We have not built
+or tested a connector to either platform. The concept assumes a consented
+synthetic sandbox, not access to production chats or encrypted server traffic.
+Encryption in transit does not prevent an authorized endpoint from combining
+what it receives. These scenarios are motivations, not findings from our runs.
+\input{figures/fig_social_concept}
+
 \input{agentdojo_external}
 
 \subsection{A falsifiable evaluation of the proposed composition}
@@ -335,3 +347,50 @@ beyond the allowed window. These tests would establish a useful contribution:
 not that desensitization makes every interaction auditable, but that the system
 identifies which conclusions its limited evidence supports and exposes where
 additional local checks or trusted observation are necessary.
+
+\subsection{Social-group audit study: a prospective protocol}
+\label{sec:social-prospective}
+Graph pseudonymization removes direct identifiers but can preserve structural
+signatures. Prior social-network work demonstrates topology-based
+re-identification~\cite{narayanan2009}; it does not establish an attack rate
+for our metadata. Figure~\ref{fig:social-design} separates recipient inference
+from the distinct risk that the auditor links pseudonymous participants.
+This is federated observation, not federated model training or proven anonymity.
+
+\input{figures/fig_social_graph_design}
+
+\paragraph{Demo and task unit.}
+The accompanying offline storyboard, \texttt{examples/social\_audit\_demo/},
+uses invented chat fragments and deterministic display rules. Switching its
+view reveals how hiding names can leave the same graph; it runs no model,
+privacy detector or platform API. A future task would be a complete consented
+group workflow with explicit membership, allowed purpose, protected facts and
+a verifiable terminal objective (for example a meeting booked without exposing
+a participant's sensitive reason). Legitimate scheduling, cross-group
+forwarding and repeated-summary attacks require matched clean counterparts.
+
+\paragraph{Freeze before evaluating.}
+A proposed first study uses 120 independent workflow clusters across scheduling,
+travel, creator collaboration and support coordination. Partition identities,
+graph templates and protected facts across development and test. Within each
+cluster, pair three pre-specified membership conditions (fixed, joining,
+revoked) and four views (raw-content reference, stable aliases, window-scoped
+aliases, aggregate-only). This yields 1,440 proposed episodes per model/seed,
+not 1,440 independent tasks. Group sizes 4, 8 and 16 should be balanced across
+clusters; model versions, prompts, budgets and attacker knowledge must be
+frozen before test outcomes. None of these episodes has been executed here.
+
+\paragraph{Keep threat models and denominators separate.}
+Give the recipient attacker only delivered content and its permitted memory;
+give a separate honest-but-curious auditor attacker the exported graph plus a
+pre-specified auxiliary graph. Measure protected-fact inference, node-linkage
+precision/coverage, native task completion, successful completion without
+adjudicated disclosure, audit false positives/negatives, unknowns, calls,
+tokens, latency and metadata bytes. Use blinded semantic adjudication and
+cluster-paired intervals. Retain failed tasks and incomplete reports. Compare
+against no audit, local identifier redaction and deny-all with the same trusted
+policy inputs; raw-content auditing is a separately disclosed reference.
+A candidate fails if apparent privacy gains come solely from refusing tasks,
+losing audit coverage or changing the adversary's information. An eventual
+platform study also requires supported APIs, participant consent and a tested
+release boundary; none is implied by the storyboard.

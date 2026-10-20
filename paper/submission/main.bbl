@@ -25,6 +25,12 @@ Faouzi El~Yagoubi, Godwin Badu-Marfo, and Ranwa Al~Mallah.
 \newblock \url{https://github.com/microsoft/presidio}, 2026.
 \newblock Accessed 2026-09.
 
+\bibitem{narayanan2009}
+Arvind Narayanan and Vitaly Shmatikov.
+\newblock De-anonymizing social networks.
+\newblock In {\em IEEE Symposium on Security and Privacy}, pages 173--187,
+  2009.
+
 \bibitem{sumleaks}
 Vaidehi Patil, Elias Stengel-Eskin, and Mohit Bansal.
 \newblock The sum leaks more than its parts: Compositional privacy risks and

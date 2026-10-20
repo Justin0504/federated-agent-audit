@@ -25,7 +25,7 @@ Agents Over-Share: Center-Blind Auditing for Multi-Tenant Agent Privacy
 Aojie (Justin) Yuan — University of Southern California
 
 ## Suggested categories
-Primary: cs.CR. Optional cross-list: cs.AI, subject to arXiv moderation.
+Primary: cs.CR (Cryptography and Security). Suggested cross-list: cs.MA (Multiagent Systems), subject to arXiv moderation.
 
 ## Comments
 {pages} pages, including references and appendices. The main narrative ends

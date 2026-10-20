@@ -1,0 +1,28 @@
+% Hypotheses and proposed measurements only. No invented performance curves.
+\begin{widefigure}[htbp]\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm,y=1mm]
+\node[figtitle,anchor=west] at (0,85) {HIDING NAMES IS NOT HIDING A SOCIAL GRAPH};
+\node[figchip=figamber,anchor=west] at (0,78) {PROPOSED EXPERIMENT / NO RESULTS};
+\foreach \xx/\title/\tone in {0/Stable aliases/figrose,64/Window-scoped aliases/figindigo,128/Aggregate-only view/figemerald}{
+\draw[figzone,fill=\tone!4,draw=\tone!35] (\xx,22) rectangle (\xx+56,71);
+\node[figtitle,anchor=west] at (\xx+3,66) {\title};}
+% Same distinctive topology survives relabeling.
+\foreach \x/\y/\id in {10/53/u1,27/56/u2,45/51/u3,20/40/u4,40/38/u5}{
+\node[circle,draw=figrose,fill=white,font=\scriptsize,minimum size=5mm] (n\id) at (\x,\y) {\id};}
+\foreach \a/\b in {u1/u2,u2/u3,u2/u4,u2/u5,u4/u5}{\draw[figflow] (n\a)--(n\b);}
+\node[fignote,align=center,text width=49mm] at (28,27) {Names hidden; motifs, degree\\and timestamps still linkable.};
+\node[figlabel] at (92,57) {window $t$\qquad window $t+1$};
+\foreach \x/\y/\id in {75/46/p1,88/42/p2,102/46/q1,114/42/q2}{\node[circle,draw=figindigo,fill=white,font=\scriptsize,minimum size=5mm] (w\id) at (\x,\y) {\id};}
+\draw[figflow] (wp1)--(wp2);\draw[figflow] (wq1)--(wq2);
+\draw[figbound] (95,35)--(95,53);
+\node[fignote,align=center,text width=49mm] at (92,27) {Fewer long joins; some inference\\checks lose evidence. Test both.};
+\foreach \x/\y in {137/53,145/53,153/53,137/45,145/45,153/45}{\fill[figemerald!25,rounded corners=.6mm] (\x,\y) rectangle (\x+5,\y+5);}
+\node[figlabel,align=left,anchor=west] at (162,51) {Group\\counts};
+\node[fignote,align=center,text width=49mm] at (156,30) {Less event detail; noise alone\\is not a specified DP guarantee.};
+\draw[figzone,fill=figwash] (0,0) rectangle (184,16);
+\node[figtitle,anchor=west] at (3,12) {Measure the tradeoff; do not assume a winner};
+\node[figlabel,anchor=west] at (3,6) {Recipient inference\quad Center re-identification\quad Audit recall\quad Task success\quad Abstention\quad Cost};
+\end{tikzpicture}}
+\caption{A proposed graph-view ablation. Stable aliases preserve topological signatures; shortening linkability or publishing aggregates may weaken both attacker linkage and audit coverage. These are hypotheses to test on matched task clusters, not measured curves, deployed controls or new guarantees. A differential-privacy arm would require an explicit neighboring-dataset definition, mechanism and composition budget.}\label{fig:social-design}
+\end{widefigure}

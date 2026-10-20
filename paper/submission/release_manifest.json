@@ -1,9 +1,9 @@
 {
-  "pages": 43,
+  "pages": 45,
   "sha256": {
-    "core_narrative.tex": "0b78b324eb7eb6719bbd782a00f5fe4a44e585411a68d7f3543dc316184d5da3",
+    "core_narrative.tex": "c418c9fa1dd8e237a841f32ca653bbee06087292c1270b035d47445a160a6fa2",
     "appendix_audit_details.tex": "8a6191111d3c2ea43f449a884a4fa97f80f698d40bd85bda5c7c6590a0547594",
-    "appendix_release_details.tex": "91302ae28825f4818ffd350d55ce589a7512bcf661804c146b3c16c02fb2cefc",
+    "appendix_release_details.tex": "e7b1f0a4eadd5b7d1cef9e18ed181165cb6e8d8919526d89530a30c51f9b70a2",
     "appendix_development.tex": "eed544b9b054227412715d08f7a7d7a7cc3b72fb458cda36032b3709a51fdda0",
     "appendix_detector_studies.tex": "94e66e9ce60fd1d015037b5bfa0e98827d19023d31da8a72f671cadd99391cd1",
     "core_case_figure.tex": "bfc7b42e92f5d0fdca227e6aadb6a6310dfc89cac0da3a54aedf8aa67214dca3",
@@ -16,9 +16,9 @@
     "methodology.tex": "aa20576aa0835bd3f0cb69496883684a55ef9105483fdbe5320e418fb840f421",
     "agentdojo_external.tex": "e5ec4a8a45f1c3f356d1b5fc87adbc88688118d847ec9ccb4d90aa7495798088",
     "historical_measurements.tex": "60216591cdbd988ff7787f15063fec59cb3cefc40b1319c112a4406040c98eb0",
-    "references.bib": "d390bf007422fc8376b320d73882ab64b76d289a7fbfd6d9801df801901683af",
-    "main.pdf": "67c6cebe98a9f1709415971909ba4085ac42960d88350fca1e5647d847f53f03",
-    "arxiv_submission.zip": "9b1a2ef39206cfe1bced8be58a92ae6ab98b7f6797deaa7620a6125126c28d20",
-    "ARXIV.md": "0363f84368d742d76e673a2ae706f981494386afa20a3e44bc2d17c533f7466e"
+    "references.bib": "3f0989e2e8ef0bca44113ba2f109aa8b7376a097766d95a285c89690f3dc81de",
+    "main.pdf": "23a21a9a84fcc234571b67b41ef9c6e0912a68c26ad17e1c5d62b3f0221b70d3",
+    "arxiv_submission.zip": "42fbee89cb1b8c605904083153c94e5432fc29be0ae8c193b987e2b21e9804be",
+    "ARXIV.md": "7e6f2d809783191f1dc247f73dce723291a93564f518f5a4c472e4100b2833f2"
   }
 }

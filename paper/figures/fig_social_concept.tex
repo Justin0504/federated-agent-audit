@@ -1,0 +1,47 @@
+% Prospective scenario storyboard. Synthetic messages; no measured outcome.
+\begin{widefigure}[htbp]\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm,y=1mm]
+\node[figtitle,anchor=west] at (0,95) {GROUP CHAT: PERMITTED FRAGMENTS CAN BECOME A SENSITIVE JOIN};
+\node[figchip=figamber,anchor=west] at (0,88) {CONCEPT DEMO / NOT AN EVALUATED INTEGRATION};
+\draw[figzone,fill=figemerald!4,draw=figemerald!40] (0,17) rectangle (58,81);
+\node[figtitle,anchor=west] at (3,76) {Private group / user devices};
+\node[fignote,anchor=west] at (3,70) {WhatsApp / Instagram-like setting};
+\draw[figzone,fill=white] (3,49) rectangle (55,65);
+\node at (9,57) {\semanticicon{schedule_agent}{7mm}};
+\node[figlabel,anchor=west] at (15,60) {Schedule agent};
+\node[figlabel,anchor=west] at (15,54) {``Tuesday, every week.''};
+\draw[figzone,fill=white] (3,29) rectangle (55,45);
+\node at (9,37) {\semanticicon{location_agent}{7mm}};
+\node[figlabel,anchor=west] at (15,40) {Travel agent};
+\node[figlabel,anchor=west] at (15,34) {``Near the oncology center.''};
+\node[fignote,anchor=west] at (3,22) {No diagnosis is explicitly stated.};
+\draw[figzone,fill=figrose!4,draw=figrose!35] (64,17) rectangle (119,81);
+\node[figtitle,anchor=west] at (67,76) {Recipient-side composition};
+\node at (73,65) {\semanticicon{runtime_agent}{8mm}};
+\node[figlabel,anchor=west] at (81,67) {Summary agent};
+\node[fignote,anchor=west] at (81,61) {same subject + history};
+\draw[figflow,draw=figrose] (91,55)--(91,49);
+\draw[figzone,fill=white] (67,31) rectangle (116,49);
+\node[figlabel,align=center,text width=44mm] at (91.5,40) {Recurring visits + clinic location\\$\Rightarrow$ possible health inference};
+\node[fignote,align=center,text width=47mm] at (91.5,23) {Possible inference only;\\not a measured attack.};
+\draw[figflow,draw=figrose] (58,57)--(64,57);
+\draw[figflow,draw=figrose] (58,37)--(64,37);
+\draw[figzone,fill=figindigo!4,draw=figindigo!35] (126,17) rectangle (184,81);
+\node[figtitle,anchor=west] at (129,76) {A separate audit view};
+\node at (134,64) {\semanticicon{label_report}{7mm}};
+\node[figmono,anchor=west] at (141,65) {subject / recipient};
+\node[figmono,anchor=west] at (141,59) {labels / time / hops};
+\draw[figflow] (155,54)--(155,49);
+\node at (137,41) {\semanticicon{audit_graph}{8mm}};
+\node[figlabel,align=left,anchor=west] at (145,42) {Link reports locally scoped\\to purpose and time};
+\node[fignote,align=center,text width=49mm] at (155,26) {Report gaps $\Rightarrow$ unknown\\Linked metadata can itself leak.};
+\draw[figbound] (122,17)--(122,82);
+\draw[figcross] (119,65)--(126,65);
+\draw[figzone,fill=figwash] (0,0) rectangle (184,12);
+\node at (7,6) {\semanticicon{release_check}{7mm}};
+\node[figlabel,anchor=west] at (14,8) {Before a cross-group forward: check recipient, purpose, current membership and source support.};
+\node[fignote,anchor=west] at (14,3) {A later revocation cannot erase a recipient's memory. Endpoint copies and omitted events remain outside the report.};
+\end{tikzpicture}}
+\caption{Prospective social-agent storyboard with invented messages. A private-group assistant and a recipient-side summarizer may combine fragments across time; the right panel sketches report-based observation, not a validated semantic guard. The report arrow abstracts local report emission, not transmission of a raw summary. Platform names motivate a scenario; this is neither a production connector nor a claim that either platform exposes the required group APIs.}\label{fig:social-concept}
+\end{widefigure}
