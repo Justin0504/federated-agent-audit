@@ -4,7 +4,7 @@
 #   make arxiv      → arxiv_submission.zip, self-contained
 #   make clean
 
-main.pdf: main.tex paired_protocol.tex paired_protocol_results.tex final_native_results.tex final_native_appendix.tex core_narrative.tex core_case_figure.tex core_outcome_figure.tex appendix_cost_figure.tex appendix_audit_details.tex appendix_release_details.tex appendix_development.tex appendix_detector_studies.tex methodology.tex agentdojo_external.tex historical_measurements.tex references.bib $(wildcard ../figures/jetstream20261013/*) $(wildcard ../figures/agentdojo20261013/*.pdf)
+main.pdf: main.tex paired_protocol.tex paired_protocol_results.tex final_native_results.tex final_native_appendix.tex core_narrative.tex core_case_figure.tex core_outcome_figure.tex appendix_cost_figure.tex appendix_audit_details.tex appendix_release_details.tex appendix_development.tex appendix_detector_studies.tex methodology.tex agentdojo_external.tex historical_measurements.tex references.bib $(wildcard ../figures/jetstream20261013/*) $(wildcard ../figures/agentdojo20261013/*.pdf) $(wildcard ../figures/*.tex) $(wildcard ../figures/final_native/*.pdf) $(wildcard ../figures/semantic_icons/*.pdf) $(wildcard ../figures/brands/*.pdf) $(wildcard ../figures/institution/*)
 	tectonic main.tex
 
 .PHONY: anon arxiv clean

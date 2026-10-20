@@ -1,28 +1,31 @@
-% Hypotheses and proposed measurements only. No invented performance curves.
+% Proposed graph-view ablation, not evaluated controls.
 \begin{widefigure}[htbp]\centering
 \resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[x=1mm,y=1mm]
-\node[figtitle,anchor=west] at (0,85) {HIDING NAMES IS NOT HIDING A SOCIAL GRAPH};
-\node[figchip=figamber,anchor=west] at (0,78) {PROPOSED EXPERIMENT / NO RESULTS};
-\foreach \xx/\title/\tone in {0/Stable aliases/figrose,64/Window-scoped aliases/figindigo,128/Aggregate-only view/figemerald}{
-\draw[figzone,fill=\tone!4,draw=\tone!35] (\xx,22) rectangle (\xx+56,71);
-\node[figtitle,anchor=west] at (\xx+3,66) {\title};}
-% Same distinctive topology survives relabeling.
-\foreach \x/\y/\id in {10/53/u1,27/56/u2,45/51/u3,20/40/u4,40/38/u5}{
-\node[circle,draw=figrose,fill=white,font=\scriptsize,minimum size=5mm] (n\id) at (\x,\y) {\id};}
+\node[figtitle,anchor=west] at (0,93) {REMOVE THE NAME. THE RELATIONSHIP FINGERPRINT CAN REMAIN.};
+\node[figchip=figamber,anchor=west] at (0,86) {PROPOSED VIEW ABLATION / NO RESULTS};
+\foreach \xx/\ttl/\tone in {0/Stable aliases/figrose,63/Window aliases/figindigo,126/Aggregate view/figemerald}{
+\draw[figzone,fill=\tone!4,draw=\tone!40] (\xx,24) rectangle (\xx+58,79);
+\node[figtitle,anchor=west] at (\xx+3,74) {\ttl};}
+\node[fignote,anchor=west] at (3,68) {Group / DM links, names replaced};
+\foreach \x/\y/\id in {9/53/u1,28/59/u2,48/53/u3,17/40/u4,40/40/u5}{\node[circle,draw=figrose,fill=white,font=\scriptsize,minimum size=5mm] (n\id) at (\x,\y) {\id};}
 \foreach \a/\b in {u1/u2,u2/u3,u2/u4,u2/u5,u4/u5}{\draw[figflow] (n\a)--(n\b);}
-\node[fignote,align=center,text width=49mm] at (28,27) {Names hidden; motifs, degree\\and timestamps still linkable.};
-\node[figlabel] at (92,57) {window $t$\qquad window $t+1$};
-\foreach \x/\y/\id in {75/46/p1,88/42/p2,102/46/q1,114/42/q2}{\node[circle,draw=figindigo,fill=white,font=\scriptsize,minimum size=5mm] (w\id) at (\x,\y) {\id};}
+\draw[figamber,line width=.9pt,dashed] (28,59) circle (4mm);
+\node[fignote,align=center] at (29,29) {Hub degree 4 + triangle\\Candidate linkage to auxiliary graph};
+\node[fignote,anchor=west] at (66,68) {Purpose / time-scoped joins};
+\node[figlabel] at (77,59) {$t$};\node[figlabel] at (108,59) {$t+1$};
+\foreach \x/\y/\id in {73/53/p1,87/48/p2,73/39/p3,103/53/q1,116/43/q2}{\node[circle,draw=figindigo,fill=white,font=\scriptsize,minimum size=5mm] (w\id) at (\x,\y) {\id};}
 \draw[figflow] (wp1)--(wp2);\draw[figflow] (wq1)--(wq2);
-\draw[figbound] (95,35)--(95,53);
-\node[fignote,align=center,text width=49mm] at (92,27) {Fewer long joins; some inference\\checks lose evidence. Test both.};
-\foreach \x/\y in {137/53,145/53,153/53,137/45,145/45,153/45}{\fill[figemerald!25,rounded corners=.6mm] (\x,\y) rectangle (\x+5,\y+5);}
-\node[figlabel,align=left,anchor=west] at (162,51) {Group\\counts};
-\node[fignote,align=center,text width=49mm] at (156,30) {Less event detail; noise alone\\is not a specified DP guarantee.};
-\draw[figzone,fill=figwash] (0,0) rectangle (184,16);
-\node[figtitle,anchor=west] at (3,12) {Measure the tradeoff; do not assume a winner};
-\node[figlabel,anchor=west] at (3,6) {Recipient inference\quad Center re-identification\quad Audit recall\quad Task success\quad Abstention\quad Cost};
+\draw[figbound] (95,35)--(95,62);
+\node[fignote,align=center] at (92,29) {Cross-window links omitted\\Less linkage; less audit continuity};
+\node[fignote,anchor=west] at (129,68) {Exact counts / no individual paths};
+\foreach \x in {133,142,151,160,169}{\fill[figemerald!25,rounded corners=.5mm] (\x,51) rectangle (\x+6,57);}
+\node[figlabel] at (155,43) {5 participants / 5 edges};
+\node[fignote,align=center] at (155,29) {Event evidence is lost\\Exact aggregates are not DP};
+\draw[figzone,fill=figwash] (0,0) rectangle (184,18);
+\node[figtitle,anchor=west] at (3,14) {Matched future design: 120 workflows $\times$ 3 membership states $\times$ 4 views = 1,440 episodes};
+\node[figlabel,anchor=west] at (3,8) {Recipient inference\quad Auditor re-identification\quad Task utility\quad Audit coverage\quad Unknown\quad Cost};
+\node[fignote,anchor=west] at (3,3) {Raw identities are the fourth reference view. Episodes are clustered by workflow; none have been executed.};
 \end{tikzpicture}}
-\caption{A proposed graph-view ablation. Stable aliases preserve topological signatures; shortening linkability or publishing aggregates may weaken both attacker linkage and audit coverage. These are hypotheses to test on matched task clusters, not measured curves, deployed controls or new guarantees. A differential-privacy arm would require an explicit neighboring-dataset definition, mechanism and composition budget.}\label{fig:social-design}
+\caption{Proposed graph-view comparison using one invented five-node relationship graph. Stable pseudonyms retain the same hub and triangle; an auxiliary graph may provide linkage clues. Window-scoped aliases suppress cross-window joins, while aggregates remove individual paths. Reduced visibility may weaken both attacks and auditing: no winner or privacy guarantee is assumed. This future design is separate from the completed authored-task, archived-replay and live evaluations.}\label{fig:social-design}
 \end{widefigure}
