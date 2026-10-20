@@ -85,3 +85,9 @@ Rebuilt the manuscript and independently compiled the staged arXiv source packag
 Replaced the repeated cover method table with three explicitly separated evidence cards: 20 authored tasks/five controls, 1,132 archived traces/81 tasks, and 32 development-disjoint tasks/eight methods. Left panel names the metadata audit and structured release interfaces and visualizes their different inputs and outputs. Provider logos are scoped to each study. Counts and caveats are checked against core_narrative.tex; clean replay utility loss and live attack uncertainty remain visible. Full per-method results remain in the paper. No experiments or methods added.
 
 The 43-page manuscript and staged arXiv source package compile; cover inspected at 1800px, with no text overlap or clipping. ZIP CRC and cover-source equality verified.
+
+## Anchored icons and live bar chart
+
+Removed A/B headings. Restored all eight live methods as horizontal completion-count bars (axis 0/8/16; denominator 32), aligned native attack counts (/16), and total-call lollipops. The left panel embeds calendar/location icons in concrete illustrative message cards, a report icon alongside actual field types, and a release gate with measured 8 allow/3 deny/9 unknown decisions from the separate 20-task study. No new evidence or experiments.
+
+Rendered and inspected the final cover; corrected an intermediate TikZ macro collision before delivery. Final build remains 43 pages, with no overfull/undefined warnings. Independently compiled arXiv staging and ZIP CRC/source equality passed.

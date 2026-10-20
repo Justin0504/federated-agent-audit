@@ -1,58 +1,70 @@
-% Cover: implemented interfaces and three distinct evidence designs.
+% Cover: concrete evidence interfaces and frozen live comparison.
 \begin{center}
 \diagramcontent{%
 \begin{tikzpicture}[x=1mm,y=1mm]
 \path[use as bounding box] (0,0) rectangle (184,76);
-\node[figtitle,anchor=west] at (1,73) {A\quad Two complementary interfaces};
-\node[figtitle,anchor=west] at (95,73) {B\quad Three tests, distinct evidence};
-% Contribution 1: compact concrete dataflow with an explicit boundary.
-\draw[figzone,fill=figindigo!3,draw=figindigo!35] (1,35) rectangle (90,68);
-\node[fignum=figindigo,font=\scriptsize] at (5,64) {1};
-\node[figtitle,anchor=west] at (9,64) {Center-blind audit};
-\node at (9,54) {\semanticicon{calendar}{5mm}};
-\node at (19,54) {\semanticicon{location}{5mm}};
-\node[figlabel,align=center] at (14,44) {Visits + clinic\\Private messages};
-\draw[figflow] (25,54)--(31,54);
-\node at (40,54) {\semanticicon{report}{6mm}};
-\node[figmono,align=center] at (40,44) {subject / owner\\labels + hash};
-\draw[figbound] (56,39)--(56,60);
-\draw[figcross] (49,54)--(64,54);
-\node at (75,54) {\semanticicon{graph}{7mm}};
-\node[figlabel,align=center] at (75,44) {Linked reports\\4 audit checks};
-\node[fignote,anchor=west] at (4,37.5) {Center receives metadata, not raw message text.};
-% Contribution 2: checking evidence before releasing a structured action.
-\draw[figzone,fill=figamber!4,draw=figamber!40] (1,3) rectangle (90,32);
-\node[fignum=figamber,font=\scriptsize] at (5,28) {2};
-\node[figtitle,anchor=west] at (9,28) {Evidence-bound release};
-\node at (8,19) {\semanticicon{message}{5.5mm}};
-\node[figlabel,align=center] at (22,19) {Action +\\source version};
-\draw[figflow] (34,19)--(39,19);
-\node at (45,19) {\semanticicon{gate}{7mm}};
-\node[figlabel,align=left,anchor=west] at (52,19) {Authority + scope\\Freshness + support};
-\node[figchip=figemerald] at (14,8) {allow};
-\node[figchip=figrose] at (36,8) {deny};
-\node[figchip=figamber] at (63,8) {unknown};
-% Evidence cards: common positions, visible sample units, no pooled claims.
-\draw[figzone,fill=figamber!3,draw=figamber!30] (95,48) rectangle (184,68);
-\node[fignum=figamber,font=\scriptsize] at (99,64) {I};
-\node[figtitle,anchor=west] at (103,64) {Mechanism / 20 authored tasks};
-\node[fignote,anchor=west] at (98,59) {5 controls\quad\modellogo{qwen}3B\quad frozen structured checks};
-\node[figlabel,anchor=west] at (98,54) {Benign completion \textcolor{figemerald}{8/8}; unsupported release \textcolor{figrose}{4$\to$0}};
-\node[fignote,anchor=west] at (98,50) {9 unknown decisions retained; internally authored.};
-\draw[figzone,fill=figrose!3,draw=figrose!30] (95,25) rectangle (184,45);
-\node[fignum=figrose,font=\scriptsize] at (99,41) {II};
-\node[figtitle,anchor=west] at (103,41) {Transfer / 1,132 archived traces};
-\node[fignote,anchor=west] at (98,36) {81 tasks\quad\modellogo{openai}\modellogo{claude}\modellogo{meta}trace sources};
-\node[figlabel,anchor=west] at (98,31) {Attack \textcolor{figrose}{165$\to$0/808}; clean utility \textcolor{figamber}{198$\to$179/324}};
-\node[fignote,anchor=west] at (98,27) {Action-prefix replay; stops at first block, no recovery.};
-\draw[figzone,fill=figemerald!3,draw=figemerald!35] (95,2) rectangle (184,22);
-\node[fignum=figemerald,font=\scriptsize] at (99,18) {III};
-\node[figtitle,anchor=west] at (103,18) {Live / 32 tasks $\times$ 8 methods};
-\node[fignote,anchor=west] at (98,13) {16 clean + 16 attacked\quad\modellogo{qwen}14B\quad 1 seed};
-\node[figlabel,anchor=west] at (98,8) {Task success \textcolor{figemerald}{0--12/32}; calls \textcolor{figamber}{69--211} per method};
-\node[fignote,anchor=west] at (98,4) {Paired utility, native attack, joint success and cost.};
+\node[figtitle,anchor=west] at (1,73) {Private context $\rightarrow$ auditable evidence};
+\node[figtitle,anchor=west] at (96,73) {Eight methods, the same 32 tasks};
+% Each icon belongs to a concrete message, record, or decision.
+\draw[figzone,fill=figindigo!3,draw=figindigo!30] (1,30) rectangle (91,68);
+\node[figtitle,anchor=west] at (4,64) {Center-blind audit};
+\draw[figzone,fill=white] (4,37) rectangle (32,60);
+\node at (8,55) {\semanticicon{calendar}{4.5mm}};
+\node[figlabel,anchor=west] at (12,55) {Tuesday visits};
+\node at (8,48) {\semanticicon{location}{4.5mm}};
+\node[figlabel,anchor=west] at (12,48) {Oncology clinic};
+\node[fignote] at (18,40) {2 messages, 1 subject};
+\draw[figflow] (32,50)--(36,50);
+\draw[figzone,fill=white] (36,37) rectangle (63,60);
+\node at (40,55) {\semanticicon{report}{4.5mm}};
+\node[figlabel,anchor=west] at (44,55) {Local report};
+\node[figmono,align=left,anchor=west] at (37,45.5) {schedule\\health hint\\subject + owner\\hash};
+\draw[figbound] (65,35)--(65,60);
+\draw[figcross] (63,50)--(69,50);
+\node at (79,55) {\semanticicon{graph}{6mm}};
+\node[figlabel,align=center] at (79,43) {Disclosure\\Purpose\\Hops / inference};
+\node[fignote,anchor=west] at (4,33) {Metadata crosses the boundary; raw messages stay local.};
+% Measured authored outcomes, not unanchored decorative decision chips.
+\draw[figzone,fill=figamber!4,draw=figamber!35] (1,3) rectangle (91,27);
+\node[figtitle,anchor=west] at (4,23.5) {Evidence-bound release};
+\node[fignote,anchor=east] at (88,23.5) {20 authored tasks};
+\node at (8,16) {\semanticicon{message}{5mm}};
+\node[figlabel,anchor=west] at (12,16) {Action + source};
+\draw[figflow] (37,16)--(42,16);
+\node at (47,16) {\semanticicon{gate}{6mm}};
+\node[figlabel,align=left,anchor=west] at (53,16) {Authority / scope\\Freshness / support};
+\node[figchip=figemerald] at (18,7) {8 allow};
+\node[figchip=figrose] at (43,7) {3 deny};
+\node[figchip=figamber] at (72,7) {9 unknown};
+% Count-axis bars, aligned attack outcomes, and cost lollipops.
+\node[fignote,anchor=west] at (96,66.5) {\modellogo{qwen}14B\quad 16 clean + 16 attacked\quad 256 runs};
+\node[fignote,anchor=west] at (96,60.5) {Method};
+\node[fignote] at (140,60.5) {Tasks /32};
+\node[fignote] at (160.5,60.5) {Atk /16};
+\node[fignote,anchor=east] at (184,60.5) {Calls};
+\fill[figwash] (95,51.8) rectangle (184,57);
+\foreach \tick in {0,8,16}{
+\pgfmathsetmacro{\tx}{126+27*\tick/16}
+\draw[figgrid] (\tx,12.8)--(\tx,57);
+\node[fignote] at (\tx,10) {\tick};
+}
+\foreach \name/\n/\a/\c/\y/\barcolor in {No gate/10/1/138/54.5/figslate,Gate + replan/10/0/137/49/figemerald,Scope + replan/10/0/136/43.5/figemerald,Receipt + replan/9/0/136/38/figemerald,Deny egress/8/0/142/32.5/figamber,Tool Filter/0/0/69/27/figindigo,IPIGuard/8/0/211/21.5/figindigo,Filter + resume/12/0/144/16/figindigo}{
+\node[figlabel,anchor=west] at (96,\y) {\name};
+\pgfmathsetmacro{\bx}{126+27*\n/16}
+\ifnum\n>0\fill[\barcolor,rounded corners=.5mm] (126,\y-1.4) rectangle (\bx,\y+1.4);\fi
+\node[figlabel,anchor=west] at (\bx+.4,\y) {\n};
+\ifnum\a>0
+\node[figchip=figrose,inner ysep=1pt] at (160.5,\y) {\a};
+\else\node[fignote] at (160.5,\y) {0};\fi
+\pgfmathsetmacro{\cx}{168+10*\c/220}
+\draw[figrule,line width=.8pt] (168,\y)--(178,\y);
+\draw[figamber,line width=1pt] (168,\y)--(\cx,\y);
+\fill[figamber] (\cx,\y) circle (.65mm);
+\node[figlabel,anchor=east] at (184,\y) {\c};
+}
+\node[fignote,anchor=west] at (96,4) {One seed; 0/16 attacks has upper 95\% bound 19.4\%.};
 \end{tikzpicture}}
 \end{center}
 \refstepcounter{figure}\label{fig:preprint-overview}
-{\small\noindent\textbf{Figure~\thefigure: From governance interfaces to three levels of evidence.}
-Left: metadata auditing and a separate structured release check. Right: authored controls, archived replay and development-disjoint live tasks; evidence groups are not pooled. Live defended methods observe 0/16 attacks (upper 95\% bound: 19.4\%), not established privacy superiority. Section~\ref{sec:eval} reports all methods, uncertainty and failures.\par}
+{\small\noindent\textbf{Figure~\thefigure: Audit evidence and live task outcomes.}
+Left: illustrative message-to-report flow and measured release decisions on 20 authored tasks. Right: eight methods on development-disjoint tasks; bars show completion counts and dots show total model calls. Resume adapts Tool Filter. Evidence groups are separate; native attack failure is not semantic privacy (Section~\ref{sec:eval}).\par}
