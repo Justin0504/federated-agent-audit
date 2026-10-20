@@ -101,3 +101,9 @@ Final cover rendered and inspected after splitting the overflowing subject/owner
 ## Role-specific cover icons
 
 Added six original editable SVG/PDF icons: calendar-badged agent, location-badged agent, label/hash report, graph inspection, versioned action, and release checklist. The cover uses 6--7mm icons with existing label spacing. No content or numerical changes. Final page 1 rendered and inspected; 43 pages retained, no overfull/undefined warnings. Staged source compiled; all six packaged icon PDFs verified byte-for-byte and ZIP CRC passed.
+
+## Full-manuscript icon and layout pass
+
+Unified semantic icons across the main pipeline and supplementary deployment, worked example, relay and attack diagrams; shared recovery/threat sources use the same set. Added an original runtime-agent icon with a code/tool badge. Small attack/relay icons use a 6mm optical target rather than the previous 4/5mm. Existing shared diagram widths and full-width statistical figures retained; the tall task matrix retains its intentional height constraint. No experimental content changed.
+
+Rendered all 43 pages and reviewed five full-document contact sheets, then inspected modified pages 3, 12, 13, 38 and 39 individually. Main content ends on page 8; appendix starts on page 9. No observed overlap or clipping; 19,722 extracted words were within page bounds. No overfull boxes or undefined references in the build. Staged arXiv source compiled independently; archive CRC plus changed figure-source and all seven new-family icon byte-equality checks passed.

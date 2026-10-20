@@ -4,6 +4,7 @@ import subprocess
 ROOT = Path(__file__).resolve().parent
 robot = '<rect x="5" y="11" width="38" height="32" rx="9" fill="#C9DDEB"/><path d="M24 11V5"/><circle cx="24" cy="5" r="2" fill="#C79352"/><rect x="11" y="20" width="26" height="13" rx="5" fill="#304656"/><circle cx="18" cy="26" r="2" fill="white" stroke="none"/><circle cx="30" cy="26" r="2" fill="white" stroke="none"/><path d="M13 46h20"/>'
 art = {
+ 'runtime_agent': robot + '<rect x="29" y="34" width="31" height="24" rx="4" fill="#E5ECE2"/><path d="M35 42l-3 4 3 4M54 42l3 4-3 4M47 40l-5 13"/>',
  'schedule_agent': robot + '<rect x="29" y="33" width="31" height="25" rx="4" fill="#FFF8ED"/><path d="M29 41h31M37 30v7M52 30v7"/><rect x="36" y="46" width="6" height="6" rx="1" fill="#C79352" stroke="none"/><path d="M47 48h6"/>',
  'location_agent': robot + '<path d="M45 60C40 54 30 45 30 37a15 15 0 0 1 30 0c0 8-10 17-15 23Z" fill="#F0D2C5"/><circle cx="45" cy="37" r="5" fill="#FFF"/>',
  'label_report': '<path d="M10 5h29l13 13v41H10Z" fill="#F4F7FA"/><path d="M39 5v13h13" fill="#C9DDEB"/><rect x="17" y="24" width="28" height="8" rx="3" fill="#DCE7F5"/><path d="M17 39h14M17 46h10"/><rect x="31" y="36" width="28" height="23" rx="5" fill="#E5ECE2"/><path d="M41 41l-2 13M49 41l-2 13M36 45h17M35 50h17"/>',

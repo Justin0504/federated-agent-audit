@@ -9,14 +9,14 @@
 \node[figtitle,anchor=west] at (67,83) {B\quad Evidence extraction};
 \node[figtitle,anchor=west] at (132,83) {C\quad Central checks};
 % Concrete local message artifacts, from the paper's existing worked example.
-\node at (7,73) {\semanticicon{calendar}{7mm}};
+\node at (7,73) {\semanticicon{schedule_agent}{7mm}};
 \node[figlabel,anchor=west] at (13,75) {``Every Tuesday afternoon''};
 \node[fignote,anchor=west] at (13,70) {standing appointment, 8 weeks};
-\node at (7,61) {\semanticicon{location}{7mm}};
+\node at (7,61) {\semanticicon{location_agent}{7mm}};
 \node[figlabel,anchor=west] at (13,63) {``Near the oncology center''};
 \node[fignote,anchor=west] at (13,58) {a second message, same subject};
 \draw[figgrid] (3,53)--(56,53);
-\node at (8,44) {\semanticicon{agent}{7mm}};
+\node at (8,44) {\semanticicon{runtime_agent}{7mm}};
 \node[figlabel,anchor=west] at (15,47) {Agent + tools + context};
 \node[fignote,anchor=west] at (15,41) {Policy stays outside the model};
 \node[figchip=figamber,anchor=west] at (3,31) {Raw messages remain local};
@@ -47,11 +47,11 @@
 \node[fignote,align=center] at (153,29) {Reports are not ground truth};
 % Separate implemented release mechanism, not a claim of semantic enforcement.
 \draw[figzone,fill=figrose!3] (0,3) rectangle (178,21);
-\node at (7,12) {\semanticicon{message}{7mm}};
+\node at (7,12) {\semanticicon{versioned_action}{7mm}};
 \node[figlabel,anchor=west] at (14,15) {Proposed action};
 \node[fignote,anchor=west] at (14,9) {source / version / field / value};
 \draw[figflow,draw=figrose] (58,12)--(67,12);
-\node at (74,12) {\semanticicon{gate}{8mm}};
+\node at (74,12) {\semanticicon{release_check}{8mm}};
 \node[figlabel,anchor=west] at (81,15) {Trusted release check};
 \node[fignote,anchor=west] at (81,9) {scope / freshness / exact support};
 \draw[figflow,draw=figrose] (133,12)--(141,12);
