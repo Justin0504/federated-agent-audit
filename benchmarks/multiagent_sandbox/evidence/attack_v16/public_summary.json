@@ -1,0 +1,166 @@
+{
+  "scope": "Authored execution-contract stress test; not semantic leakage or independent-task utility; variants are dependent, not 640 independent tasks.",
+  "n": 640,
+  "groups": {
+    "authorize_once/replay": {
+      "utility": 32,
+      "attack_success": 32,
+      "joint": 0,
+      "attack_queries": 32,
+      "verifier_calls": 32,
+      "seconds": 0.0005416080821305513
+    },
+    "authorize_once/parameter_substitution": {
+      "utility": 32,
+      "attack_success": 32,
+      "joint": 0,
+      "attack_queries": 32,
+      "verifier_calls": 64,
+      "seconds": 0.0010409198002889752
+    },
+    "authorize_once/cross_task": {
+      "utility": 32,
+      "attack_success": 32,
+      "joint": 0,
+      "attack_queries": 32,
+      "verifier_calls": 64,
+      "seconds": 0.0010947033297270536
+    },
+    "authorize_once/stale_epoch": {
+      "utility": 32,
+      "attack_success": 32,
+      "joint": 0,
+      "attack_queries": 32,
+      "verifier_calls": 64,
+      "seconds": 0.0010424217907711864
+    },
+    "authorize_once/revocation": {
+      "utility": 32,
+      "attack_success": 32,
+      "joint": 0,
+      "attack_queries": 32,
+      "verifier_calls": 64,
+      "seconds": 0.0010095029138028622
+    },
+    "reauthorize/replay": {
+      "utility": 32,
+      "attack_success": 32,
+      "joint": 0,
+      "attack_queries": 32,
+      "verifier_calls": 96,
+      "seconds": 0.0005161808803677559
+    },
+    "reauthorize/parameter_substitution": {
+      "utility": 32,
+      "attack_success": 0,
+      "joint": 32,
+      "attack_queries": 256,
+      "verifier_calls": 352,
+      "seconds": 0.0020054193446412683
+    },
+    "reauthorize/cross_task": {
+      "utility": 32,
+      "attack_success": 32,
+      "joint": 0,
+      "attack_queries": 32,
+      "verifier_calls": 128,
+      "seconds": 0.0010055525926873088
+    },
+    "reauthorize/stale_epoch": {
+      "utility": 32,
+      "attack_success": 32,
+      "joint": 0,
+      "attack_queries": 32,
+      "verifier_calls": 128,
+      "seconds": 0.001003789366222918
+    },
+    "reauthorize/revocation": {
+      "utility": 32,
+      "attack_success": 0,
+      "joint": 32,
+      "attack_queries": 256,
+      "verifier_calls": 352,
+      "seconds": 0.00187870510853827
+    },
+    "bound_reference/replay": {
+      "utility": 32,
+      "attack_success": 0,
+      "joint": 32,
+      "attack_queries": 256,
+      "verifier_calls": 320,
+      "seconds": 0.0013974247267469764
+    },
+    "bound_reference/parameter_substitution": {
+      "utility": 32,
+      "attack_success": 0,
+      "joint": 32,
+      "attack_queries": 256,
+      "verifier_calls": 352,
+      "seconds": 0.0019441781332716346
+    },
+    "bound_reference/cross_task": {
+      "utility": 32,
+      "attack_success": 0,
+      "joint": 32,
+      "attack_queries": 256,
+      "verifier_calls": 352,
+      "seconds": 0.0018609866965562105
+    },
+    "bound_reference/stale_epoch": {
+      "utility": 32,
+      "attack_success": 0,
+      "joint": 32,
+      "attack_queries": 256,
+      "verifier_calls": 352,
+      "seconds": 0.0018492103554308414
+    },
+    "bound_reference/revocation": {
+      "utility": 32,
+      "attack_success": 0,
+      "joint": 32,
+      "attack_queries": 256,
+      "verifier_calls": 352,
+      "seconds": 0.001871198182925582
+    },
+    "receipt/replay": {
+      "utility": 32,
+      "attack_success": 0,
+      "joint": 32,
+      "attack_queries": 256,
+      "verifier_calls": 320,
+      "seconds": 0.0054794998141005635
+    },
+    "receipt/parameter_substitution": {
+      "utility": 32,
+      "attack_success": 0,
+      "joint": 32,
+      "attack_queries": 256,
+      "verifier_calls": 352,
+      "seconds": 0.005956658278591931
+    },
+    "receipt/cross_task": {
+      "utility": 32,
+      "attack_success": 0,
+      "joint": 32,
+      "attack_queries": 256,
+      "verifier_calls": 352,
+      "seconds": 0.00508416083175689
+    },
+    "receipt/stale_epoch": {
+      "utility": 32,
+      "attack_success": 0,
+      "joint": 32,
+      "attack_queries": 256,
+      "verifier_calls": 352,
+      "seconds": 0.004643494845367968
+    },
+    "receipt/revocation": {
+      "utility": 32,
+      "attack_success": 0,
+      "joint": 32,
+      "attack_queries": 256,
+      "verifier_calls": 352,
+      "seconds": 0.00584627571515739
+    }
+  }
+}

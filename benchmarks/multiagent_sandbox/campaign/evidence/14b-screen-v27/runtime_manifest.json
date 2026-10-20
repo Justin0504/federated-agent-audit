@@ -1,0 +1,34 @@
+{
+  "container_id": "e7423e9a0b6a411a47c3a64cb6e5615df74b678781aade065d5f19321052cc66",
+  "image_id": "sha256:6ff0abe276d5773f86cb605342ee39e7eb86fdf9f2dad75e022f6c76bb01ff75",
+  "command": [
+    "-m",
+    "/models/qwen25_14b/qwen2.5-14b-instruct-q4_k_m-00001-of-00003.gguf",
+    "--alias",
+    "Qwen2.5-14B-Instruct-Q4_K_M",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18090",
+    "-c",
+    "8192",
+    "-np",
+    "1",
+    "-t",
+    "4",
+    "-tb",
+    "4",
+    "-ngl",
+    "99",
+    "--no-context-shift",
+    "--jinja",
+    "--reasoning-budget",
+    "0"
+  ],
+  "entrypoint": [
+    "/runtime/llama-b11624/llama-server"
+  ],
+  "model": "Qwen2.5-14B-Instruct-Q4_K_M",
+  "endpoint": "http://127.0.0.1:18090",
+  "host": "sss"
+}

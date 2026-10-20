@@ -1,0 +1,95 @@
+{
+  "summary": {
+    "episodes": 32,
+    "arms": {
+      "exact_redaction": {
+        "n": 8,
+        "utility": 5,
+        "joint": 0,
+        "member_failures": 0,
+        "infra_errors": 0,
+        "privacy_observed": 8,
+        "mean_additional_bits": 6.5,
+        "mean_reconstruction": 1.0,
+        "comparable_pairs": 4,
+        "different_transcript_pairs": 4,
+        "coordinator_format_errors": 0,
+        "coordinator_output_caps": 0
+      },
+      "structured_release": {
+        "n": 8,
+        "utility": 5,
+        "joint": 0,
+        "member_failures": 0,
+        "infra_errors": 0,
+        "privacy_observed": 8,
+        "mean_additional_bits": 6.5,
+        "mean_reconstruction": 1.0,
+        "comparable_pairs": 4,
+        "different_transcript_pairs": 4,
+        "coordinator_format_errors": 0,
+        "coordinator_output_caps": 0
+      },
+      "membership_oracle": {
+        "n": 8,
+        "utility": 5,
+        "joint": 0,
+        "member_failures": 0,
+        "infra_errors": 0,
+        "privacy_observed": 8,
+        "mean_additional_bits": 6.5,
+        "mean_reconstruction": 1.0,
+        "comparable_pairs": 4,
+        "different_transcript_pairs": 4,
+        "coordinator_format_errors": 0,
+        "coordinator_output_caps": 0
+      },
+      "task_bound": {
+        "n": 8,
+        "utility": 6,
+        "joint": 6,
+        "member_failures": 0,
+        "infra_errors": 0,
+        "privacy_observed": 8,
+        "mean_additional_bits": 0.0,
+        "mean_reconstruction": 0.1875,
+        "comparable_pairs": 4,
+        "different_transcript_pairs": 0,
+        "coordinator_format_errors": 0,
+        "coordinator_output_caps": 0
+      }
+    },
+    "member_calls": 24,
+    "member_output_caps": 0,
+    "planned_episodes": 32,
+    "complete": true
+  },
+  "protocol": {
+    "seed": 20261017,
+    "pairs": 4,
+    "budget": 8,
+    "source_hashes": {
+      "run.py": "7192babe1bd0b3cee90bac37cd00741e0ddd2e8236e37a23cdd45a73647bcc42",
+      "protocol_eval.py": "0a40659b2106fb4029d6361e5ba12cac7d4b815568632aa1706794bb05fb8054",
+      "live_protocol_eval.py": "1ceea534153ac618dd06490d60e99d674582a96c2d56eba5739e92dfc1223181"
+    },
+    "arms": [
+      "exact_redaction",
+      "structured_release",
+      "membership_oracle",
+      "task_bound"
+    ],
+    "limitations": [
+      "trusted broker",
+      "shared member proposals across arms",
+      "finite conditional prior",
+      "not MPC",
+      "payload-only twin-world test",
+      "no open-ended planning"
+    ],
+    "planned_calls": 56
+  },
+  "executed_commit": "a6ae791",
+  "model": "Qwen3-8B Q4_K_M",
+  "runtime": "llama.cpp b11624; Jetstream CPU"
+}

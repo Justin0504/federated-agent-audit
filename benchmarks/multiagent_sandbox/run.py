@@ -49,7 +49,7 @@ def release(proposal, memory, arm):
     return result
 
 
-def infer(endpoint, messages, max_tokens=512):
+def infer(endpoint, messages, max_tokens=512, *, cache_prompt=True):
     def post(path, data):
         req = urllib.request.Request(
             endpoint + path,
@@ -74,7 +74,7 @@ def infer(endpoint, messages, max_tokens=512):
             "temperature": 0,
             "seed": 0,
             "stream": False,
-            "cache_prompt": True,
+            "cache_prompt": cache_prompt,
         },
     )
     if response.get("truncated"):

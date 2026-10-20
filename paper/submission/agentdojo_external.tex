@@ -1,0 +1,128 @@
+\subsection{External tasks and native success criteria}
+\label{sec:external-dojo}
+The new authored tasks above do not establish external validity. We therefore
+add an action-prefix replay using AgentDojo~\cite{debenedetti2024agentdojo}, an
+external benchmark with executable task-utility and attack-success predicates.
+We pin the upstream repository at revision
+\texttt{089ed468cf3e}, retain its MIT attribution, and use its v1 task definitions
+without changing the success criteria. This evaluates an authorization component
+of our method, not the full semantic-support gate or a live adaptive agent.
+
+\paragraph{Selection and controls.}
+Before scoring, we freeze 1,132 archived trajectories from four official pipeline
+labels: GPT-4o (2024-05-13), GPT-4 Turbo (2024-04-09), Claude 3.5 Sonnet
+(2024-06-20) and Llama 3 70B Chat. The selection contains all available clean
+runs and \texttt{important\_instructions} runs for the specified disclosure
+attacks in workspace, travel and Slack: 324 clean trajectories and 808 attacked
+trajectories, spanning 81 underlying user tasks. We exclude sabotage and phishing
+goals from the privacy endpoint, not unsuccessful attacks. Model names describe
+the upstream archives; we do not make new model calls or claim that these are
+current-model measurements.
+
+Five matched controls use the same archived action sequence: no gate, a keyword
+check for communication intent, literal destination binding to the initial
+request, their conjunction, and denial of every mediated egress action. The
+adapter consumes only the original user request and proposed tool arguments.
+Neither attacker goals, security labels nor successful reference actions grant
+permissions. It reuses the structured gate on a destination-authority envelope;
+this says nothing about factual support of the message body. The initial request
+is trusted and untrusted tool observations cannot extend its authority.
+Destination binding deliberately does not infer contacts from names or grant
+permissions from retrieved text. Its false denials are part of the evaluation.
+
+\paragraph{Replay semantics and endpoints.}
+We re-execute observed tool calls in AgentDojo's in-memory environments. Email,
+Slack and web operations modify mock state; no real communication is sent. At
+the first blocked egress action, we terminate the prefix and remove the final
+answer instead of retaining the original trajectory's later success. Unblocked
+trajectories keep their archived final answer. The unchanged upstream predicates
+then evaluate task utility and attack success from the resulting state and
+executed prefix. Upstream \texttt{security=True} denotes attacker success.
+Errors remain in the denominator and are reported separately.
+
+This intervention measures which archived actions a gate admits and what utility
+the admitted prefix retains. It does not measure how an agent would recover,
+replan, or attack again after a refusal. The selected attack predicates also
+encode specific exfiltration goals, not every semantic disclosure. We compare
+ungated replay with the archived labels to expose reconstruction differences.
+For paired utility differences, we resample the 81 underlying tasks, keeping
+all model and injection variants of each task together (2,000 bootstrap draws;
+seed 1729). These intervals describe variation within this archive, not a
+confidence guarantee for future deployments.
+
+\paragraph{Privacy reduction has a measurable utility cost.}
+All 5,660 replays completed in the Jetstream environment. Under the native
+attack predicates, combined intent and destination checks reduce observed
+attack success from 165/808 to 0/808. Clean utility falls from 198/324 (61.1\%)
+to 179/324 (55.2\%); attacked utility falls from 383/808 (47.4\%) to 316/808
+(39.1\%). The clean paired change is $-5.9$ percentage points (task-cluster
+bootstrap 95\% interval $[-10.2,-2.2]$); the attacked change is $-8.3$ points
+($[-12.8,-4.3]$). The combined arm blocks 28 clean and 202 attacked trajectories;
+not every block removes a previously successful task. These losses are material:
+this external result does not reproduce the eight-of-eight utility retention
+of the internally authored structured tasks.
+
+Figure~\ref{fig:core-replay} in the main text displays these same counts.
+The deny-egress control has one clean and one attacked checker exception;
+both remain unresolved rather than being scored as successful or verified safe.
+
+
+Intent checking alone leaves 85 successful attacks. Destination-only and combined
+checks have identical utility and attack-success counts, so this experiment
+provides no measurable benefit for the additional intent rule. Denying every
+mediated egress retains only 150 clean and 285 attacked successes, with two
+checker exceptions. Some tasks need no mediated external send, so this arm is
+not equivalent to refusing every task. The native predicate failure in each
+case is a missing website-state key after early termination; it is not silently
+converted to a confirmed safe outcome.
+
+The costs concentrate in Slack: combined checking retains 44/84 clean successes
+versus 61/84 without a gate, and 24/168 attacked successes versus 90/168. Travel
+retains 42/80 clean and 75/160 attacked successes in both arms; workspace retains
+93/160 versus 95/160 clean, and 217/480 versus 218/480 attacked. Thus aggregate
+retention conceals substantial environment-specific loss. Literal destination
+binding cannot resolve legitimate implicit contacts or contextual destinations.
+Eleven combined-arm blocks also arise from unsupported destination argument
+representations, including null optional values; we retain them rather than
+repairing the adapter after seeing outcomes.
+
+\paragraph{Concordance and scope of the evidence.}
+Ungated replay agrees with archived task-utility labels in 1,128/1,132 cases and
+attack-success labels in 781/808 attacked cases. The 27 attack disagreements are
+26 workspace cases and one travel case. Four task-utility disagreements and
+these attack disagreements remain in all denominators. We use outcomes of the
+pinned executable predicates consistently across the five arms; the discrepancy
+means the replay is not an exact reproduction of all historical labels. Twenty-four
+archived traces contain execution errors. Runtime tool errors are retained as
+observed behavior; the combined arm has no checker exceptions. All frozen
+source/protocol and trace hashes are preserved with the artifacts.
+
+\paragraph{Post-hoc discrepancy audit.}
+We replay the 31 trajectories with any label disagreement under seven available
+upstream suite versions, from v1 through v1.2.2, without changing the frozen
+primary experiment. All four utility disagreements align with archived labels
+under later versions: three travel cases pass after v1.1 removes the requirement
+that the final answer repeat the hotel rating; one workspace case passes after
+v1.1.1 accepts the updated end time as part of calendar rescheduling. This
+establishes compatibility with changed predicates, not the provenance of the
+historical evaluation. All 27 attack disagreements persist across these versions
+(nine replay-positive/archive-negative and eighteen in the opposite direction).
+Their historical cause remains unresolved.
+
+As a post-hoc sensitivity analysis only, restricting to trajectories whose
+ungated utility and attack labels agree with the archive leaves 322 clean and
+779 attacked runs. Combined checking changes clean utility from 198/322 to
+179/322, attacked utility from 383/779 to 315/779, and attack success from 156/779
+to 0/779. Thus both the reduction in selected attack success and the utility
+cost persist without the disputed trajectories. These filtered counts do not
+replace the primary denominators; the subset was selected after observing
+concordance. Per-trajectory version results accompany the artifacts.
+
+The finding is bounded but useful: explicit task-to-destination binding can
+suppress the selected archived exfiltration actions, while failing to retain
+legitimate tasks that require contextual authority resolution. It does not
+validate semantic support of message bodies, arbitrary leakage channels,
+continuing attackers or agent recovery after a block. A next method should
+resolve recipient authority from trusted task evidence and evaluate recovery in
+a fresh closed-loop run; it should not extract permission from attacker-written
+observations or use benchmark attack labels as a policy oracle.

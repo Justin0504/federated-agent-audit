@@ -1,0 +1,327 @@
+\section{Historical detector studies and component measurements}
+\label{app:detector-studies}
+\suppressfloats[t]
+\subsection{Historical evidence and provenance limits}
+We retain the 3,168-trial instruction sweep and related recipient experiments in
+Appendix~\ref{app:historical}. Their source traces support arithmetic
+reproduction, but some archived backend aliases lack provider-returned version
+identifiers. We therefore do not use these rows to establish a model ranking or
+a capability--privacy relationship. The fixed-checkpoint structured tasks and
+the external task evaluation in Appendix~\ref{sec:external-dojo} provide separately scoped evidence for the
+release mechanisms.
+
+\subsection{Comparison with real baselines}
+A hand-rolled regular-expression scanner is not a credible DLP baseline, so we run
+\textbf{Microsoft Presidio}~\cite{presidio} itself, in two realistic configurations: a
+strict identifier policy (SSN, card, email, phone, bank, passport, licence) and a
+broad one that adds \texttt{PERSON}, \texttt{LOCATION}, \texttt{NRP} and
+\texttt{DATE\_TIME}. The set is 32 realistic scenarios (17 leaks / 15 clean) spanning
+all four violation types plus the cases that separate the approaches: non-regex PII, a
+diagnosis, authorized external sharing, benign traffic, and single-hint near-misses
+that must \emph{not} fire (Table~\ref{tab:frontier}).
+
+The configured baseline observers receive raw content, while our central auditor
+receives labels computed locally. This is a deployment choice in this comparison,
+not an inherent limitation of Presidio or other tools: they could also run locally.
+Our local tagger likewise reads content. The comparison therefore measures these
+specific integrations, not superiority over every possible DLP deployment.
+\emph{On accuracy}, no Presidio configuration wins on both axes. The identifier policy
+reaches only $F1{=}0.26$: it has no notion of owner, purpose, or hop budget, so it
+misses inference, purpose, and TTL violations entirely, and the three clean scenarios
+it does flag are precisely the \emph{authorized} external shares. The broad policy
+buys recall ($0.65$) only by firing indiscriminately---specificity falls to $0.47$,
+flagging eight of fifteen clean scenarios including a lunch invitation and a slide
+deck---so its apparently strong $83\%$ ``inference recall'' is not inference detection
+at all, merely the observation that those messages contain a place and a date. A
+policy-aware LLM-judge that reads every byte is precise but insensitive
+($F1{=}0.58$, $0\%$ inference recall). On these 32 scenarios, the configured lexical auditor reaches $F1{=}0.94$
+with specificity $1.00$ and no raw message text in its central view; the observed
+misses concern tagger coverage
+(employment- and behavioral-domain hints), never a false alarm. Consistent with the
+tagger study below, the open-weight LLM tagger does not help here---it slightly
+\emph{trails} the lexical floor---so the lift we previously measured was specific to a
+proprietary backend.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lcccccc}
+\toprule
+Detector & P & R & F1 & spec. & inf.\ rec. & content$\to$center \\
+\midrule
+Presidio DLP, identifiers & 0.50 & 0.18 & 0.26 & 0.80 & 0\% & 1{,}839 ch \\
+Presidio DLP, broad & 0.58 & 0.65 & 0.61 & 0.47 & 83\% & 1{,}839 ch \\
+Llama Guard 3 (1B) & 0.53 & 0.53 & 0.53 & 0.47 & 0\% & 1{,}839 ch \\
+LLM-judge, policy-aware & 1.00 & 0.41 & 0.58 & 1.00 & 0\% & 1{,}839 ch \\
+Ours --- LLM tagger, open 14B & 1.00 & 0.82 & 0.90 & 1.00 & 50\% & \textbf{0} \\
+\textbf{Ours --- lexical tagger} & \textbf{1.00} & \textbf{0.88} & \textbf{0.94} & \textbf{1.00} & 67\% & \textbf{0} \\
+\bottomrule
+\end{tabular}
+\caption{Ours vs.\ real baselines on 32 realistic scenarios (17 leaks). All baselines
+read every byte; ours decides at zero content egress. Presidio is run in two realistic
+configurations---neither wins on both axes: the identifier policy is insensitive, the
+broad policy is indiscriminate (specificity $0.47$). The LLM tagger and LLM-judge both
+run on the same local open-weight model (Qwen2.5-14B); Llama Guard is the 1B variant
+(\S\ref{sec:guard}).}
+\label{tab:frontier}
+\end{table}
+
+\paragraph{A shipped guardrail.} Presidio is a pattern matcher and the LLM-judge is
+a general model handed our policy; neither is a product built to screen agent
+messages. Llama Guard is, so we ran it on the message that crosses. It lands at
+$F1=0.53$ on this scenario distribution and the two ways it fails are more informative
+than the number.\label{sec:guard}
+
+It flags \textbf{all eight} of the authorized and in-organization shares as unsafe.
+Those carry exactly the same sensitive content as the leaks; the only difference is
+that the recipient is entitled to it. And it calls \textbf{all six} compositional
+inference cases safe, because no single message in them contains a hazard.
+
+Both failures are architectural rather than a matter of capacity. The hazard
+taxonomy has no slot for \emph{who may receive} a datum, so an authorized share and
+a leak are the same message to it; and it judges messages one at a time, so
+evidence that only becomes disclosive when it accumulates is invisible. A larger
+Llama Guard would share both blind spots exactly --- which is why we report the 1B
+variant, forced by local disk, without claiming it is the strongest available: the
+limit being demonstrated is not one that scale removes.
+
+\subsection{Adaptive evasion: what can an adversary learn while evading?}
+The right question about an adaptive adversary is not whether it can evade---it
+always can, by sending nothing---but \emph{how much it can learn while evading}.
+We therefore sample the adversary's strategy space at random and run every
+strategy through the real auditor, recording both whether the detector fired and
+the attribute reported by the recipient under the experiment's scoring rule,
+$g=P(A\mid\text{fragments})-p_0$. A strategy draws a fragment count $n\leq8$,
+a per-fragment evidence strength $\lambda_i\in[1.05,3]$, a split across up to
+three of the recipient's agents, up to three subject aliases, and optional
+verbatim replay; suppressing a tag hides a fragment from the auditor but does not
+un-send it, so $g$ is computed over what actually crossed the boundary. Across
+$20{,}000$ strategies the largest gain achieved by any \emph{undetected} strategy
+is $0.29992$ against the policy threshold $\delta{=}0.3$: not one evasion crossed
+the line (Table~\ref{tab:evasion}). Within this synthetic model, the detector and simulated adversary share the
+same gain function, so complete and correctly grouped metadata aligns their
+thresholds. This does not validate the gain model against natural-language
+recipients or cover missing observations.
+
+The ablations suppress tags or split subject identities. At tag rate $q=0$,
+$53.6\%$ of sampled strategies exceed the simulated gain threshold without an
+alert; aliasing produces $16.3\%$ harmful evasions. These are modeled integrity
+failures, not measurements of resistance to an actual compromised client.
+Our report authentication and canonical identifiers provide implementation
+hooks for integrity, but their software implementations do not prove key
+confinement, input authenticity, or complete mediation. Rejecting an unauthenticated
+report exposes missing evidence; it does not undo an unobserved disclosure.
+The enrollment calculation $(1-c)\times53.6\%$ is consequently a conditional
+mixture calculation assuming every enrolled sender reports completely and
+correctly, not an empirical deployment guarantee.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lccc}
+\toprule
+Configuration & detect & max $g$ evaded & harmful evasions \\
+\midrule
+Full design & 0.54 & \textbf{0.29992} & \textbf{0.0\%} \\
+$-$ attestation ($q{=}0.4$) & 0.20 & 0.90 & 33.9\% \\
+$-$ attestation ($q{=}0$) & 0.00 & 0.90 & 53.6\% \\
+$-$ canonical subject ids & 0.38 & 0.90 & 16.3\% \\
+\bottomrule
+\end{tabular}
+\caption{Adaptive evasion, $20{,}000$ random strategies per configuration. A
+\emph{harmful} evasion is one that goes undetected \emph{and} gives the recipient
+a belief gain $\geq\delta{=}0.3$. Under the full design there are none: the
+largest gain any evasion achieves is $0.29992$, just under the threshold. Each
+ablated mechanism admits evasion at the full attainable gain ($0.90$).}
+\label{tab:evasion}
+\end{table}
+
+\paragraph{Attacking the tagger instead.} The study above assumes honest tags;
+the tagger is the one component that reads content, so we attack it directly. An
+attacking model is given the protected fact and, in the white-box arm, the lexical
+tagger's entire 141-term lexicon with the instruction to avoid every term. A
+hand-off \emph{evades} only if a reader model from a different family, shown the
+hand-off alone, judges the fact conveyed \emph{and} the auditor fires no
+content-derived violation---saying nothing is not evasion. Across six attackers (7B open-weight to GPT-4o) and 576 hand-offs, the lexical tagger is evaded $55\%$ of the time black-box and $70\%$ white-box; against the 32B attacker it catches none of 48 white-box hand-offs, against GPT-4o two. The LLM tagger, facing the same hand-offs, is evaded $4\%$ $[1,7]$ black-box and $7\%$ $[2,13]$ white-box (cluster bootstrap over facts), and
+black-box evasion does not rise with attacker strength; against the 32B attacker, swapping in a smaller tagger from a third family (8B) raises its evasion from $0\%$ and $6\%$ to $8\%$ and $12\%$, so the figure tracks tagger strength rather than a shared lineage. For the open-weight attackers, avoiding the vocabulary costs the message (conveyance $87\%\!\to\!82\%$); GPT-4o hedges instead, conveying the fact in only $62\%$ of its black-box hand-offs. This
+is the thesis on the defender's side---a token list fails against any sender able
+to follow ``avoid these words,'' while a tagger that judges meaning does not. Table~\ref{tab:frontier}'s lexical row is therefore the wrong one to deploy against a sender who is trying; the LLM tagger ($F1=0.90$ there) is the configuration the attack leaves standing. Query access is the stronger attack, and we ran it: handed the LLM tagger's verdict and three rewrites, two attackers raise evasion to $16\%$ $[7,26]$---and lower conveyance to $60\%$, because what passes the tagger increasingly fails to say the thing. The tagger is not unbeatable; it is expensive to beat, and the price is the message.
+
+\subsection{What the audit costs, and what actually crosses}\label{app:historical-cost}
+Lemma~\ref{lem:blind} says the center's view of a message is a hash plus a
+categorical label, so its size cannot depend on the message. That is a claim about
+the implementation as much as the mathematics, and it is falsifiable: we sweep
+content length over three orders of magnitude and measure the bytes that actually
+cross. They are constant at \textbf{418 bytes per message} from 64-byte to
+64\,KB messages---$0.0\%$ variation across a $1024\times$ range. This is an empirical fixed-schema size result, not a proof of content secrecy;
+metadata values and repeated observations can still disclose information.
+
+Throughput is $32$--$40$k messages/s single-process, and per-message cost grows
+only $1.24\times$ from $100$ to $50{,}000$ messages: the detectors are linear in
+edges, so an audit scales with traffic rather than with history. We state the
+comparison against a content-shipping observer as a crossover rather than a win,
+because it is one. At $16$\,KB messages the center receives $39\times$ fewer bytes;
+at 64-byte messages it receives $6.5\times$ \emph{more}, since 418 bytes of metadata
+then outweighs the message it describes. Lemma~\ref{lem:blind} gives a conditional representation-capacity bound, not a
+non-invertibility guarantee. Equality patterns, low-entropy hashes and repeated
+metadata may expose information even when the representation is small.
+
+\subsection{The self-authored floor}
+On all 48 A2A-MT scenarios the auditor scores $P/R/F1=1.0$ (TP$=18$, FP$=0$,
+TN$=30$, FN$=0$) with full per-type coverage and no over-firing on single-hint
+clean controls, and holds $1.0$ when the templated text is replaced by
+LLM-generated prose---the detectors key on labels, not wording. We report this
+first and weight it least: we wrote both the detectors and the scenarios, so it
+measures the detectors \emph{given correct labels} and nothing more. Everything
+that follows is an attempt to break it. Generating the realistic variant did earn
+its keep in one way hand-written tests could not: it exposed TTL fragility under
+paraphrasing (fixed by \texttt{provenance\_id}) and an invariant false positive on
+prose tokens coinciding with label tokens.
+
+\subsection{The local tagger}
+The inference
+detector accumulates \texttt{inferred\_categories}; in a real deployment these
+must be \emph{produced} from content, not hand-set. A local tagger (lexical,
+zero-dependency, optional LLM backend) emits tags to the center. A locally hosted backend keeps raw content on the
+agent; a remote API backend also exposes it to that provider and requires an
+additional trust assumption. On a labeled set with paraphrased cases, the lexical backend recovers explicit
+(sensitive) \texttt{category} at $P/R/F1=1.0$ and \texttt{inferred\_categories}
+at $P=1.0$, $R=0.78$; the \textbf{LLM backend (gpt-4o-mini) lifts inferred-category
+recall $0.78\to1.0$} (the misses are novel paraphrases like ``the place where they
+treat tumors'').
+That lift, however, is \emph{backend-dependent}, and we report the negative result:
+on the same labeled set, open-weight backends served locally (Qwen2.5-7B/14B,
+Llama-3.1-8B) do \emph{not} clear the paraphrase gap---each sits at or below the
+lexical floor's $R{=}0.78$, and Llama-3.1-8B is materially worse ($R{=}0.56$)---while
+also \emph{costing} explicit-category precision ($1.0\to0.38$--$0.75$) by over-tagging
+benign text. Qwen2.5-14B is the partial exception, raising inferred \emph{precision}
+to $0.88$ (best inferred $F1{=}0.82$) with recall still at $0.78$. These configuration-dependent results do not isolate capability as a causal
+factor; replacing a lexical tagger with a local model does not consistently
+improve inference coverage in this experiment.
+\texttt{AuditSession.observe} wires it in so a deployer supplies only text plus
+policy. Both dishonest suppression and honest labeling errors can remove
+necessary evidence. A MAC detects unauthorized report modification, but cannot
+distinguish a correctly authenticated labeling error from a correct label.
+The following ablations study the semantic recall limits.
+
+\subsection{An author-independent benchmark}
+Our 48-scenario benchmark scores 1.0, but we wrote both the detectors and the
+scenarios. To reduce direct scenario-author overlap, an LLM generates diverse
+scenarios with its own intended labels and we score our auditor against them. Pooling
+six batches gives \textbf{75 scenarios} (46 intended leaks), every one of which parses
+and is scored---no silent sample shrinkage. The honest result sits far below the
+self-authored 1.0: with the lexical tagger $P{=}1.00$, $R{=}0.17$; with an open-weight
+LLM tagger recall rises to $R{=}0.46$ but precision falls to $P{=}0.88$ (three false
+positives). That last number sharpens a claim we would otherwise have overstated: the
+architecture does not over-fire \emph{given correct labels}, but an over-tagging
+backend can still manufacture false positives end-to-end, so the absence of false positives in the controlled cases cannot be
+generalized to the deployed pipeline or arbitrary correct-label inputs.
+
+\paragraph{Where the recall actually goes.} It would be easy to attribute this gap
+to taxonomy coverage and move on; we tested the attribution instead, on a fresh pool
+and with the LLM tagger moved to a different model family (Mistral-7B) than the
+author, so that one model is not both writing and grading the scenarios---which is
+why its absolute numbers differ from the pool above. Scoring one
+pool of $99$ author-generated scenarios under progressively more generous taggers
+bounds what any tagger fix can buy (Table~\ref{tab:ceiling}), and the result
+corrects us in two places.
+
+First, \textbf{the ceiling is $0.76$, not $1.0$}. Even with every part marked
+maximally sensitive and carrying every inferred category, roughly a quarter of the
+author's intended leaks go undetected. That remainder is not reachable by any
+tagger: it is detector scope plus the author's own label noise, and no amount of
+taxonomy work will move it. Second, within what \emph{is} reachable, the binding
+constraint is the \textbf{sensitivity estimate}, not category coverage---conceding
+sensitivity alone recovers the entire reachable gap, while conceding every inferred
+category recovers \emph{nothing} ($R{=}0.22$, identical to the lexical floor to the
+last confusion-matrix cell). The reason is structural rather than lexical: the
+author writes predominantly single-hop scenarios, so converging fragments never
+reach $k^{*}{=}2$ and the inference detector cannot contribute at all. Our earlier
+reading of the miss taxonomy---that the misses split evenly between disclosure and
+inference---was measuring the author's scenario mix, not our detector.
+
+Taxonomy coverage is real but secondary: letting the tagger name the sensitive kind
+in open vocabulary instead of choosing from our ten classes lifts recall
+$0.37\to0.43$. The oracles are upper bounds and not configurations---flagging
+everything costs precision ($0.85\to0.74$)---but they say clearly which component
+is worth improving, and that the honest ceiling for this pool is $0.76$ rather than
+the $1.0$ a reader would otherwise assume.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lccl}
+\toprule
+Tagger & $P$ & $R$ & what it isolates \\
+\midrule
+lexical & 0.85 & 0.22 & the shipped floor \\
+LLM backend & 0.86 & 0.37 & shipped, fixed taxonomy \\
+LLM, open vocabulary & 0.84 & 0.43 & taxonomy coverage \\
+oracle: all inferred categories & 0.85 & 0.22 & category tagging \\
+oracle: maximal sensitivity & 0.74 & 0.76 & sensitivity estimate \\
+\textbf{oracle: both} & 0.74 & \textbf{0.76} & \textbf{the recall ceiling} \\
+\bottomrule
+\end{tabular}
+\caption{What any tagger fix can buy, on one pool of $99$ author-generated
+scenarios. Conceding sensitivity recovers the whole reachable gap; conceding every
+inferred category recovers none of it. The ceiling is $0.76$, so a quarter of the
+author's intended leaks are out of reach of tagging altogether.}
+\label{tab:ceiling}
+\end{table}
+
+One caveat keeps this honest in the other direction too: the author model states
+some ``inferences'' explicitly and labels borderline cases as leaks, so part of the
+$49$--$63\%$ agreement is label noise rather than a detector gap, which is why we
+report agreement alongside $P/R$ instead of treating the author's labels as gold.
+
+\subsection{External validation on AgentLeak}
+The multi-tenant
+auditor reuses a federated engine we validate on the external \textbf{AgentLeak}
+benchmark. Driving AgentLeak's own 600 multi-agent scenarios through an LLM to
+produce real inter-agent traces and labeling leakage by AgentLeak's rule, the
+auditor detects \textbf{100\% of internal-channel leaks at 0.972 precision with
+no detected raw vault strings in the central view} ($82.5\%$ internal-channel leak rate,
+under the archived scoring rule). On a labeled 33-scenario set the engine holds $P/R/F1=1.0$,
+and under the full six-layer desensitizer plus DP it holds $F1\approx0.97$ at
+$\varepsilon\in[0.5,3]$ with no detected raw-content matches. These are historical benchmark
+measurements, not guarantees of semantic privacy or calibrated inference.
+
+\subsection{Is the operating point cherry-picked?}
+The inference detector fires at $k^{*}{=}2$ under our defaults, so it is fair to ask
+whether that is a knife-edge fitted to the benchmark. We sweep each knob over the full
+48-scenario suite (deterministic; no LLM calls) and find a broad plateau
+(Table~\ref{tab:sens}). \emph{Every} setting of $(p_0,\lambda,\delta)$ for which the
+closed form gives $k^{*}{=}2$ scores $P/R/F1=1.0$---roughly a $2\times$ band in each
+knob independently---and quality degrades only once $k^{*}$ moves off $2$, in the
+direction the model predicts: $k^{*}{=}1$ over-fires ($P{=}0.86$) and $k^{*}\ge3$
+under-fires ($R{=}0.83$). Within this authored suite, the tested parameter settings track the
+closed-form $k^{*}$. This is an internal sensitivity check, not external
+calibration of the likelihood ratios or evidence against benchmark-specific tuning. The disclosure floor $\tau$ degrades gracefully rather than cliff-edging
+($\tau{=}2$: $P{=}0.90$; $\tau{=}4$: $R{=}0.94$; $\tau{=}5$: $R{=}0.89$), and
+raw$\to$center $=0$ at every setting.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lcc}
+\toprule
+knob & $F1{=}1.0$ band ($k^{*}{=}2$) & degrades at \\
+\midrule
+$\delta$  & $[0.20,\ 0.40]$ & $0.10$, $0.50$ \\
+$\lambda$ & $[2.5,\ 5.0]$   & $2.0$, $9.0$ \\
+$p_0$     & $[0.10,\ 0.30]$ & $\le 0.05$ \\
+\bottomrule
+\end{tabular}
+\caption{Inference-detector parameter sensitivity over the 48 scenarios
+($\delta$ swept 0.10--0.50, $\lambda$ 1.5--9.0, $p_0$ 0.02--0.30). Quality tracks the
+closed-form $k^{*}$, not the raw parameter values.}
+\label{tab:sens}
+\end{table}
+
+
+\subsection{Metadata privacy under differential privacy}
+Beyond hiding content, we harden the
+metadata: identity-bearing fields are pseudonymized with a per-audit shared salt
+(cross-tenant comparisons hold in pseudonym space; literal identifiers are
+replaced, but linkage and external information may still identify principals) and \texttt{sensitivity} is DP-noised, while categories are kept
+structurally. Pseudonymization alone is lossless ($P/R/F1=1.0$). Under DP we
+sweep two orders of magnitude, $\varepsilon\in[0.1,8]$, at 40 trials each: mean
+$F1$ decays monotonically and gracefully---$0.99$ at $\varepsilon{=}3$, $0.98$ at
+$1$, $0.96$ at $0.5$, and still $\approx0.93$ at $0.1$ (sd $\le0.033$)---with no
+cliff. The loss is concentrated in recall, i.e.\ disclosure decisions whose noised
+sensitivity crosses the floor, exactly where the mechanism predicts, and no raw-content matches are detected at any tested $\varepsilon$.
+These accuracy measurements do not establish differential privacy for the whole
+report: unchanged categories, routing relations and repeated releases require
+separate adjacency and composition analysis.

@@ -1,0 +1,27 @@
+{
+  "name": "native-dev-v27-qwen25-14b",
+  "stage": "independent development competence screen, not formal evaluation",
+  "host": "sss",
+  "model_repository": "Qwen/Qwen2.5-14B-Instruct-GGUF",
+  "model_revision": "b466e1f8c07172155743e8e1307507d8a4f91fbd",
+  "files": [
+    {"name": "qwen2.5-14b-instruct-q4_k_m-00001-of-00003.gguf", "size": 3991999872, "sha256": "a09ea5e7b1eafb1b30b241726c3cc3c905c96f14ad41e246ffa5f44e53904f68"},
+    {"name": "qwen2.5-14b-instruct-q4_k_m-00002-of-00003.gguf", "size": 3989373504, "sha256": "21b9457d079680d284e90ef69607c4b2d8ef64a09d4729cb7b5e1357bdba41ae"},
+    {"name": "qwen2.5-14b-instruct-q4_k_m-00003-of-00003.gguf", "size": 1006737120, "sha256": "c8d37006760a387a35216e070e6664d7da927f10be8eb870fef2e3d4833d9976"}
+  ],
+  "reference_development_protocol_sha256": "4b8128acbc180efa040869224575d2888661f1f891c463f76bf317e793202e8a",
+  "conditions": "All nine no_gate entries from native-dev-v23-canonical; no resampling or exclusions",
+  "max_model_calls": 12,
+  "max_actions": 12,
+  "max_output_tokens": 1024,
+  "context_tokens": 8192,
+  "temperature": 0,
+  "seed": 0,
+  "tool_feedback": "envelope",
+  "system_prompt": "Same explicit native_backend.SYSTEM as v25 reference; hash exact text in executable manifest before inference",
+  "runtime": "llama.cpp b11624 CUDA12.8 on Jetstream A100; separate localhost endpoint18090",
+  "screen_gate": "All9 completed with known native outcomes and no unresolved implementation faults; at least2/3 same-task ungated clean twins succeed",
+  "next_stage": "If screen passes, freeze common prompt/model/source/budgets and run all63 development episodes across7 methods; only full development validation may qualify32x7 held-out tasks",
+  "no_automatic_formal_launch": true,
+  "claim_limit": "Development selection is disclosed. Do not pool with prior7B or oracle diagnostics; count failures and unknown costs. No task-specific answer hints."
+}

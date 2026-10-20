@@ -1,0 +1,47 @@
+% Synthetic, prospective platform-like storyboard; no platform integration.
+\begin{widefigure}[htbp]\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm,y=1mm]
+\node[figtitle,anchor=west] at (0,98) {ONE SUBJECT. TWO SOCIAL CONTEXTS. THREE AGENT ROLES.};
+\node[figchip=figamber,anchor=west] at (0,91) {FUTURE SCENARIO / INVENTED MESSAGES / NO MODEL RUN};
+% recognizable platform-like surfaces, not screenshots or official logos
+\draw[figzone,fill=figemerald!5,draw=figemerald!45] (0,22) rectangle (57,84);
+\fill[figemerald,rounded corners=1mm] (3,73) rectangle (54,81);
+\node[font=\footnotesize\bfseries,text=white,anchor=west] at (5,77) {WhatsApp-like group};
+\node[fignote,anchor=west] at (3,69) {Private circle / 5 fictional members};
+\node at (8,58) {\semanticicon{schedule_agent}{7mm}};
+\node[figlabel,anchor=west] at (14,62) {Calendar agent / 09:10};
+\draw[figzone,fill=white] (14,45) rectangle (54,59);
+\node[figlabel,align=left,anchor=west] at (16,52) {``Every Tuesday afternoon,\\for the next eight weeks.''};
+\node[figchip=figemerald,anchor=west] at (3,38) {$m_1$: recurrence + time};
+\node[fignote,anchor=west] at (3,28) {Local task: schedule a shared ride};
+\draw[figzone,fill=figrose!4,draw=figrose!40] (62,22) rectangle (119,84);
+\fill[figrose,rounded corners=1mm] (65,73) rectangle (116,81);
+\node[font=\footnotesize\bfseries,text=white,anchor=west] at (67,77) {Instagram-like DM};
+\draw[figrose,line width=1.2pt] (69,66) circle (3mm);
+\draw[figamber,line width=.6pt] (69,66) circle (2.2mm);
+\node[fignote,anchor=west] at (74,66) {Story reply / same subject};
+\node at (70,53) {\semanticicon{location_agent}{7mm}};
+\node[figlabel,anchor=west] at (76,59) {Travel agent / 09:14};
+\draw[figzone,fill=white] (76,43) rectangle (116,56);
+\node[figlabel,align=left,anchor=west] at (78,49) {``Pickup near the\\oncology center.''};
+\node[figchip=figrose,anchor=west] at (65,36) {$m_2$: place + context};
+\node[fignote,anchor=west] at (65,27) {Illustrative geotag / quoted reply};
+\draw[figzone,fill=figindigo!4,draw=figindigo!40] (125,22) rectangle (184,84);
+\node[figtitle,anchor=west] at (128,78) {Recipient-side summary};
+\node at (132,66) {\semanticicon{runtime_agent}{8mm}};
+\node[figlabel,align=left,anchor=west] at (140,67) {Summary agent\\same subject + history};
+\node[figchip=figindigo] at (154.5,53) {$m_1 + m_2 +$ identity link};
+\draw[figflow,draw=figrose] (154,49)--(154,44);
+\draw[figzone,fill=figrose!8,draw=figrose!45] (128,29) rectangle (181,44);
+\node[figlabel,align=center] at (154.5,36.5) {Possible recurring health visit\\Candidate inference; not a diagnosis};
+\draw[figcross] (57,53)--(62,53);
+\draw[figcross] (119,53)--(125,53);
+\node[fignote,anchor=west] at (0,17) {Illustrative authorized relay / cross-context forwarding. Neither fragment states a diagnosis.};
+\draw[figzone,fill=figwash] (0,0) rectangle (184,12);
+\node at (6,6) {\semanticicon{label_report}{6mm}};
+\node[figlabel,anchor=west] at (12,8) {Separate audit path: subject / recipient / purpose / time / hops / report hash};
+\node[fignote,anchor=west] at (12,3) {Raw text stays local; report gaps remain unknown. A later revocation cannot erase recipient memory.};
+\end{tikzpicture}}
+\caption{Prospective cross-message composition in a synthetic social-group workflow. Platform-colored panels evoke a group chat and a Story reply/DM, not actual interfaces, connectors or API capabilities. Arrows describe a hypothetical authorized relay between agent contexts. Two fragments can support a sensitive inference when a recipient links their subject and history. No semantic inference outcome is measured here; the metadata audit is a separate observation path.}\label{fig:social-concept}
+\end{widefigure}

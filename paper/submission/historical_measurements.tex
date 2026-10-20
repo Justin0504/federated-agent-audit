@@ -1,0 +1,138 @@
+\section{Historical exploratory measurements}\label{app:historical}
+\suppressfloats[t]
+These archived measurements lack complete provider-version provenance. Displayed
+backend names are experiment aliases. They are retained for traceability and
+prompt-condition comparisons, not as verified model rankings or evidence of
+a general relation between capability and privacy.
+
+\subsection{Controlled hand-off measurement}\label{app:historical-handoff}
+We use 24 authored multi-agent workflows across seven domains, each holding a
+sensitive record. A coordinator delegates to an external specialist under a
+permissive prompt. Five runs per workflow give 120 trials per configured backend.
+Our auditor flags sensitive identifiers or attributes in 78--82\% of trials for
+the three open-weight configurations and 46\% for the historical Claude alias
+(Table~\ref{tab:wild}). These are detector outputs on controlled tasks, not
+independently adjudicated disclosure rates. Cross-purpose hand-offs are purpose
+violations by construction; detecting them tests label consistency rather than
+an unknown real-world outcome. The central audit records omit raw message text.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{llcc}
+\toprule
+Recipient model & tier & disclosure & raw$\to$center \\
+\midrule
+Qwen2.5-7B   & small (open) & 82\% (99/120) & \textbf{0} \\
+Llama-3.1-8B & small (open) & 81\% (97/120) & \textbf{0} \\
+Qwen2.5-14B  & mid (open)   & 78\% (94/120) & \textbf{0} \\
+\textbf{Claude (alias)} & API alias & \textbf{46\% (55/120)} & \textbf{0} \\
+\bottomrule
+\end{tabular}
+\caption{Auditor flag rates on 24 authored workflows $\times$ five runs per
+configured backend. Model names are archived aliases, not all independently
+verified provider versions. Raw message text is not sent to the central auditor;
+this does not imply that metadata reveals no information.}
+\label{tab:wild}
+\end{table}
+
+\subsection{Can the agent simply be told not to?}\label{sec:instr}
+The measurement above invites an obvious objection: our coordinator prompt ends
+\emph{``include whatever you think is helpful''}, so a reader may reasonably
+suspect the leak is our wording rather than the model's behavior. It also leaves
+this paper's central claim---that the safeguard has to be structural---as an
+assertion. We test both by sweeping the instruction alone, over the same 24
+workflows, eleven models---nine open-weight models from five families and two API configurations---and $3{,}168$ trials. Ground truth here is
+deliberately \emph{independent of our auditor}: literal identifiers and attribute
+terms taken from the source record, matched against what the coordinator actually
+wrote, with each pattern checked against its own record so a drifted annotation
+fails loudly rather than scoring zero in our favor.
+
+Removing the invitation does not reduce the measured match rate in this
+experiment ($96\%\!\to\!98\%$); this contrast does not rule out effects from
+other prompt choices. Instructing the agent helps, and the shape of the
+help is the finding. Naming the forbidden categories explicitly leaves $82\%$; handing the model the
+record's actual policy---owner, permitted recipient, purpose, and the fact that
+this recipient is \emph{not} permitted---leaves $68\%$; Claude (alias) under the strongest condition still leaks in $36\%$ of hand-offs, and GPT-4o is the one model that mostly withholds ($14\%$), to which we return below (Table~\ref{tab:instr}).
+
+In the saved runs, instructions reduce identifier matches from $78\%$ to
+$35\%$ and sensitive-attribute matches from $89\%$ to $60\%$.
+Figure~\ref{fig:redaction} reports the per-configuration contrasts. These
+literal-match measurements do not identify the model's reasoning process or
+establish a general relation between parameter count and privacy behavior.
+
+\paragraph{Interpretation boundary.} The historical configurations differ in
+literal-match and refusal behavior. Missing provider-version evidence prevents
+attributing these differences to a specific model release, alignment method or
+capability level. The experiment supports only the observed contrasts within
+its saved traces and scoring procedure.
+
+Against the separate literal-match scorer, the auditor has recall $0.74$
+(716 scorer-positive hand-offs missed across the 3,168 trials) and precision $0.90$.
+There are 224 alerts without a literal match. Without independent semantic
+adjudication, disagreements may reflect auditor error or limitations of literal
+matching. These are proxy agreement statistics, not guaranteed bounds on
+semantic precision or recall.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lccccc}
+\toprule
+Coordinator instruction & leak & 95\% CI & ident. & attrib. & auditor \\
+\midrule
+permissive & 96\% & [93, 98] & 78\% & 89\% & 77\% \\
+invitation removed & 98\% & [96, 99] & 82\% & 89\% & 76\% \\
+categories forbidden & 82\% & [78, 86] & 36\% & 80\% & 58\% \\
+\textbf{full policy stated} & \textbf{68\%} & [63, 73] & \textbf{35\%} & \textbf{60\%} & 70\% \\
+\midrule
+\multicolumn{6}{l}{\emph{unverified Claude configuration alone, permissive $\to$ policy}} \\
+\quad identifiers & \multicolumn{5}{l}{$44\%\ \to\ \mathbf{1\%}$ \quad (literal-match rate)} \\
+\quad attributes & \multicolumn{5}{l}{$40\%\ \to\ 36\%$ \quad (barely moves)} \\
+\bottomrule
+\end{tabular}
+\caption{Sweeping the coordinator's instruction, pooled over eleven models ($792$ trials per row). Scored against ground truth independent of our
+auditor. Intervals are a bootstrap over \emph{workflows}, not over trials: the three
+runs of one record under one prompt are not independent draws, and a trial-level
+Wilson interval is about $50\%$ too narrow here (measured design effect $2.1$--$2.4$). Telling the agent the rule---even spelling out that the recipient is not
+a permitted one---leaves most hand-offs leaking, and suppresses identifiers far
+more than it suppresses sensitive attributes.}
+\label{tab:instr}
+\end{table}
+
+\input{figures/fig_redaction}
+
+\subsection{What survives a relay chain}\label{sec:relay}
+Two things the design rests on had only ever been tested against paraphrases we
+wrote ourselves, which is not a test: that \texttt{provenance\_id} follows a datum
+through re-wording, so hop/TTL tracking is not defeated by a relay that rephrases,
+and that exposure compounds rather than decays. We let real agents do the
+rephrasing---each forwards the case onward in its own words, four hops deep,
+against a hop budget of two---over the same 24 records, three models, 144 chains.
+
+Exposure does not decay. Two of the three models still carry the subject's
+identifiers or attributes at hop~4 in \emph{every} chain ($100\%$); the third
+declines only from $94\%$ to $79\%$. The intuition that passing a datum through
+successive re-writes dilutes it is simply wrong, and the same identifier/attribute
+asymmetry appears again from an entirely different mechanism---Mistral-7B's
+identifier rate falls across the chain ($90\!\to\!83\%$) while its attribute rate
+\emph{rises} ($94\!\to\!96\%$). Meanwhile the tracking holds: provenance survived
+all four model paraphrases in $144/144$ chains and the TTL violation fired in
+$144/144$, with zero raw content reaching the center. The failure we were looking
+for---a datum that keeps leaking while the auditor loses track of it---did not
+occur.
+
+\subsection{Is the inference threat real?}
+Our detector fires at $k^{*}=2$ hints, but is that where real inferability begins? We
+have an independent LLM play the recipient and infer the subject's withheld attribute
+from the $K$ benign fragments it received ($K=1,2,3$), scaled to \textbf{16 sensitive
+attributes} across health, finance, employment, legal, and behavioral domains
+($5$ trials each). In these saved trials, Claude (alias) infers the withheld attribute from two benign
+fragments in \textbf{100\% (16/16)} of attributes and from a \emph{single} fragment in
+\textbf{81\% (13/16)}. Other configured recipients differ: on the same 16-attribute
+set, open-weight recipients infer at $K{=}2$ in 56--69\% (Qwen2.5-7B, Llama-3.1-8B)
+and 81\% (Qwen2.5-14B) of attributes, versus 100\% for the Claude alias---inference
+differs across configured runs. Missing version provenance prevents a causal
+claim about model capability or progress. The default detector stays silent at
+$K=1$ even when the recipient returns the target attribute. This is a detection
+coverage gap, not evidence of a general no-false-alarm guarantee. A non-firing
+recipient is also not proof that the fragments are uninformative. Per-fragment
+likelihood ratios in Section~\ref{sec:auditor} permit earlier alerts for stronger
+hints, but the ratios require calibration; these observations alone do not
+validate them on unseen tasks.

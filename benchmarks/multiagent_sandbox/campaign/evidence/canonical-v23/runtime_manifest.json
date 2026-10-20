@@ -1,0 +1,49 @@
+{
+  "agentdojo_revision": "089ed468cf3ed0322acc66b0211f26d9d90dbf60",
+  "critical_source_verification": {
+    "src/agentdojo/functions_runtime.py": {
+      "sha256": "3c67f71eb8a7f15d2a15fe9595d84218c5e6868d95fd71d1cef679cd2192d0f7",
+      "matches": true
+    },
+    "src/agentdojo/task_suite/task_suite.py": {
+      "sha256": "2e69da06f7e150dd6d238c53a74845b56eebeb224e07f694e1051a6e0c6a2bc1",
+      "matches": true
+    },
+    "src/agentdojo/default_suites/v1/travel/user_tasks.py": {
+      "sha256": "757f0e28208f92c2082e016469654524cb1120ec10928ce229da15fe32f6d3ee",
+      "matches": true
+    },
+    "src/agentdojo/default_suites/v1/workspace/user_tasks.py": {
+      "sha256": "d2a550b812b7f40ee2dea17ac19d44f2dd063d103524118216b563eca6e44171",
+      "matches": true
+    },
+    "src/agentdojo/default_suites/v1/slack/user_tasks.py": {
+      "sha256": "25e43a0c58109765da090aa2f01bfb0892aaee70ca1622028074d7b49443a57b",
+      "matches": true
+    },
+    "src/agentdojo/agent_pipeline/llms/openai_llm.py": {
+      "sha256": "009a04eaa07bbacffe4de45c4c9928b76d4a74d4119214403e22728672e2bf14",
+      "matches": true
+    },
+    "src/agentdojo/agent_pipeline/agent_pipeline.py": {
+      "sha256": "ed50995dafa8e9678c214387ef366b4487fb1bdff52d47cfa2c20f975376ad48",
+      "matches": true
+    }
+  },
+  "weights": [
+    {
+      "file": "qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf",
+      "sha256": "dfce12e3862a5283ccfb88221b48480e58745165de856439950d0f22590580db"
+    },
+    {
+      "file": "qwen2.5-7b-instruct-q4_k_m-00002-of-00002.gguf",
+      "sha256": "539cf93f78e887edea1c04e2d7d8cdaca9d01dae9c9025bcb8accbe29df3d72a"
+    }
+  ],
+  "ipiguard_revision": "4e686ed2f62c135cb12564a4466daa95f3ace878",
+  "image_id": "sha256:6ff0abe276d5773f86cb605342ee39e7eb86fdf9f2dad75e022f6c76bb01ff75",
+  "host": "sss",
+  "gpu": "NVIDIA A100-SXM4-40GB",
+  "gpu_layers": 99,
+  "runtime": "llama.cpp b11624 CUDA12.8"
+}

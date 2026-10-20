@@ -1,0 +1,47 @@
+{
+  "source_sha256": "a41eb59657f787a6a26c1dfe3113b81cf0f6b2bbe46abcde052bc2f4079a9e2e",
+  "selected_keys": [
+    [
+      "meeting",
+      2,
+      0,
+      "membership_oracle"
+    ],
+    [
+      "quorum",
+      0,
+      0,
+      "membership_oracle"
+    ],
+    [
+      "quorum",
+      0,
+      1,
+      "membership_oracle"
+    ],
+    [
+      "quorum",
+      2,
+      1,
+      "membership_oracle"
+    ],
+    [
+      "meeting",
+      0,
+      0,
+      "membership_oracle"
+    ],
+    [
+      "quorum",
+      1,
+      0,
+      "membership_oracle"
+    ]
+  ],
+  "variant_order": "cyclic by selected row",
+  "source_hashes": {
+    "run.py": "0da1812a3c5791b543848df04a438360e9e90db6660b5c7a36e6ab7519445a68",
+    "paired_scale.py": "f70d7aa8c8a04aa41309136a9ca4da19e48cefd373d5bef906e0c6f2c4e50d5c",
+    "diagnose_retries.py": "b0c9e3ca4772d2d89a8f95d90b89e8fd63725548b88a0153339bec9f8d4bc149"
+  }
+}

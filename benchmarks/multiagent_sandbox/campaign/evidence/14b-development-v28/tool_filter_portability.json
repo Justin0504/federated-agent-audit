@@ -1,0 +1,27 @@
+{
+  "synthetic_only": true,
+  "not_benchmark_evidence": true,
+  "results": [
+    {
+      "variant": "no_filter_history",
+      "tool_calls": 0,
+      "expected_tool": false,
+      "completion_tokens": 17,
+      "prompt_tokens": 152
+    },
+    {
+      "variant": "filter_history",
+      "tool_calls": 0,
+      "expected_tool": false,
+      "completion_tokens": 1,
+      "prompt_tokens": 168
+    },
+    {
+      "variant": "generic_resume",
+      "tool_calls": 1,
+      "expected_tool": true,
+      "completion_tokens": 17,
+      "prompt_tokens": 189
+    }
+  ]
+}

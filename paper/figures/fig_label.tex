@@ -1,6 +1,6 @@
 % Shared, editable TikZ. Data: codex_pack/figure_data.json.
-\begin{figure}[t]\centering
-\resizebox{\linewidth}{!}{%
+\begin{widefigure}[t]\centering
+\diagramcontent{%
 \begin{tikzpicture}[x=1mm,y=1mm]
 \node[figtitle, anchor=west] at (0,65) {\texttt{Part.metadata["a2a.privacy/v1"]}};
 \draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (0,1) rectangle (59,60);
@@ -37,6 +37,15 @@
 \draw[draw=figindigo!60,line width=.5pt] (59.5,56) -- (60.5,56) -- (60.5,34.4) -- (59.5,34.4);
 \draw[draw=figindigo!60,line width=.5pt] (59.5,23.6) -- (60.5,23.6) -- (60.5,18.2) -- (59.5,18.2);
 \draw[draw=figindigo!60,line width=.5pt] (59.5,12.8) -- (60.5,12.8) -- (60.5,7.4) -- (59.5,7.4);
+
+\draw[figzone,fill=figamber!4,draw=figamber!50] (97,1) rectangle (178,60);
+\node[figtitle,anchor=west] at (101,54) {WHAT THE CENTER CAN OBSERVE};
+\node[figlabel,anchor=west] at (101,44) {Reported subject, owner and recipient links};
+\node[figlabel,anchor=west] at (101,35) {Declared categories and policy constraints};
+\node[figlabel,anchor=west] at (101,26) {Accumulated hops and inference evidence};
+\draw[figbound] (101,20) -- (174,20);
+\node[fignote,anchor=west] at (101,14) {Raw message text is excluded from the report.};
+\node[fignote,anchor=west] at (101,8) {Labels and linkability can still reveal information.};
 \end{tikzpicture}}
 \caption{A privacy label mapped to its policy checks, using the implementation's field names. Example values illustrate the schema; they are not a measured record. Subject and recipient identity join fragments; stable provenance joins relays even when their content hashes change.}\label{fig:label}
-\end{figure}
+\end{widefigure}

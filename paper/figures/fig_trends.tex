@@ -4,14 +4,19 @@
 % and indigo land at almost the same greyscale value, so hue alone would collapse
 % in a black-and-white print. Labelled in place rather than via a legend box.
 \begin{figure}[t]\centering
+\diagramcontent{%
 \begin{tikzpicture}[x=26mm, y=0.30mm]
+\path[use as bounding box] (0,-27) rectangle (7.08,165);
+\node[figtitle,anchor=west] at (0,153) {HISTORICAL CONFIGURATIONS: TWO DISTINCT MEASUREMENTS};
+\node[figtitle,anchor=west] at (4.0,116) {Interpretation boundary};
+\node[fignote,anchor=north west,align=left,text width=70mm] at (4.0,99) {Archived configuration groups, not a calibrated capability axis.\\Literal disclosure and recipient inference use different scoring procedures.\\Provider versions are incomplete. These means do not establish a causal trend or general protection.};
 
 \foreach \y in {25,50,75,100} \draw[figgrid] (0.78,\y) -- (3.5,\y);
 \draw[figaxis] (0.78,0) -- (3.62,0);
 \draw[figaxis] (0.78,0) -- (0.78,122) node[figaxislabel, above] {\%};
 \foreach \y in {0,50,100}
   \draw[figtick] (0.74,\y) -- (0.78,\y) node[figticklabel, left] {\y};
-\foreach \x/\l in {1/{small\\7--8B}, 2/{mid\\14B}, 3/{frontier\\Opus 4.8}}
+\foreach \x/\l in {1/{small\\7--8B}, 2/{mid\\14B}, 3/{API\\Claude alias}}
   \node[figticklabel, align=center, anchor=north] at (\x,-5) {\l};
 
 % explicit over-sharing: FALLS with capability
@@ -34,11 +39,12 @@
   {over-sharing\\(explicit)};
 \node[figseriestag=figindigo, anchor=east] at (2.60,114)
   {inference @ $k^{*}{=}2$\\(implicit)};
-\end{tikzpicture}
-\caption{Two opposing trends across recipient capability (tier means; per-model
-values in Table~\ref{tab:wild} and \S\ref{sec:eval}). As recipients get stronger,
-\emph{explicit} over-sharing falls while \emph{implicit} inference rises---neither
-end is safe to trust, and the center-blind auditor catches both at zero content
-egress.}
+\end{tikzpicture}}
+\caption{Historical configuration-group means for literal disclosure and
+inference at the assumed $k^{*}=2$ threshold. The archived groups show opposing
+patterns in these measurements; group membership does not isolate capability.
+Provider-version uncertainty and different scoring tasks prevent general
+model-ranking or safety conclusions. See Table~\ref{tab:wild} and the historical
+measurement appendix for denominators and provenance limits.}
 \label{fig:trends}
 \end{figure}

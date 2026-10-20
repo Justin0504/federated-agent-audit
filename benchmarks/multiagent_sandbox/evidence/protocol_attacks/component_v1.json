@@ -1,0 +1,69 @@
+{
+  "summary": {
+    "pairs": 4,
+    "episodes": 32,
+    "arms": {
+      "exact_redaction": {
+        "n": 8,
+        "utility": 6,
+        "joint": 0,
+        "mean_additional_bits": 7.0,
+        "mean_reconstruction": 1.0,
+        "different_transcript_pairs": 4,
+        "format_errors": 0,
+        "output_caps": 0
+      },
+      "structured_release": {
+        "n": 8,
+        "utility": 6,
+        "joint": 0,
+        "mean_additional_bits": 7.0,
+        "mean_reconstruction": 1.0,
+        "different_transcript_pairs": 4,
+        "format_errors": 0,
+        "output_caps": 0
+      },
+      "membership_oracle": {
+        "n": 8,
+        "utility": 6,
+        "joint": 0,
+        "mean_additional_bits": 7.0,
+        "mean_reconstruction": 1.0,
+        "different_transcript_pairs": 4,
+        "format_errors": 0,
+        "output_caps": 0
+      },
+      "task_bound": {
+        "n": 8,
+        "utility": 8,
+        "joint": 8,
+        "mean_additional_bits": 0.0,
+        "mean_reconstruction": 0.125,
+        "different_transcript_pairs": 0,
+        "format_errors": 0,
+        "output_caps": 0
+      }
+    }
+  },
+  "protocol": {
+    "seed": 20261016,
+    "pairs": 4,
+    "budget": 8,
+    "source_sha256": "9a03ab7203cb25985d0a0e080002cd9ee40f1c0c98792f4666e3e7bd0b3d26e5",
+    "inference_source_sha256": "7192babe1bd0b3cee90bac37cd00741e0ddd2e8236e37a23cdd45a73647bcc42",
+    "arms": [
+      "exact_redaction",
+      "structured_release",
+      "membership_oracle",
+      "task_bound"
+    ],
+    "live_roles": "coordinator only; deterministic member policy executors and adaptive attacker",
+    "utility_scope": "receipt execution, not open-ended planning",
+    "assumption": "trusted broker, uniform conditional finite prior, attacker knows other calendars",
+    "excluded_channels": [
+      "timing",
+      "network packet sizes",
+      "host compromise"
+    ]
+  }
+}

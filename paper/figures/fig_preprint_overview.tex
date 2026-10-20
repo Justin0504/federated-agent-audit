@@ -1,0 +1,80 @@
+% Schematic audit topology and three disjoint, denominator-labelled studies.
+\begin{center}
+\diagramcontent{%
+\begin{tikzpicture}[x=1mm,y=1mm]
+\path[use as bounding box] (0,0) rectangle (184,76);
+\node[figtitle,anchor=west] at (1,73) {Multi-agent, center-blind auditing};
+\node[figtitle,anchor=west] at (96,73) {Mechanism, replay and live evidence};
+\draw[figzone,fill=figindigo!3,draw=figindigo!30] (1,29) rectangle (91,68);
+\node[fignote,anchor=west] at (4,64) {Private agent runtimes};
+\draw[figzone,fill=white] (4,48) rectangle (35,60);
+\node at (8,55) {\semanticicon{schedule_agent}{6mm}};
+\node[figlabel,anchor=west] at (13,56) {Schedule agent};
+\node[figlabel,anchor=west] at (13,51.5) {Tuesday visits};
+\draw[figzone,fill=white] (4,32) rectangle (35,44);
+\node at (8,39) {\semanticicon{location_agent}{6mm}};
+\node[figlabel,anchor=west] at (13,40) {Location agent};
+\node[figlabel,anchor=west] at (13,35.5) {Oncology clinic};
+\draw[figflow] (35,54)--(40,54);
+\draw[figflow] (35,38)--(40,38);
+\draw[figzone,fill=white] (40,32) rectangle (63,60);
+\node at (45,55) {\semanticicon{label_report}{6mm}};
+\node[figlabel,anchor=west] at (49,55) {Labels};
+\node[figmono,align=left,anchor=west] at (42,43) {schedule\\health hint\\subject\\owner\\hash};
+\draw[figbound] (66,31)--(66,61);
+\draw[figcross] (63,47)--(71,47);
+\node at (80,55) {\semanticicon{audit_graph}{7mm}};
+\node[figlabel,align=center] at (80,39.5) {Disclosure\\Purpose\\Hops\\Inference};
+\node[fignote,anchor=east] at (88,64) {Central audit};
+% Local raw text retention is a data-path property, not semantic secrecy.
+\draw[figzone,fill=figrose!3,draw=figrose!25] (1,20) rectangle (91,26);
+\node[figlabel] at (46,23) {Raw text stays local; reports still reveal metadata.};
+\draw[figzone,fill=figamber!4,draw=figamber!35] (1,1) rectangle (91,17);
+\node at (7,10) {\semanticicon{versioned_action}{6mm}};
+\node[figlabel,align=left,anchor=west] at (12,10) {Proposed action\\+ source version};
+\draw[figflow] (38,10)--(43,10);
+\node at (48,10) {\semanticicon{release_check}{7mm}};
+\node[figlabel,align=left,anchor=west] at (54,11) {Authority / scope\\Freshness / support};
+\node[fignote,anchor=west] at (54,4) {Allow / deny / unknown};
+% Paired bars: exact rates, each metric has its own stated denominator.
+\node[figtitle,anchor=west] at (96,67.5) {20 authored tasks};
+\fill[figslate!55] (144,66.8) rectangle (147,68.2);
+\node[fignote,anchor=west] at (148,67.5) {base};
+\fill[figemerald] (165,66.8) rectangle (168,68.2);
+\node[fignote,anchor=west] at (169,67.5) {full gate};
+\foreach \lab/\before/\after/\den/\yy in {Benign success/8/8/8/61,Unsupported/4/0/20/55}{
+\node[figlabel,anchor=west] at (96,\yy) {\lab};
+\draw[figgrid] (124,\yy-2)--(161,\yy-2);
+\pgfmathsetmacro{\endbefore}{124+37*\before/\den}
+\pgfmathsetmacro{\endafter}{124+37*\after/\den}
+\fill[figslate!55] (124,\yy+.1) rectangle (\endbefore,\yy+1.4);
+\ifnum\after>0\fill[figemerald] (124,\yy-1.6) rectangle (\endafter,\yy-.3);\else\draw[figemerald,line width=.8pt] (124,\yy-1.6)--(124,\yy-.3);\fi
+\node[figlabel,anchor=east] at (184,\yy) {\before$\to$\after\,/\den};
+}
+\draw[figgrid] (96,51)--(184,51);
+\node[figtitle,anchor=west] at (96,47.5) {1,132 archived traces};
+\node[fignote,anchor=east] at (184,47.5) {base $\to$ binding};
+\foreach \lab/\before/\after/\den/\yy in {Native attack/165/0/808/41,Clean success/198/179/324/35}{
+\node[figlabel,anchor=west] at (96,\yy) {\lab};
+\draw[figgrid] (124,\yy-2)--(161,\yy-2);
+\pgfmathsetmacro{\endbefore}{124+37*\before/\den}
+\pgfmathsetmacro{\endafter}{124+37*\after/\den}
+\fill[figslate!55] (124,\yy+.1) rectangle (\endbefore,\yy+1.4);
+\ifnum\after>0\fill[figamber] (124,\yy-1.6) rectangle (\endafter,\yy-.3);\else\draw[figamber,line width=.8pt] (124,\yy-1.6)--(124,\yy-.3);\fi
+\node[figlabel,anchor=east] at (184,\yy) {\before$\to$\after\,/\den};
+}
+\draw[figgrid] (96,31)--(184,31);
+\node[figtitle,anchor=west] at (96,28) {32 live tasks $\times$ 8 methods};
+\node[fignote,anchor=east] at (184,28) {completed /32};
+\foreach \lab/\n/\yy/\bc in {No gate/10/23/figslate,Gate + replan/10/20/figemerald,Scope + replan/10/17/figemerald,Receipt + replan/9/14/figemerald,Deny egress/8/11/figamber,Tool Filter/0/8/figindigo,IPIGuard/8/5/figindigo,Filter + resume/12/2/figindigo}{
+\node[figlabel,anchor=west] at (96,\yy) {\lab};
+\fill[figwash] (127,\yy-.8) rectangle (177,\yy+.8);
+\pgfmathsetmacro{\barend}{127+50*\n/32}
+\ifnum\n>0\fill[\bc] (127,\yy-.8) rectangle (\barend,\yy+.8);\fi
+\node[figlabel,anchor=east] at (184,\yy) {\n};
+}
+\end{tikzpicture}}
+\end{center}
+\refstepcounter{figure}\label{fig:preprint-overview}
+{\small\noindent\textbf{Figure~\thefigure: Local evidence and measured tradeoffs.}
+Left: illustrative agents retain raw text locally and export labels; release checking is separate. Right: bars use the printed denominators; grey is the reference. Replay stops at first block; live runs use one 14B model/seed. Studies are separate, and metadata can leak. Native attack failure is not semantic privacy (Section~\ref{sec:eval}).\par}

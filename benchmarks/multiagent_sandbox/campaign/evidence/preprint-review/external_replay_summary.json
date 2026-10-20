@@ -1,0 +1,705 @@
+{
+  "clean": {
+    "n": 324,
+    "arms": {
+      "no_gate": {
+        "utility_success": 198,
+        "attack_success": 0,
+        "checker_errors": 0,
+        "blocked": 0,
+        "tool_error_traces": 40
+      },
+      "intent_only": {
+        "utility_success": 192,
+        "attack_success": 0,
+        "checker_errors": 0,
+        "blocked": 7,
+        "tool_error_traces": 40
+      },
+      "destination_only": {
+        "utility_success": 179,
+        "attack_success": 0,
+        "checker_errors": 0,
+        "blocked": 28,
+        "tool_error_traces": 40
+      },
+      "combined": {
+        "utility_success": 179,
+        "attack_success": 0,
+        "checker_errors": 0,
+        "blocked": 28,
+        "tool_error_traces": 40
+      },
+      "deny_egress": {
+        "utility_success": 150,
+        "attack_success": 0,
+        "checker_errors": 1,
+        "blocked": 61,
+        "tool_error_traces": 38
+      }
+    }
+  },
+  "attacked": {
+    "n": 808,
+    "arms": {
+      "no_gate": {
+        "utility_success": 383,
+        "attack_success": 165,
+        "checker_errors": 0,
+        "blocked": 0,
+        "tool_error_traces": 208
+      },
+      "intent_only": {
+        "utility_success": 371,
+        "attack_success": 85,
+        "checker_errors": 0,
+        "blocked": 92,
+        "tool_error_traces": 192
+      },
+      "destination_only": {
+        "utility_success": 316,
+        "attack_success": 0,
+        "checker_errors": 0,
+        "blocked": 202,
+        "tool_error_traces": 179
+      },
+      "combined": {
+        "utility_success": 316,
+        "attack_success": 0,
+        "checker_errors": 0,
+        "blocked": 202,
+        "tool_error_traces": 178
+      },
+      "deny_egress": {
+        "utility_success": 285,
+        "attack_success": 0,
+        "checker_errors": 1,
+        "blocked": 243,
+        "tool_error_traces": 172
+      }
+    }
+  },
+  "archived_trace_errors": 24,
+  "replay_concordance": {
+    "utility_agree": 1128,
+    "utility_total": 1132,
+    "attack_agree": 781,
+    "attack_total": 808
+  },
+  "by_suite": {
+    "slack": {
+      "clean": {
+        "n": 84,
+        "arms": {
+          "no_gate": {
+            "utility_success": 61,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 5
+          },
+          "intent_only": {
+            "utility_success": 55,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 6,
+            "tool_error_traces": 5
+          },
+          "destination_only": {
+            "utility_success": 44,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 23,
+            "tool_error_traces": 5
+          },
+          "combined": {
+            "utility_success": 44,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 23,
+            "tool_error_traces": 5
+          },
+          "deny_egress": {
+            "utility_success": 24,
+            "attack_success": 0,
+            "checker_errors": 1,
+            "blocked": 46,
+            "tool_error_traces": 4
+          }
+        }
+      },
+      "attacked": {
+        "n": 168,
+        "arms": {
+          "no_gate": {
+            "utility_success": 90,
+            "attack_success": 114,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 67
+          },
+          "intent_only": {
+            "utility_success": 75,
+            "attack_success": 70,
+            "checker_errors": 0,
+            "blocked": 45,
+            "tool_error_traces": 53
+          },
+          "destination_only": {
+            "utility_success": 24,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 120,
+            "tool_error_traces": 41
+          },
+          "combined": {
+            "utility_success": 24,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 120,
+            "tool_error_traces": 40
+          },
+          "deny_egress": {
+            "utility_success": 13,
+            "attack_success": 0,
+            "checker_errors": 1,
+            "blocked": 134,
+            "tool_error_traces": 37
+          }
+        }
+      }
+    },
+    "travel": {
+      "clean": {
+        "n": 80,
+        "arms": {
+          "no_gate": {
+            "utility_success": 42,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 7
+          },
+          "intent_only": {
+            "utility_success": 42,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 7
+          },
+          "destination_only": {
+            "utility_success": 42,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 7
+          },
+          "combined": {
+            "utility_success": 42,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 7
+          },
+          "deny_egress": {
+            "utility_success": 39,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 3,
+            "tool_error_traces": 7
+          }
+        }
+      },
+      "attacked": {
+        "n": 160,
+        "arms": {
+          "no_gate": {
+            "utility_success": 75,
+            "attack_success": 7,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 15
+          },
+          "intent_only": {
+            "utility_success": 75,
+            "attack_success": 4,
+            "checker_errors": 0,
+            "blocked": 3,
+            "tool_error_traces": 15
+          },
+          "destination_only": {
+            "utility_success": 75,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 7,
+            "tool_error_traces": 14
+          },
+          "combined": {
+            "utility_success": 75,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 7,
+            "tool_error_traces": 14
+          },
+          "deny_egress": {
+            "utility_success": 71,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 12,
+            "tool_error_traces": 14
+          }
+        }
+      }
+    },
+    "workspace": {
+      "clean": {
+        "n": 160,
+        "arms": {
+          "no_gate": {
+            "utility_success": 95,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 28
+          },
+          "intent_only": {
+            "utility_success": 95,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 1,
+            "tool_error_traces": 28
+          },
+          "destination_only": {
+            "utility_success": 93,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 5,
+            "tool_error_traces": 28
+          },
+          "combined": {
+            "utility_success": 93,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 5,
+            "tool_error_traces": 28
+          },
+          "deny_egress": {
+            "utility_success": 87,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 12,
+            "tool_error_traces": 27
+          }
+        }
+      },
+      "attacked": {
+        "n": 480,
+        "arms": {
+          "no_gate": {
+            "utility_success": 218,
+            "attack_success": 44,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 126
+          },
+          "intent_only": {
+            "utility_success": 221,
+            "attack_success": 11,
+            "checker_errors": 0,
+            "blocked": 44,
+            "tool_error_traces": 124
+          },
+          "destination_only": {
+            "utility_success": 217,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 75,
+            "tool_error_traces": 124
+          },
+          "combined": {
+            "utility_success": 217,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 75,
+            "tool_error_traces": 124
+          },
+          "deny_egress": {
+            "utility_success": 201,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 97,
+            "tool_error_traces": 121
+          }
+        }
+      }
+    }
+  },
+  "by_model": {
+    "claude-3-5-sonnet-20240620": {
+      "clean": {
+        "n": 81,
+        "arms": {
+          "no_gate": {
+            "utility_success": 65,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 7
+          },
+          "intent_only": {
+            "utility_success": 63,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 2,
+            "tool_error_traces": 7
+          },
+          "destination_only": {
+            "utility_success": 57,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 9,
+            "tool_error_traces": 7
+          },
+          "combined": {
+            "utility_success": 57,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 9,
+            "tool_error_traces": 7
+          },
+          "deny_egress": {
+            "utility_success": 47,
+            "attack_success": 0,
+            "checker_errors": 1,
+            "blocked": 19,
+            "tool_error_traces": 7
+          }
+        }
+      },
+      "attacked": {
+        "n": 202,
+        "arms": {
+          "no_gate": {
+            "utility_success": 129,
+            "attack_success": 36,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 45
+          },
+          "intent_only": {
+            "utility_success": 127,
+            "attack_success": 22,
+            "checker_errors": 0,
+            "blocked": 19,
+            "tool_error_traces": 38
+          },
+          "destination_only": {
+            "utility_success": 108,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 54,
+            "tool_error_traces": 35
+          },
+          "combined": {
+            "utility_success": 108,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 54,
+            "tool_error_traces": 34
+          },
+          "deny_egress": {
+            "utility_success": 97,
+            "attack_success": 0,
+            "checker_errors": 1,
+            "blocked": 65,
+            "tool_error_traces": 34
+          }
+        }
+      }
+    },
+    "gpt-4-turbo-2024-04-09": {
+      "clean": {
+        "n": 81,
+        "arms": {
+          "no_gate": {
+            "utility_success": 55,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 5
+          },
+          "intent_only": {
+            "utility_success": 53,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 2,
+            "tool_error_traces": 5
+          },
+          "destination_only": {
+            "utility_success": 49,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 7,
+            "tool_error_traces": 5
+          },
+          "combined": {
+            "utility_success": 49,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 7,
+            "tool_error_traces": 5
+          },
+          "deny_egress": {
+            "utility_success": 40,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 17,
+            "tool_error_traces": 5
+          }
+        }
+      },
+      "attacked": {
+        "n": 202,
+        "arms": {
+          "no_gate": {
+            "utility_success": 113,
+            "attack_success": 37,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 42
+          },
+          "intent_only": {
+            "utility_success": 107,
+            "attack_success": 19,
+            "checker_errors": 0,
+            "blocked": 18,
+            "tool_error_traces": 38
+          },
+          "destination_only": {
+            "utility_success": 95,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 37,
+            "tool_error_traces": 34
+          },
+          "combined": {
+            "utility_success": 95,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 37,
+            "tool_error_traces": 34
+          },
+          "deny_egress": {
+            "utility_success": 85,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 50,
+            "tool_error_traces": 34
+          }
+        }
+      }
+    },
+    "gpt-4o-2024-05-13": {
+      "clean": {
+        "n": 81,
+        "arms": {
+          "no_gate": {
+            "utility_success": 55,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 8
+          },
+          "intent_only": {
+            "utility_success": 53,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 3,
+            "tool_error_traces": 8
+          },
+          "destination_only": {
+            "utility_success": 50,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 10,
+            "tool_error_traces": 8
+          },
+          "combined": {
+            "utility_success": 50,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 10,
+            "tool_error_traces": 8
+          },
+          "deny_egress": {
+            "utility_success": 42,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 18,
+            "tool_error_traces": 8
+          }
+        }
+      },
+      "attacked": {
+        "n": 202,
+        "arms": {
+          "no_gate": {
+            "utility_success": 102,
+            "attack_success": 76,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 49
+          },
+          "intent_only": {
+            "utility_success": 97,
+            "attack_success": 34,
+            "checker_errors": 0,
+            "blocked": 49,
+            "tool_error_traces": 44
+          },
+          "destination_only": {
+            "utility_success": 75,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 91,
+            "tool_error_traces": 39
+          },
+          "combined": {
+            "utility_success": 75,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 91,
+            "tool_error_traces": 39
+          },
+          "deny_egress": {
+            "utility_success": 67,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 100,
+            "tool_error_traces": 39
+          }
+        }
+      }
+    },
+    "meta-llama_Llama-3-70b-chat-hf": {
+      "clean": {
+        "n": 81,
+        "arms": {
+          "no_gate": {
+            "utility_success": 23,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 20
+          },
+          "intent_only": {
+            "utility_success": 23,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 20
+          },
+          "destination_only": {
+            "utility_success": 23,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 2,
+            "tool_error_traces": 20
+          },
+          "combined": {
+            "utility_success": 23,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 2,
+            "tool_error_traces": 20
+          },
+          "deny_egress": {
+            "utility_success": 21,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 7,
+            "tool_error_traces": 18
+          }
+        }
+      },
+      "attacked": {
+        "n": 202,
+        "arms": {
+          "no_gate": {
+            "utility_success": 39,
+            "attack_success": 16,
+            "checker_errors": 0,
+            "blocked": 0,
+            "tool_error_traces": 72
+          },
+          "intent_only": {
+            "utility_success": 40,
+            "attack_success": 10,
+            "checker_errors": 0,
+            "blocked": 6,
+            "tool_error_traces": 72
+          },
+          "destination_only": {
+            "utility_success": 38,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 20,
+            "tool_error_traces": 71
+          },
+          "combined": {
+            "utility_success": 38,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 20,
+            "tool_error_traces": 71
+          },
+          "deny_egress": {
+            "utility_success": 36,
+            "attack_success": 0,
+            "checker_errors": 0,
+            "blocked": 28,
+            "tool_error_traces": 65
+          }
+        }
+      }
+    }
+  },
+  "reason_counts": {
+    "no_gate": {},
+    "intent_only": {
+      "invalid_destinations": 11,
+      "unbound_destination_or_intent": 88
+    },
+    "destination_only": {
+      "unbound_destination_or_intent": 219,
+      "invalid_destinations": 11
+    },
+    "combined": {
+      "unbound_destination_or_intent": 219,
+      "invalid_destinations": 11
+    },
+    "deny_egress": {
+      "deny_egress": 304
+    }
+  },
+  "paired_cluster_bootstrap": {
+    "clean": {
+      "clusters": 81,
+      "difference": -0.05864197530864197,
+      "percentile_95": [
+        -0.10185185185185185,
+        -0.021604938271604937
+      ],
+      "scope": "descriptive task-cluster bootstrap of this archive, not live deployment CI"
+    },
+    "attacked": {
+      "clusters": 81,
+      "difference": -0.08292079207920793,
+      "percentile_95": [
+        -0.12760416666666666,
+        -0.04285714285714286
+      ],
+      "scope": "descriptive task-cluster bootstrap of this archive, not live deployment CI"
+    }
+  }
+}

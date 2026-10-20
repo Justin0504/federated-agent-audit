@@ -1,34 +1,64 @@
-% Shared, editable TikZ. Data: codex_pack/figure_data.json.
+% Editable architecture grounded in the existing worked example; not a new trace.
 \begin{widefigure}[t]\centering
-\resizebox{\linewidth}{!}{%
+\diagramcontent{%
 \begin{tikzpicture}[x=1mm,y=1mm]
-\node[figtitle, anchor=west] at (0,55) {BUSINESS PLANE};
-\node[figlabel, anchor=center] at (5,43) {\icon{agent}{ink}{5mm}};
-\node[figtitle, anchor=west] at (12,43) {Sending agent};
-\draw[figflow,draw=figrose,line width=1pt] (48,43) -- (129,43);
-\node[figlabel,text=figrose, anchor=south] at (88,46) {A2A message content};
-\node[figlabel, anchor=center] at (136,43) {\icon{agent}{ink}{5mm}};
-\node[figtitle, anchor=west] at (143,43) {Recipient};
-\node[figtitle, anchor=west] at (0,29) {AUDIT PLANE};
-\draw[draw=figindigo!50, fill=figindigo!3, rounded corners=1mm, line width=.6pt] (0,0) rectangle (72,23);
-\node[figlabel, anchor=center] at (6,17) {\icon{tag}{indigo}{4mm}};
-\node[figtitle, anchor=west] at (12,17) {Local observation};
-\node[figlabel, anchor=west] at (4,10) {Content is input to tagging and hashing.};
-\node[figlabel, anchor=west] at (4,4) {Output: label, hash and routing principals.};
-\draw[figflow,draw=figrose] (37,38) -- (37,24);
-\draw[figbound] (89,-3) -- (89,26);
-\node[fignote, anchor=south] at (89,27) {report boundary};
-\draw[figcross] (73,13) -- (104,13);
-\node[fignote, anchor=south] at (88,15) {metadata};
-\draw[figstop] (73,3) -- (86,3);
-\draw[figstop] (86,1) -- (86,5);
-\node[fignote,text=figrose, anchor=north] at (87,-5) {raw text stops};
-\draw[draw=figemerald!50, fill=figemerald!3, rounded corners=1mm, line width=.6pt] (105,0) rectangle (178,23);
-\node[figlabel, anchor=center] at (111,17) {\icon{detector}{emerald}{4mm}};
-\node[figtitle, anchor=west] at (117,17) {Metadata graph audit};
-\node[figlabel, anchor=west] at (109,10) {Disclosure / purpose / hop / inference};
-\node[figlabel, anchor=west] at (109,4) {Violations refer to edges and subjects.};
-\node[fignote, anchor=west] at (0,-13) {No raw-text field in audit reports. Labels, linkability and hash guessing remain privacy-relevant.};
+\node[figtitle,anchor=west] at (0,93) {ONE HANDOFF, TWO PATHS: BUSINESS CONTENT AND AUDIT EVIDENCE};
+\foreach \x/\w/\c in {0/59/figamber,64/59/figindigo,129/49/figemerald}{
+\draw[figzone,fill=\c!4,draw=\c!45] (\x,25) rectangle (\x+\w,88);}
+\node[figtitle,anchor=west] at (3,83) {A\quad Private runtime};
+\node[figtitle,anchor=west] at (67,83) {B\quad Evidence extraction};
+\node[figtitle,anchor=west] at (132,83) {C\quad Central checks};
+% Concrete local message artifacts, from the paper's existing worked example.
+\node at (7,73) {\semanticicon{schedule_agent}{7mm}};
+\node[figlabel,anchor=west] at (13,75) {``Every Tuesday afternoon''};
+\node[fignote,anchor=west] at (13,70) {standing appointment, 8 weeks};
+\node at (7,61) {\semanticicon{location_agent}{7mm}};
+\node[figlabel,anchor=west] at (13,63) {``Near the oncology center''};
+\node[fignote,anchor=west] at (13,58) {a second message, same subject};
+\draw[figgrid] (3,53)--(56,53);
+\node at (8,44) {\semanticicon{runtime_agent}{7mm}};
+\node[figlabel,anchor=west] at (15,47) {Agent + tools + context};
+\node[fignote,anchor=west] at (15,41) {Policy stays outside the model};
+\node[figchip=figamber,anchor=west] at (3,31) {Raw messages remain local};
+% Actual field names and retained example values.
+\node[figchip=figindigo] at (93,74) {Lexical / LLM tagger};
+\draw[figflow] (93,70)--(93,65);
+\draw[figzone,fill=white] (67,29) rectangle (120,64);
+\node[figmono,anchor=west] at (70,60) {Part.metadata / privacy label};
+\node[figmono,anchor=west] at (70,54) {category: schedule};
+\node[figmono,anchor=west] at (70,48) {inferred: health (+ location)};
+\node[figmono,anchor=west] at (70,42) {sensitivity: 4};
+\node[fignote,anchor=west] at (70,36) {+ subject / owner / recipient};
+\node[fignote,anchor=west] at (70,31) {+ hash / provenance / report MAC};
+\draw[figflow] (59,74)--(64,74);
+\draw[figbound] (126,25)--(126,88);
+\draw[figcross] (123,56)--(129,56);
+% Named nodes replace semantically empty r1/r2 graph nodes.
+\node[circle,draw=figamber,fill=figamber!10,minimum size=6mm,font=\scriptsize] (s) at (140,71) {$s$};
+\node[circle,draw=figindigo,fill=figindigo!8,minimum size=6mm,font=\scriptsize] (r) at (165,71) {$r$};
+\draw[figflow,bend left=25] (s) to node[above,font=\scriptsize] {$m_1$} (r);
+\draw[figflow,bend right=25] (s) to node[below,font=\scriptsize] {$m_2$} (r);
+\node[fignote] at (140,63) {subject};\node[fignote] at (165,63) {recipient};
+\node[figlabel,anchor=west] at (132,55) {Check across linked reports};
+\node[figchip=figrose,minimum width=20mm] at (141,47) {disclosure};
+\node[figchip=figamber,minimum width=20mm] at (166,47) {purpose};
+\node[figchip=figindigo,minimum width=20mm] at (141,38) {hop / TTL};
+\node[figchip=figemerald,minimum width=20mm] at (166,38) {inference};
+\node[fignote,align=center] at (153,29) {Reports are not ground truth};
+% Separate implemented release mechanism, not a claim of semantic enforcement.
+\draw[figzone,fill=figrose!3] (0,3) rectangle (178,21);
+\node at (7,12) {\semanticicon{versioned_action}{7mm}};
+\node[figlabel,anchor=west] at (14,15) {Proposed action};
+\node[fignote,anchor=west] at (14,9) {source / version / field / value};
+\draw[figflow,draw=figrose] (58,12)--(67,12);
+\node at (74,12) {\semanticicon{release_check}{8mm}};
+\node[figlabel,anchor=west] at (81,15) {Trusted release check};
+\node[fignote,anchor=west] at (81,9) {scope / freshness / exact support};
+\draw[figflow,draw=figrose] (133,12)--(141,12);
+\node[figlabel,align=center] at (159,12) {allow / deny / unknown};
+\node[fignote,anchor=west] at (0,-3) {Model coverage is study-specific (Table 1):};
+\node[figlabel,anchor=west] at (70,-3) {\modellogo{qwen}live / authored};
+\node[figlabel,anchor=west] at (114,-3) {\modellogo{openai}\modellogo{claude}\modellogo{meta}archived replay};
 \end{tikzpicture}}
-\caption{Separate business and audit paths. Agent-to-agent messages carry content; the report-only audit path carries locally derived metadata. The center checks policy over that graph without receiving message text. What crosses is bounded by Lemma~\ref{lem:blind}: a hash and $O(\log)$ bits of label, which cannot be inverted to content.}\label{fig:arch}
+\caption{Concrete messages anchor the architecture; they illustrate the existing worked example in Figure~\ref{fig:desens}, not a new execution. The center links locally derived reports without raw text. A separate structured release mechanism checks supported actions. Logos denote study-specific backends or archived trace sources, not a shared deployment. Labels can be wrong and metadata can leak; neither an authenticated report nor a missing alert establishes semantic confidentiality.}\label{fig:arch}
 \end{widefigure}

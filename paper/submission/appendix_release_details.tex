@@ -1,0 +1,396 @@
+\section{From observed failures to evidence-aware auditing}
+\label{app:release-details}
+The experiments motivate a narrower question than whether a hand-off is safe:
+\emph{which claim can the center justify from the evidence it actually receives?}
+We derive a design from the observed failures below. A restricted structured-output
+gate is implemented and tested on authored cases; the broader semantic composition
+remains proposed. We distinguish these two levels throughout.
+
+\paragraph{What recent methods contribute.}
+FlowSeal~\cite{flowseal2026} places mandatory release checks outside the agent's
+conversation and isolates semantic declassification. FAVA~\cite{fava2026}
+separates model-produced permission representations from deterministic authorization;
+its guarantee begins after evidence has been lowered into its graph.
+CaMeL~\cite{camel2025} uses capabilities and data-flow control while explicitly
+excluding some text-to-text corruption from its protection. We adopt the separation
+of proposal and authority, rather than claiming it as new. Our narrower research
+question concerns which release claims a content-blind center can justify when
+policy, identity, support, or event evidence is incomplete. We do not reproduce
+these systems or claim an empirical advantage over them.
+
+\subsection{Authorization, relevance, and support are separate claims}
+The deployed follow-up used four development tasks in a $2\times2$ design:
+broad versus case-scoped retrieval, and snapshot versus delivery-time permission
+checks (Appendix~\ref{app:jetstream}). All 16 episodes completed, with 32 model
+calls and no token-cap hits. Both snapshot variants exposed the revoked Birch
+reference. Delivery-time checks withheld that record, but broad retrieval still
+let the answer substitute Acorn's reference for Birch's. Case-scoped retrieval
+removed that particular substitution in the paired episode, yet the answer
+asserted that Birch's refund ``has not been processed yet,'' which the available
+evidence did not establish. These are observations on reused development cases,
+not estimates of population-level error rates.
+
+Three predicates are therefore needed. $A$ asks whether the recipient may access
+the resource at delivery; $R$ asks whether it belongs to the requested case and
+purpose; $S$ asks whether the generated claim is supported by the permitted
+evidence. Authorized context can be irrelevant, and relevant authorized context
+does not make every generated assertion true. A check of $A$ must not be reported
+as a check of $A\land R\land S$. A missing record also establishes only lack of
+available evidence, not a negative fact about the world.
+
+\subsection{Make the scope of a verdict explicit}
+For an event $e$, let $E_e$ be the available evidence and let
+$\Omega(E_e;\mathcal{T})$ denote the nonempty set of executions consistent with
+that evidence under stated trust assumptions $\mathcal{T}$. For one specified
+violation predicate $V$ over completed disclosures, the ideal verdict is
+\[
+\widehat V(E_e)=
+\begin{cases}
+\textsf{violation}, & \forall w\in\Omega(E_e;\mathcal{T}),\ V(w)=1,\\
+\textsf{no violation in scope}, & \forall w\in\Omega(E_e;\mathcal{T}),\ V(w)=0,\\
+\textsf{unknown}, & \text{otherwise}.
+\end{cases}
+\]
+Inconsistent evidence, represented by an empty set, also yields unknown and an
+integrity alert; it must not make either universal condition vacuously true.
+If the actual execution belongs to this set, a definite verdict is sound by
+definition. This observation is a specification, not a proof that our current
+verifier constructs the set correctly. Its difficulty lies in establishing the
+trust assumptions and evidence coverage. The current software uses bounded
+checks and heuristic semantic labels, not a general possible-executions solver.
+
+Each response should name its predicate, event or time-window scope, supporting
+evidence, and missing obligations. The absence of a semantic alert cannot justify
+an authorization claim, or vice versa. Likewise, a blocked attempt is a denied
+action rather than a completed disclosure. A pre-execution gate may map unknown
+to deferral, redaction, or refusal according to risk; that operational choice
+does not change unknown into evidence of a violation.
+
+\subsection{Bind policy evidence to the release boundary}
+A proposed release receipt binds the workspace, event, resource version,
+recipient, purpose, policy epoch, and release decision. A trusted authority must
+establish the epoch effective at that release, not merely return its current
+epoch when an old event is audited. A policy check and the corresponding context
+release must share a defined serialization boundary. Otherwise a revocation
+between check and release recreates the stale-snapshot failure.
+
+Our database harness implements a transactional check at its recorded context
+release boundary. It does not prove revocation of information already present in
+a model's context or memory. The experimental receipt verifier binds identifiers
+and an epoch, but does not yet implement all the proposed purpose, resource-version,
+and semantic-support obligations. Its authoritative epoch is supplied by the
+evaluation fixture. A stale authority and an authorized issuer signing a false
+decision remain counterexamples. Authentication alone cannot eliminate either.
+
+\subsection{Check semantic support locally and disclose the uncertainty}
+At the owner boundary, a proposed support checker decomposes a generated answer
+into claims and relates each claim to authorized evidence for the requested case.
+An unsupported claim triggers revision or a statement that the information is
+unavailable. The center receives only a scoped support result, opaque provenance
+references, checker version, and uncertainty status. Raw claims and supporting
+passages remain local. This is a proposed mechanism: the current online harness
+reports generated-output observations as unknown, rather than pretending to
+verify their semantics.
+
+The additional checker is fallible and creates a new trust dependency. It must
+be tested on omissions, paraphrases, plausible but unsupported assertions, and
+contradictory records. Self-reported model confidence is not a calibrated error
+bound. The center can verify a checker's identity and evidence bindings without
+being able to verify the judgment itself. Privacy labels also need a separate
+test: a statement can be fully supported and still disclose a prohibited fact.
+
+
+\subsection{A restricted, implemented release mechanism}
+\label{app:structured-release}
+To test the separation without treating a second LLM as an oracle, we implement
+an experimental structured-output gate. The model proposes only tuples
+$(\mathrm{source},\mathrm{version},\mathrm{field},\mathrm{value})$. A trusted local
+adapter supplies the task's workspace, case, recipient and purpose, source fields,
+and current authorization state. Model-proposed permission overrides and extra
+free-text fields are rejected. The full gate requires current recipient access,
+matching workspace and case, an allowed field-purpose pair, matching source
+version, and exact equality to the corresponding source value. Missing authority
+or support produces unknown; an established scope or permission mismatch produces
+deny. The entire proposal is withheld if any tuple fails.
+
+Only validated fields reach a fixed renderer; model-written prose is never
+appended afterward. Thus this implementation prevents unsupported field substitution
+within its admitted representation. It does not solve natural-language entailment.
+A source may itself be wrong, equivalent paraphrases are rejected, and releasing
+several individually permitted fields can enable inference outside these checks.
+The adapter is a trusted input, and production use would additionally require
+serializing the check with release and mediating every output channel. The core gate is a pure function. An experimental PostgreSQL adapter now
+serializes it with a business-side mailbox commit, as evaluated below; neither
+is integrated into the production HTTP audit service or an external message sink.
+
+A minimal center-facing summary contains only a schema identifier, status and
+fixed reason code. It excludes the source values, case names, model prose and
+source identifiers. The local result contains those details for the business-side
+renderer and must not be serialized wholesale to the center. Even this reduced
+summary discloses an outcome and failure class; it is neither differentially
+private nor independently verifiable evidence of correct execution.
+
+\paragraph{Mechanism regression and its counterexamples.}
+Nineteen authored fixtures cover revoked and deleted records, stale versions,
+missing authority, cross-case and cross-workspace references, purpose restrictions,
+unsupported values, malformed proposals and mixed valid/invalid claims. The same
+inputs are available to all arms. These controls are ablations of our own code,
+not implementations of FlowSeal, FAVA or CaMeL. Table~\ref{tab:release-regression}
+reports 95 deterministic evaluations, not 95 independent workflows.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{lrrrr}
+\toprule
+Control & Inadmissible release & Benign exact & Unknown & Source error\\
+\midrule
+Snapshot & 10 & 2/2 & 5 & 1/1\\
+Fresh policy & 6 & 2/2 & 7 & 1/1\\
+Fresh policy + scope & 4 & 2/2 & 7 & 1/1\\
+Full structured gate & 0 & 2/2 & 11 & 1/1\\
+Deny all & 0 & 0/2 & 19 & 0/1\\
+\bottomrule
+\end{tabular}
+\caption{Authored contract regression. Inadmissible release counts violations of
+this representation's contract, not semantic privacy errors. Benign exact counts
+two supported exact-value outputs. Source error records acceptance of a value
+that matches an intentionally incorrect trusted source; it is a negative control,
+not a successful answer.}
+\label{tab:release-regression}
+\end{table}
+
+The full gate also rejects the supported paraphrase ``on Tuesday'' for the source
+value ``Tuesday.'' Its zero contract violations therefore come with a measurable
+expressiveness cost. All nontrivial arms accept the deliberately incorrect
+trusted source, demonstrating why source consistency must not be called factual
+truth. Independent held-out and human semantic evaluation remain necessary.
+
+\paragraph{Model-generated proposals.}
+An eight-call Jetstream pilot used cached Qwen2.5-3B-Instruct with greedy decoding
+and a 160-token cap. The inputs are a subset of the same authored fixtures, not
+new held-out workflows. The model received a draft and source fields but not the
+expected verdict or release-time authority state. All eight proposals parsed
+without truncation or generation errors. Snapshot control released all eight;
+fresh policy released five; adding scope released three; the full gate released
+two, denied three, and returned unknown for three. The two released proposals
+were the benign exact-field cases. In the unsupported-negative fixture, the
+model retained the seeded claim ``not processed'' despite the source saying
+``scheduled''; exact support checking withheld it. This is draft-conditioned
+inference plus a local gate, not a new end-to-end database deployment or an
+independent semantic evaluation. Frozen protocol and source hashes, raw outputs,
+model revision, and environment versions accompany the artifact.
+
+\paragraph{Checking freshness is not sufficient without a release boundary.}
+We next wrapped the gate in a PostgreSQL transaction that locks the resource rows,
+reads current source and authority state, evaluates the proposal, and commits a
+business-side mailbox entry together with an audit-summary outbox entry. Resource
+updates use the same rows. An event-scoped transaction lock serializes concurrent
+retries; a binding digest rejects reuse of an event identifier for a different
+proposal or task. A successful retry returns an acknowledgment rather than
+re-emitting the saved answer.
+
+Seven authored schedules, two configurations, and three repetitions produced
+42 real database trials. In the check-without-row-lock ablation, a barrier let
+revocation or a version update commit after validation but before the mailbox
+write: all six such trials retained the stale allow result. With row locking,
+we observed the conflicting update waiting in PostgreSQL's lock table; the
+mailbox transaction serialized before it. A revocation committed before the
+check was denied in both configurations. An injected pre-commit exception left
+neither mailbox nor outbox entry, and a retry created one of each. Concurrent
+identical retries created one pair, while conflicting retries were rejected.
+
+These are controlled serialization and recovery checks, not estimates of attack
+success in arbitrary deployments. The defined release point is the database
+mailbox commit. A later network dispatcher, recipient consumption, or a writer
+that bypasses these resource rows lies outside the experiment. In particular,
+revocation after that commit does not retract already released data, and a
+future dispatcher may need another policy check if its send is the intended
+release boundary. Outbox persistence here is not proof of audit-center receipt.
+The distinction matters: a fresh decision can be correct when computed yet
+invalid when applied at a different boundary.
+
+\paragraph{New tasks with a frozen gate and scorer.}
+To separate reuse of development fixtures from task transfer, we froze the gate,
+prompts, task oracles and a separate scorer before generating proposals for
+20 new tasks. Four authored domains---billing, appointment scheduling,
+onboarding and travel---each contribute two benign requests, one disclosure
+challenge, one request for an unsupported status and one authority-unavailable
+case. Unlike the eight-call pilot, these inputs contain no draft answer. The
+model sees the request, task scope and source records; it does not see the
+scoring oracle or current authority state. All five controls evaluate the same
+proposal. This is direct CPU inference plus a pure release gate, not a new
+end-to-end database deployment. Source hashes and the pinned Qwen checkpoint are
+retained with the raw proposals.
+
+The predeclared utility endpoint requires every requested source-backed field
+on each of the eight benign tasks, without private-marker disclosure,
+unsupported values, generation errors or truncation. Refusal is not success.
+Privacy-marker release is measured over all 20 tasks, including incidental
+leaks on benign requests. Unsupported released values and nonempty releases
+on the eight uncertainty tasks are reported separately. These are exact-slot
+and literal-marker checks, not human judgments of answer usefulness or semantic
+privacy. New task authorship is internal; the scorer is independent of the gate
+implementation, not independently authored or adjudicated. Correlation within
+four authored domain families precludes treating the 20 tasks as independent
+population samples.
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+Control & \shortstack{Complete\\(/8)} & \shortstack{Private\\(/20)} &
+\shortstack{Unsupported\\(/20)} & \shortstack{Uncertain\\(/8)} & \shortstack{Unknown\\(/20)} \\
+\midrule
+Snapshot & 8 & 2 & 4 & 7 & 2 \\
+Fresh policy & 8 & 2 & 4 & 4 & 5 \\
+Policy + scope & 8 & 0 & 4 & 4 & 5 \\
+Full gate & 8 & 0 & 0 & 0 & 9 \\
+Deny all & 0 & 0 & 0 & 0 & 20 \\
+\bottomrule
+\end{tabular}
+\caption{Frozen new-task evaluation: 20 authored tasks, one pinned Qwen2.5-3B
+proposal per task, five matched gate controls. Complete counts successful benign
+requests. Private counts literal forbidden-marker release; Unsupported counts
+released values absent from the cited source; Uncertain counts nonempty release
+when authority or requested facts are unavailable. Unknown is a gate verdict,
+not a success. This is a controlled transfer check, not independent semantic
+adjudication.}
+\label{tab:frozen-tasks}
+\end{table}
+
+All 20 calls completed without generation errors or token-cap hits.
+Table~\ref{tab:frozen-tasks} separates privacy from utility: the full gate
+completes all eight benign requests while releasing no forbidden marker or
+unsupported value. Deny-all also prevents those releases but completes no benign
+request. Scope checking removes the two literal disclosure failures; it still
+allows four unsupported status claims. Exact source support is needed to remove
+those four releases. The model generated ``not started'' without evidence in
+three domains and used ``onboarding'' as a status in the fourth. Thus reducing
+disclosure alone does not establish factual task correctness.
+
+A descriptive breakdown limits the causal interpretation. All nontrivial arms
+reject two proposals with a string-valued version field before checking policy;
+one is the revoked invoice case. The new run therefore supplies no additional
+evidence about revocation-check effectiveness for that case. The full gate has
+nine unknowns: two schema failures, three authority-unavailable cases and four
+unsupported-value cases. Three further requests are denied for purpose, case or
+workspace mismatch. There are no withheld benign requests in this small set.
+CPU generation takes 21.9--72.5 seconds per request (median 29.8 seconds), not an
+interactive production latency result. Prompts, gate and scorer were not changed
+after outcomes were observed; all seven frozen source/protocol hashes match the
+archived run.
+
+\paragraph{Two levels of support, not one safety score.}
+The operational distinction is between a validated structured projection and a
+free-text semantic judgment. Only the first currently has an executable check
+against source fields. A future semantic lane could admit paraphrases after a
+separate local checker, but its error rate, abstentions, and privacy decisions
+must remain separately visible. It must not inherit the structured lane's
+contract checks merely because both produce a signed report. This division
+retains an exact path for dates, identifiers and status fields without presenting
+that path as a solution to arbitrary inter-agent conversation.
+
+\subsection{Expose gaps in observation and costs of linkage}
+Reliable transport addresses loss of \emph{recorded} events. Complete observation
+requires an independently justified event manifest or a trusted mediation point.
+Sequence numbers and acknowledgments can expose gaps relative to such a manifest;
+they cannot detect an interaction omitted by both endpoints. The pilot's 40/40
+received event IDs establish delivery coverage over its recorded events only.
+
+Cross-message inference additionally requires continuity across the relevant
+subject, recipient, and time window. Splitting reports or rotating identifiers
+can destroy that continuity. Retaining stable identifiers restores some joins
+but exposes relationships to the center. We therefore propose workspace-scoped,
+window-bounded linkage, with explicit unknowns when evidence expires or a join
+cannot be justified. The retention window is a privacy--coverage tradeoff to
+measure, not a confidentiality guarantee; an opaque identifier remains linkable
+within its scope. The service retains a bounded workspace graph across reports, but this does not
+establish correctness of arbitrary cross-report identity joins or independent
+observation completeness. The proposed linkage policy still requires evaluation.
+
+\paragraph{Prospective social-agent application.}
+Figure~\ref{fig:social-concept} sketches how the same evidence boundary could
+matter in WhatsApp- or Instagram-like social settings. Delegated scheduling,
+travel and summary agents may act for different group members. A permitted
+fragment can reach a new audience through a summary, quotation or cross-group
+forward; group membership and revocation change over time. We have not built
+or tested a connector to either platform. The concept assumes a consented
+synthetic sandbox, not access to production chats or encrypted server traffic.
+Encryption in transit does not prevent an authorized endpoint from combining
+what it receives. These scenarios are motivations, not findings from our runs.
+\input{figures/fig_social_concept}
+
+\input{agentdojo_external}
+
+\subsection{A falsifiable evaluation of the proposed composition}
+The frozen new-task experiment covers matched structured requests, but not
+independent semantic validation. A subsequent external evaluation should retain
+the same pre-outcome freeze of implementation, prompts, policies and scorer.
+Compare snapshot control, fresh-policy control, fresh-policy plus case scoping,
+and local support checking on independently sourced workflows. Baselines must receive the same policy and identity information;
+central raw-content checks may be a separate reference, with their disclosure
+cost reported. Ablate freshness, scope, support checking, and event continuity
+individually. Repetitions of one workflow remain one statistical cluster.
+
+Measure false authorization and false denial separately from semantic disclosure,
+unsupported assertions, task success, and abstention. Report error among decided
+events together with the fraction decided: rejecting everything must not appear
+effective. Independent reviewers should label a blinded sample against explicit
+policy and source evidence, with disagreements adjudicated and reviewer access
+kept distinct from the center's access. Report latency, metadata volume, linkage
+exposure, and outage behavior alongside those outcomes.
+
+The proposed support checker fails its purpose if it reduces literal marker hits
+without reducing independently judged disclosure or unsupported claims. The
+proposed continuity mechanism fails if its gains depend on retaining relationships
+beyond the allowed window. These tests would establish a useful contribution:
+not that desensitization makes every interaction auditable, but that the system
+identifies which conclusions its limited evidence supports and exposes where
+additional local checks or trusted observation are necessary.
+
+\subsection{Social-group audit study: a prospective protocol}
+\label{sec:social-prospective}
+Graph pseudonymization removes direct identifiers but can preserve structural
+signatures. Prior social-network work demonstrates topology-based
+re-identification~\cite{narayanan2009}; it does not establish an attack rate
+for our metadata. Figure~\ref{fig:social-design} separates recipient inference
+from the distinct risk that the auditor links pseudonymous participants.
+This is federated observation, not federated model training or proven anonymity.
+
+\input{figures/fig_social_graph_design}
+
+\paragraph{Demo and task unit.}
+The accompanying offline storyboard, \texttt{examples/social\_audit\_demo/},
+uses invented chat fragments and deterministic display rules. Switching its
+view reveals how hiding names can leave the same graph; it runs no model,
+privacy detector or platform API. A future task would be a complete consented
+group workflow with explicit membership, allowed purpose, protected facts and
+a verifiable terminal objective (for example a meeting booked without exposing
+a participant's sensitive reason). Legitimate scheduling, cross-group
+forwarding and repeated-summary attacks require matched clean counterparts.
+
+\paragraph{Freeze before evaluating.}
+A proposed first study uses 120 independent workflow clusters across scheduling,
+travel, creator collaboration and support coordination. Partition identities,
+graph templates and protected facts across development and test. Within each
+cluster, pair three pre-specified membership conditions (fixed, joining,
+revoked) and four views (raw-content reference, stable aliases, window-scoped
+aliases, aggregate-only). This yields 1,440 proposed episodes per model/seed,
+not 1,440 independent tasks. Group sizes 4, 8 and 16 should be balanced across
+clusters; model versions, prompts, budgets and attacker knowledge must be
+frozen before test outcomes. None of these episodes has been executed here.
+
+\paragraph{Keep threat models and denominators separate.}
+Give the recipient attacker only delivered content and its permitted memory;
+give a separate honest-but-curious auditor attacker the exported graph plus a
+pre-specified auxiliary graph. Measure protected-fact inference, node-linkage
+precision/coverage, native task completion, successful completion without
+adjudicated disclosure, audit false positives/negatives, unknowns, calls,
+tokens, latency and metadata bytes. Use blinded semantic adjudication and
+cluster-paired intervals. Retain failed tasks and incomplete reports. Compare
+against no audit, local identifier redaction and deny-all with the same trusted
+policy inputs; raw-content auditing is a separately disclosed reference.
+A candidate fails if apparent privacy gains come solely from refusing tasks,
+losing audit coverage or changing the adversary's information. An eventual
+platform study also requires supported APIs, participant consent and a tested
+release boundary; none is implied by the storyboard.

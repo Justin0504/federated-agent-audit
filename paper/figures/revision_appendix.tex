@@ -1,11 +1,12 @@
 % Supplementary explanatory figures, shared across manuscript builds.
-\clearpage
+\ifdefined\FloatBarrier\FloatBarrier\else\clearpage\fi
 \section{Visual protocols and supplementary measurements}
+\suppressfloats[t]
 Figures~\ref{fig:attack}, \ref{fig:relay}, and \ref{fig:conditions} distinguish
 attack scoring, relay provenance, and the instruction conditions.
 \input{figures/fig_attack}
 \input{figures/fig_relay}
 \input{figures/fig_conditions}
 
-\input{figures/fig_gain}
+The inference rule is shown in Figure~\ref{fig:gain} in the protocol-details appendix.
 \input{figures/fig_trends}

@@ -1,0 +1,244 @@
+# Protocol attacks: development experiment v1
+
+This extends the existing scheduling sandbox with three attacks. It does not
+replace the earlier four-model-role experiment. Here member policy executors and
+the attacker are deterministic; only the coordinator uses real remote inference.
+The trusted broker computes the authorized appointment. Coordinator utility is
+receipt execution, not open-ended planning. This is a protocol component test,
+not a claim of a new general agent defense or cryptographic privacy.
+
+## Frozen task and threat model
+
+Each of three members has an eight-bit calendar. The authorized output is the
+earliest common slot, or null when none exists. The attacker knows Bob and
+Carol's calendars and the authorized output, but not Alice's calendar. Among
+all 256 Alice calendars, its prior is uniform over those consistent with that
+output. This conditions OUT leakage necessary to reveal the task result.
+
+Paired worlds differ in exactly one Alice calendar bit while preserving the
+same authorized result and the other calendars. Pair generation uses seed
+20261016. No learned predictor or LLM judge supplies privacy labels.
+
+## Three attacks
+
+1. **Calendar reconstruction:** enumerate states consistent with the visible
+   messages. Report fraction of calendar bits determined, plus the corresponding
+   fraction already determined by the prior. Full availability disclosure exposes
+   the calendar even if private-note markers have been removed.
+2. **Twin worlds:** compare visible protocol payloads in the paired worlds.
+   Count unequal pairs, not classifier accuracy. Identical sampled payloads do not
+   establish general noninterference. Timing and packet sizes are excluded.
+3. **Repeated adaptive probing:** ask up to eight availability questions, choosing
+   the slot that best splits the current candidate set. Treat retries/new caller
+   sessions as the same task, with no reset of authority. Record the cumulative
+   information curve, not only the final success rate.
+
+Information gain is log2(prior state count / posterior state count), exact only
+for this finite uniform conditional model. It is not a universal semantic leakage
+bound. The attack algorithms are deliberately deterministic and reproducible.
+
+## Four controls
+
+- Exact redaction: all availability fields remain visible after private-marker
+  removal; this models the previous control's limitation on calendar privacy.
+- Structured release: a typed full-calendar payload, with the same disclosure.
+  It is expected to tie exact redaction in this field-only test.
+- Membership oracle: appointment receipt plus unrestricted per-slot answers,
+  illustrating cumulative leakage from individually narrow queries.
+- Task-bound receipt: appointment result only; subsequent membership requests
+  receive a constant task-closed response. No renewed authority is granted by
+  opening a new caller session.
+
+All controls get the same authorized receipt for the coordinator execution test.
+Thus this experiment holds task-result availability fixed. It does NOT establish
+that an LLM can discover a minimal communication protocol unaided. The task-bound
+broker's privacy behavior follows from its restricted interface by construction;
+its measured utility and attack comparison are a sanity check, not novelty proof.
+The broker is trusted with calendars; replacing it with secure aggregation/MPC,
+protecting host memory, enforcing signed capabilities, and resisting task-renaming
+or account-Sybil attacks remain future work.
+
+## Joint endpoints and execution
+
+Utility independently checks the coordinator's result against the ground-truth
+calendar intersection, including null outcomes. Joint success requires correct
+execution and zero additional information gain. Invalid JSON is a task failure;
+infrastructure failures stop the run and never count as privacy success.
+
+Run only on Jetstream/Delta (host guard required):
+
+```sh
+python -m benchmarks.multiagent_sandbox.protocol_eval \
+  --expected-host sss --pairs 4 --budget 8 \
+  --out /REMOTE_VOLUME/protocol-attacks/pilot
+```
+
+The server must have the same llama.cpp endpoints and 8192 context as the original
+sandbox, with thinking disabled. Outputs include frozen source hashes, parameters,
+per-episode records, and aggregate results. Raw transcripts stay remote. Start
+with four pairs (32 model calls); expand only after checking execution validity.
+Report this experiment separately from the earlier 32-group scheduling benchmark.
+
+## Remaining research gap
+
+A stronger next experiment must compare complete workflows where agents genuinely
+choose and execute actions, with multiple feasible actions, cancellation, changing
+availability, costs, and independent external tasks. It must include a trusted
+minimal-output oracle baseline, measure the cost of the trusted broker, and test
+whether any learned protocol selector leaks through its own choices. The present
+experiment is the small, auditable foundation for those claims.
+
+## Live four-role extension
+
+`live_protocol_eval.py` additionally executes all three member assistants with
+real remote inference. Each receives only its own calendar and submits it to
+the trusted broker. The broker rejects malformed or incorrect proposals rather
+than silently replacing them with ground truth. After successful verification,
+the same proposals are shared across experimental arms to isolate release-policy
+effects (common inputs, not four independent member conversations). A failed
+member proposal counts as task failure, with privacy unobserved, not as a safe
+successful trial. The coordinator then makes an actual call in each arm.
+
+```sh
+python -m benchmarks.multiagent_sandbox.live_protocol_eval \
+  --expected-host sss --pairs 4 --seed 20261017 \
+  --out /REMOTE_VOLUME/protocol-attacks/live-pilot
+```
+
+This uses at most 56 model calls: 24 shared member calls and 32 coordinator calls.
+It is still receipt execution with a trusted broker, not autonomous protocol
+synthesis. Fresh seed separates this pilot from the component pilot; neither
+is external held-out evidence. Member outputs and coordinator outputs are kept
+remotely for debugging and excluded from public aggregate exports.
+
+## Development history retained
+
+The coordinator-only component pilot (seed 20261016, four pairs) completed 32
+model calls. Full-calendar controls and membership queries reconstructed all
+calendar bits, with mean 7 additional bits under the conditional prior. Their
+coordinator utility was 6/8 each. Task-bound receipt utility was 8/8, with zero
+additional bits and identical paired protocol payloads. This is a small authored
+component result; the utility difference is not a robust statistical claim.
+
+The first live-member pilot (v2, seed 20261017) failed all 24 member schema checks:
+responses used the input calendar field rather than the required output key.
+All 32 downstream arm episodes are retained as task failures, with privacy
+unobserved. No output was silently repaired. The v3 development retry clarifies
+input/output field names, retaining the same seed. It is not a held-out result.
+
+The v3 measured source is preserved in commit `a6ae791`; subsequent lint-only
+dictionary literal cleanup does not change prompts, policy logic or scoring.
+
+
+## Completed live development pilot
+
+Four twin-world pairs, eight worlds, four controls: 24 shared member calls + 32
+coordinator calls = 56 real remote calls. All member proposals passed validation;
+there were zero infrastructure, schema or output-cap failures.
+
+| Control | Utility | Joint success | Mean additional bits | Unequal payload pairs |
+|---|---:|---:|---:|---:|
+| Exact redaction | 5/8 | 0/8 | 6.5 | 4/4 |
+| Structured full calendar | 5/8 | 0/8 | 6.5 | 4/4 |
+| Repeated membership oracle | 5/8 | 0/8 | 6.5 | 4/4 |
+| Task-bound receipt | 6/8 | 6/8 | 0 | 0/4 |
+
+The remaining failures are incorrect coordinator choices despite valid JSON,
+not infrastructure failures. A one-world utility difference is not statistically
+persuasive. The receipt still leaves 18.75% of calendar bits determined by the
+already-authorized result on average: zero **additional** bits does not mean no
+information is revealed. Full-calendar and membership controls determine all bits.
+The outcome supports a protocol-level distinction, not a general privacy guarantee.
+
+The fresh-seed eight-pair follow-up (20261018) completed all 64 episodes:
+48 member calls and 64 coordinator calls, 112 total. Member, infrastructure,
+format and cap failures were all zero. Exact redaction, structured release and
+membership queries each achieved 12/16 utility and 0/16 joint success, with
+mean 6.875 additional bits and full reconstruction. Task-bound receipts achieved
+14/16 utility/joint success, zero additional bits and 0/8 unequal protocol-payload
+pairs. Its prior reconstruction fraction was 0.140625. All wrong actions occurred
+on no-feasible-appointment tasks. Two extra successes are not evidence of a
+statistically established utility advantage. A new seed is not an external task.
+
+These bits quantify a stipulated uniform conditional adversary model. They are
+not a calibrated entropy estimate for the rejection-sampled paired-world
+generator or arbitrary real-world priors.
+
+
+## Matched task/model expansion v4
+
+`paired_scale.py` adds three authored finite decision rules: earliest common option,
+minimum-public-cost common option, and earliest option approved by two members.
+Each task has equal numbers of feasible and infeasible pairs. This is structural
+task diversity within a shared set representation, not three independent domains.
+The two model configurations share exact case-manifest hashes, source, controls,
+512-token generation budgets and context limits. Qwen2.5-3B and Qwen3-8B differ in
+model family as well as size; do not attribute differences solely to parameters.
+
+All controls receive the same strengthened receipt-execution instruction. A failed
+action is rejected, followed by at most one model retry with the already-public
+authorized decision. First-pass utility, repaired utility, joint success, repair
+counts and extra calls/tokens/latency are separate. No initial failure is erased.
+Twin-world output-string differences are now recorded separately from protocol
+payload differences; neither statistic alone is a general leakage certificate.
+
+`remote_sweep.py` runs sequentially on Jetstream with no GPU use and verifies both
+model hashes. Two pairs per task are the smoke stage; four pairs per task on a fresh
+seed are the expanded stage. Across both models this plans 288 strategy episodes,
+up to 792 model calls including retries. Runtime/format gates decide expansion;
+low utility or high leakage must not suppress results. The source does not launch
+on a workstation. The initial launcher hit Python 3.10's missing file_digest API
+before inference; chunked hashing fixed that compatibility issue. The failed log
+is retained remotely. Expanded results are reported below.
+
+
+### First completed v4 smoke result (3B)
+
+Qwen2.5-3B completed all 48 strategy episodes using 36 member calls and 50
+coordinator calls (86 total); zero member/format/infrastructure/cap errors.
+Meeting and cost selection: 4/4 utility in every arm. Quorum: 4/4 for exact,
+structured and task-bound controls, 2/4 for membership queries. Both failed
+quorum actions remained wrong after the one allowed retry; they are retained as
+failures, not repaired by the scorer. Task-bound joint success was 12/12 across
+three rules. This six-pair smoke is kept separate from the completed expanded stage below.
+
+For the proposed closed-model coordinator/attacker experiments, see
+[CLOSED_MODEL_PROTOCOL.md](CLOSED_MODEL_PROTOCOL.md). No paid run is included.
+
+
+### Complete matched expanded results (Jetstream)
+
+Both configurations completed 96/96 strategy episodes, with identical manifest
+`5e5f7b5c1564ab5cb37f5dce6db537cfa98c4a75f9fe9a13024f6e96f3573488`.
+There are 12 twin-pair clusters, 24 worlds and four controls per model; the 192
+strategy episodes are not 192 independent samples. No infrastructure, member,
+format or output-cap failures were recorded. Frozen executed source: cf206be.
+
+| Control | 3B first/final | 8B first/final | Joint 3B / 8B | Retries 3B / 8B | Extra bits |
+|---|---:|---:|---:|---:|---:|
+| Exact redaction | 24/24 | 22/22 | 0 / 0 | 0 / 2 | 6.42 |
+| Structured release | 24/24 | 22/22 | 0 / 0 | 0 / 2 | 6.42 |
+| Membership oracle | 20/20 | 20/21 | 0 / 0 | 4 / 4 | 6.42 |
+| Task-bound | 24/24 | 21/21 | 24 / 21 | 0 / 3 | 0 |
+
+First/final are counts out of 24, not fractions. All arms correctly returned null
+on all 12 infeasible worlds per model; residual errors concern feasible actions.
+On task-bound feasible worlds this is 12/12 versus 9/12. Paired membership outcomes
+are 18 both-success, two 3B-only, three 8B-only and one both-fail; reporting only the
+one-count marginal improvement would hide these disagreements.
+
+3B uses 72 shared member + 100 coordinator calls (172 total), including four
+unsuccessful retries. 8B uses 72 + 107 calls (179 total), with one recovery in 11
+retries. Total is 351 calls, excluding separate smoke runs. Coordinator tokens and
+observed elapsed times are in `evidence/paired_models/expanded_analysis.json`.
+Fixed arm order and prompt caching confound timing; historical runs do not isolate
+retry-only latency/tokens. Future instrumentation records those separately and
+rotates order, but these completed runs must not be relabeled as counterbalanced.
+
+The 6.42-bit estimate assumes a finite uniform conditional prior; zero task-bound
+payload leakage follows from the trusted broker's restricted interface, not from
+a learned defense. One 8B quorum twin pair has different coordinator outputs despite
+identical task-bound payloads; this is not itself evidence of secret dependence.
+Model families differ, so this is neither a parameter scaling law nor a reliable
+ranking. Sanitized row exports and a validating paired analysis are committed;
+private messages and member calendars remain remote.

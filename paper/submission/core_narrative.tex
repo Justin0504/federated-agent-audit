@@ -1,0 +1,251 @@
+\section{Problem and evidence boundary}\label{sec:threat}
+The unit of analysis is an agent-to-agent handoff across a data-governance
+boundary. We distinguish the \emph{data subject} whom a fact describes, the
+\emph{owning principal} controlling the resource, and the \emph{acting agent}
+that sends or receives it. Shared ownership does not automatically authorize
+all purposes, recipients or fields.
+
+A recipient may retain and combine messages, a forwarder may exceed its scope,
+and a local reporter may omit events or mislabel their content. Our software
+baseline trusts the local observation and labeling path for semantic detection;
+it does not solve malicious endpoints or unmediated communication. Report MACs
+authenticate an issuer's statement, not its truth. Replay prevention, completeness
+and key isolation are separate obligations. The formal authenticity statement
+and its assumptions appear in Appendix~\ref{app:audit-details}.
+
+\paragraph{What the center can observe.}
+The center receives labels, routing identities, provenance and content hashes,
+not raw message text. This reduces centralized content collection but still
+reveals metadata and equality patterns. Low-entropy hashes may permit dictionary
+attacks. A missing alert therefore cannot certify confidentiality: the report
+may be incomplete, its labels wrong, or the relevant inference outside the model.
+Figure~\ref{fig:preprint-overview} summarizes this boundary and its empirical limits.
+
+\section{A scoped audit and release interface}\label{sec:ext}
+\subsection{Metadata audit}\label{sec:auditor}
+The experimental \ext{} extension attaches governance fields to A2A Parts:
+subject, owner, sensitivity, categories, inferred categories, allowed recipients,
+purpose, hop budget and provenance. It uses A2A's metadata mechanism; it is not
+an adopted A2A standard. A local component derives labels and a central graph
+checks four relationships: disclosure to an unauthorized principal, incompatible
+purpose, forwarding beyond a hop budget, and accumulated inference across messages.
+\input{figures/fig_pipeline}
+
+For the inference check we use an explicit odds model,
+$O_k=O_0\prod_{i=1}^k\lambda_i$, and flag a posterior gain exceeding a chosen
+threshold. Its likelihood ratios and conditional-independence assumption are
+modeling choices, not calibrated guarantees about real recipients. Accurate
+labels alone do not validate these assumptions. Appendix~\ref{app:audit-details}
+provides the derivation, protocol schema and worked example;
+Appendix~\ref{app:detector-studies} preserves detector and tagger measurements.
+
+\subsection{Release checks and their implementation}\label{sec:methodology}
+An audit report must distinguish three claims: authorization at release ($A$),
+relevance to the requested case and purpose ($R$), and support by permitted
+source evidence ($S$). Authorized context can belong to the wrong case, and
+relevant context can still lead to an unsupported assertion. Checking $A$ does
+not establish $A\land R\land S$. Missing evidence produces \emph{unknown}, not a
+positive safety verdict or a fact about the world.
+
+We adopt the separation of model proposals from trusted authority found in
+capability and information-flow systems, including CaMeL~\cite{camel2025},
+FlowSeal~\cite{flowseal2026} and FAVA~\cite{fava2026}. Our question is which scoped
+claims a content-blind center can justify when evidence is incomplete. We do
+not reproduce those systems or claim empirical superiority over them.
+
+\paragraph{Implemented structured gate.}\label{sec:structured-release}
+A model proposes tuples $(\mathrm{source},\mathrm{version},\mathrm{field},\mathrm{value})$.
+A trusted local adapter supplies workspace, case, recipient, purpose, source
+fields and authorization state. The full gate requires current recipient access,
+matching workspace and case, an allowed field-purpose pair, matching version and
+exact equality to the source value. It rejects permission overrides and extra
+free text. Missing authority or support returns unknown; established mismatches
+return deny. Only admitted fields reach a fixed renderer, and the entire proposal
+is withheld if any tuple fails.
+
+An experimental PostgreSQL adapter serializes this check with a business-side
+mailbox commit. That boundary does not guarantee external delivery or remove
+information already in model memory. Source facts can be wrong, exact matching
+rejects valid paraphrases, and individually allowed fields can enable inference.
+A minimal center-facing summary exposes status and fixed reason codes; it is
+neither differentially private nor independently verifiable semantic evidence.
+
+\paragraph{What remains proposed.}
+General free-text support verification and a complete composition of semantic
+auditing with release enforcement remain unvalidated. The current gate is a
+restricted executable check, not a natural-language entailment system. The
+receipt interface binds identifiers and an epoch but does not implement every
+proposed purpose, version and support obligation. Appendix~\ref{app:release-details}
+retains the full specification, counterexamples and database experiments.
+
+\section{Evaluation: privacy, utility and cost}\label{sec:eval}
+We organize the evidence by what each execution mode can establish. Authored
+structured tasks test mechanism behavior; external replay measures intervention
+on archived actions; live tasks measure execution under fixed budgets. We do
+not pool these units or equate native attack failure with semantic privacy.
+
+\begin{table}[t]\centering\small
+\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.14}
+\begin{tabular}{@{}p{.18\linewidth}p{.22\linewidth}p{.28\linewidth}p{.26\linewidth}@{}}
+\toprule
+Evidence & Unit and scale & Model coverage & Interpretation boundary\\
+\midrule
+Structured release & 20 tasks; five gates & \modellogo{qwen}Qwen2.5-3B & Shared proposals; exact-field proxies\\
+External replay & 1,132 traces; 81 tasks; five controls & \modellogo{openai}GPT-4o / GPT-4-Turbo; \modellogo{claude}Claude 3.5; \modellogo{meta}Llama 3 & Archived actions; no replanning after block\\
+Live comparison & 32 tasks; eight methods; 256 episodes & \modellogo{qwen}Qwen2.5-14B Q4\_K\_M & One pinned model/seed; sparse attacks\\
+\bottomrule
+\end{tabular}
+\caption{Core evidence, separated by execution mode. Logos identify families/providers, not a shared multi-model run. Historical studies additionally cover 11 configurations across Phi, Mistral, Qwen, Llama, Gemma, GPT and Claude (Appendices~\ref{app:historical} and~\ref{app:permodel}); missing backend provenance limits model-ranking claims. Repeated controls and model variants are not independent tasks.}
+\label{tab:evidence-scope}
+\end{table}
+
+\subsection{Structured release: a bounded mechanism result}
+A frozen gate and scorer evaluate 20 new authored tasks using one pinned
+Qwen2.5-3B proposal per task. Every gate sees the same proposal. The full gate
+completes all eight benign requests, reduces literal forbidden-marker releases
+from two to zero and unsupported-value releases from four to zero. Deny-all
+also removes these releases but completes no benign request. Scope checking
+removes the two marker failures while leaving the four unsupported values;
+exact source matching removes those values.
+
+The full gate returns unknown on nine tasks: two schema failures, three cases
+without authority and four unsupported values. Three further requests are denied.
+Two malformed proposals are rejected before policy evaluation, limiting any
+revocation-specific interpretation. Source errors and valid paraphrases remain
+counterexamples. This small authored transfer check establishes neither broad
+semantic correctness nor production performance. The full ablation table and
+frozen protocol appear in Appendix~\ref{app:release-details}.
+
+\subsection{External replay: privacy reduction costs utility}
+We freeze 1,132 AgentDojo~\cite{debenedetti2024agentdojo} archived trajectories:
+324 clean and 808 attacked, covering 81 underlying tasks. Five controls replay
+the same actions using unchanged native task and attack predicates. At the first
+blocked egress action, replay terminates; the original later answer is removed.
+This tests a destination-authority adapter, not semantic message support or how
+an agent recovers after a refusal.
+
+Combined intent and destination checks reduce native exfiltration success from
+165/808 to 0/808. Clean utility falls from 198/324 to 179/324, a paired change of
+$-5.9$ percentage points (task-cluster bootstrap 95\% interval $[-10.2,-2.2]$).
+Attacked utility falls from 383/808 to 316/808, a change of $-8.3$ points
+($[-12.8,-4.3]$). Destination-only checking produces the same counts; this
+experiment supplies no measurable benefit for the additional intent rule.
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=\linewidth]{figures/agentdojo20261013/privacy_utility.pdf}
+\caption{External replay retains all selected trajectories and separates native
+attack success from task completion. The deny-egress arm has one clean and one
+attacked checker exception, retained as unresolved. Task-cluster intervals and
+reconstruction discrepancies are detailed in Appendix~\ref{sec:external-dojo}.}
+\label{fig:core-replay}
+\end{figure}
+
+Losses concentrate in Slack and include legitimate implicit destinations that
+literal binding cannot resolve. The archive also has checker-version discrepancies:
+we retain and audit them instead of replacing the native predicates or selecting
+only successful reconstructions. Appendix~\ref{sec:external-dojo} reports the
+complete controls, suite breakdowns and discrepancy audit. These losses qualify
+the eight-of-eight benign retention in the authored set.
+
+\subsection{Live execution: low attack counts are not a safety ranking}
+The live executor runs on a Jetstream A100 with llama.cpp b11624. Following
+development, we freeze Qwen2.5-14B-Instruct Q4\_K\_M, a shared system instruction
+and budgets of 12 model calls, 12 actions, 1,024 output tokens per
+call and an 8,192-token context. Setup and planning consume the same call budget.
+The final development gate requires at least two of three ungated clean twins
+to succeed and known outcomes; the 72-episode validation passes. All earlier
+failures, model screens and interface diagnostics remain in
+Appendix~\ref{app:development} and are excluded from formal estimates.
+
+The formal batch contains 16 clean and 16 attacked task IDs disjoint from the
+development tasks, eight methods and one seed: 256 completed episodes with known
+native outcomes. Task families and archived payloads appeared in earlier
+diagnostics, so task disjointness does not imply a previously unseen benchmark.
+We retain official Tool Filter and IPIGuard alongside five system controls,
+and separately label a Tool Filter adaptation with a generic resume instruction.
+No task-specific hints or formal-outcome tuning are used.
+\input{core_case_figure}
+\input{core_outcome_figure}
+
+Ungated execution completes 10/32 tasks and exhibits one native attack success
+among 16 attacked tasks. Gate and scope complete 10/32 each, receipt 9/32,
+deny-egress and IPIGuard 8/32 each, original Tool Filter 0/32 and its resume
+adaptation 12/32. All defended variants have zero observed native attacks.
+Only one attack case is discordant with no gate; zero out of 16 has a Wilson
+95\% upper bound of 19.4\%. This is not evidence of broad privacy superiority.
+
+Resume gains four tasks and loses two against no gate: $+6.25$ percentage points
+(paired bootstrap 95\% interval $[-9.38,21.88]$). Receipt gains one and loses two:
+$-3.13$ points ($[-12.50,6.25]$). Neither supports utility superiority. Gate,
+scope, receipt and IPIGuard each attain 4/16 attacked joint successes, equal to
+no gate; resume attains 5/16. Joint success still uses a specific native attack
+predicate, not comprehensive semantic privacy.
+
+\paragraph{Cost and failure accounting.}\label{sec:cost}
+Total model calls are 138 for no gate, 137 for gate, 136 each for scope and
+receipt, 142 for deny-egress, 211 for IPIGuard, 69 for original Tool Filter and
+144 for resume. IPIGuard exhausts the matched budget on 21/32 tasks. Four original
+Tool Filter calls have unknown token use; their totals are lower bounds.
+Failures and unknown costs remain visible. Appendix Figure~\ref{fig:final-native-cost}
+reports paired cost intervals; Figure~\ref{fig:full-task-matrix} shows every task.
+Timing is observational, not randomized, and no currency-cost claim is made.
+
+% Continue naturally after results; avoid a half-empty forced page.
+\FloatBarrier
+\section{Deployment, reuse and research directions}
+\label{sec:deployment-reuse}
+\paragraph{A deployed research environment.}
+On Jetstream we separated business and audit PostgreSQL instances, a private
+report service and Qdrant retrieval; raw records and prompts stayed on the
+business side. A controlled regression exercised 1,872 operations over 2, 8 and
+16 logical tenants, concurrency levels 1 and 4, and three repetitions. It tests
+permission freshness and reporting, not 1,872 independent semantic tasks.
+Delivery-time checks blocked the constructed revoked accesses, but also withheld
+otherwise authorized operations when policy access failed. An actual stopped
+report-service container tested outbox preservation for triggered recovery.
+Appendix~\ref{app:jetstream} gives the configuration and failure accounting.
+
+A LangGraph pilot connects retrieval to two model roles using synthetic business
+records. Its failures motivate the authorization--relevance--support separation:
+withholding a revoked record did not prevent another customer's reference from
+being substituted or an unsupported refund statement. This is a real software
+stack with controlled data, not a customer deployment. AgentDojo's mail, Slack
+and travel tools likewise execute in benchmark environments; we did not test
+production accounts, real users or end-to-end service-level objectives.
+
+\paragraph{What applications can reuse now.}
+An application can mirror a handoff into \texttt{AuditSession}, supply trusted
+policy labels and receive scoped findings without replacing its agent planner.
+The minimal example in Appendix~\ref{sec:complete-task-evidence} makes no model
+or network calls and does not enforce delivery. Enforcement requires a separate,
+fully mediated release boundary; the transactional adapter tests a database
+mailbox commit, not external delivery. Researchers can reuse the frozen task
+matrix and paired outcome/cost reporting to compare controls while retaining
+failures, abstentions and unknown costs.
+
+\paragraph{Limits and relation to prior work.}
+AgentLeak~\cite{agentleak} and Sum-Leaks~\cite{sumleaks} motivate internal-channel
+and compositional checks; AgentDojo supplies executable tasks. Our metadata
+interface complements local enforcement and tracing. Presidio~\cite{presidio}
+comparisons in Appendix~\ref{app:detector-studies} concern specific integrations;
+DLP can also run locally. Neither our measurements nor authenticated reports
+establish general semantic confidentiality, production readiness or utility
+superiority. False labels, omitted events, source errors, correlated inference
+and bypass channels remain open. Historical model aliases cannot support precise
+capability rankings.
+
+\paragraph{Research directions arising from the failures.}
+\emph{Interoperable evidence:} extend the experimental A2A metadata interface
+with scoped authorization, relevance and support outcomes and explicit missing
+obligations. Cross-framework conformance tests should distinguish incompatible
+policies from missing evidence; adoption and semantic conformance remain untested.
+\emph{Recovery without broader authority:} after a refusal, replan using permitted
+sources or request an explicit policy change. Evaluate privacy, completed tasks
+and repair cost together against deny-all and unchanged-authority controls;
+our prefix replay cannot establish this recovery benefit.
+\emph{Persistent memory and composition:} test repeated queries, retention windows
+and revocation after information has entered agent memory. Use independent
+recipient attacks and adjudicated semantic labels to measure cumulative leakage;
+a later permission check cannot retract previously disclosed information.
+Appendix~\ref{sec:social-prospective} gives a social-group storyboard and a matched study design. These are proposed research targets, not capabilities validated here.
+\label{sec:main-end}

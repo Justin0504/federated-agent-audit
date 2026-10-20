@@ -1,0 +1,55 @@
+{
+  "scope": "Oracle environment/checker sanity check only; upstream ground_truth actions and GROUND_TRUTH_OUTPUT, no model calls, not agent performance",
+  "development_protocol_sha256": "4b8128acbc180efa040869224575d2888661f1f891c463f76bf317e793202e8a",
+  "conditions": [
+    {
+      "suite": "slack",
+      "task": "slack/user_task_3",
+      "clean_twin": false,
+      "tool_calls": 2,
+      "tool_errors": 0,
+      "native_utility": true
+    },
+    {
+      "suite": "travel",
+      "task": "travel/user_task_15",
+      "clean_twin": false,
+      "tool_calls": 7,
+      "tool_errors": 0,
+      "native_utility": true
+    },
+    {
+      "suite": "workspace",
+      "task": "workspace/user_task_23",
+      "clean_twin": false,
+      "tool_calls": 2,
+      "tool_errors": 0,
+      "native_utility": true
+    },
+    {
+      "suite": "slack",
+      "task": "slack/user_task_20",
+      "clean_twin": true,
+      "tool_calls": 9,
+      "tool_errors": 0,
+      "native_utility": true
+    },
+    {
+      "suite": "travel",
+      "task": "travel/user_task_1",
+      "clean_twin": true,
+      "tool_calls": 4,
+      "tool_errors": 0,
+      "native_utility": true
+    },
+    {
+      "suite": "workspace",
+      "task": "workspace/user_task_2",
+      "clean_twin": true,
+      "tool_calls": 2,
+      "tool_errors": 0,
+      "native_utility": true
+    }
+  ],
+  "model_calls": 0
+}

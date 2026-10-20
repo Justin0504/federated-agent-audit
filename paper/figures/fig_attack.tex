@@ -1,10 +1,10 @@
 % Shared, editable TikZ. Data: codex_pack/figure_data.json.
-\begin{widefigure}[t]\centering
-\resizebox{\linewidth}{!}{%
+\begin{widefigure}[htbp]\centering
+\diagramcontent{%
 \begin{tikzpicture}[x=1mm,y=1mm]
 \node[figtitle, anchor=west] at (0,67) {MEASURE CONVEYANCE AND DETECTION SEPARATELY};
 \draw[draw=figrose!50, fill=figrose!3, rounded corners=1mm, line width=.6pt] (0,40) rectangle (38,58);
-\node[figlabel, anchor=center] at (6,52) {\icon{agent}{rose}{4mm}};
+\node[figlabel, anchor=center] at (6,52) {\semanticicon{runtime_agent}{6mm}};
 \node[figtitle, anchor=west] at (12,52) {Attacker};
 \node[figlabel, anchor=west] at (3,44) {Writes a hand-off};
 \draw[figflow] (39,49) -- (53,49);

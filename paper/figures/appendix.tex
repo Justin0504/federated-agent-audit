@@ -5,7 +5,8 @@
 % a measurement someone can rerun and one they have to take on trust.
 
 \section{Prompts, verbatim}\label{app:prompts}
-Every measurement in \S\ref{sec:eval} turns on wording, so we give the wording.
+These prompts document the historical measurements in Appendix~\ref{app:historical};
+they are not the prompts for the live formal comparison in Section~\ref{sec:eval}.
 
 \paragraph{The instruction sweep (\S\ref{sec:instr}).} All four conditions share
 the same intake agent (\texttt{``You are an intake agent. Summarize this record
@@ -63,82 +64,94 @@ the attribute rate in our own favour by 2--7\,pp. What remains is the balance, t
 credit score, the diagnosis. The full table is in the artifact
 (\texttt{a2a\_prompt\_conditions.py}).
 
+\ifdefined\Needspace\Needspace{0.78\textheight}\fi
 \section{Per-model results}\label{app:permodel}
 
-\begin{table}[h]\centering\small
-\resizebox{\linewidth}{!}{\begin{tabular}{llcccc}
+\begin{table}[htbp]\centering\small
+\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.08}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}p{36mm}p{31mm}rrrr@{}}
 \toprule
 Model & condition & leak & 95\% CI & ident. & attrib. \\
 \midrule
-Phi-3.5-3.8B       & permissive & 93\% & [83, 100] & 71\% & 86\% \\
+\modellogo{microsoft}Phi-3.5-3.8B       & permissive & 93\% & [83, 100] & 71\% & 86\% \\
                    & no invitation & 100\% & [95, 100] & 78\% & 88\% \\
                    & categories & 92\% & [83, 97] & 56\% & 86\% \\
                    & policy & 83\% & [69, 94] & 47\% & 71\% \\
 \addlinespace
-Mistral-7B         & permissive & 100\% & [95, 100] & 89\% & 96\% \\
+\modellogo{mistral}Mistral-7B         & permissive & 100\% & [95, 100] & 89\% & 96\% \\
                    & no invitation & 100\% & [95, 100] & 88\% & 96\% \\
                    & categories & 96\% & [88, 100] & 64\% & 96\% \\
                    & policy & 97\% & [93, 100] & 72\% & 86\% \\
 \addlinespace
-Qwen2.5-7B         & permissive & 100\% & [95, 100] & 92\% & 96\% \\
+\modellogo{qwen}Qwen2.5-7B         & permissive & 100\% & [95, 100] & 92\% & 96\% \\
                    & no invitation & 100\% & [95, 100] & 99\% & 94\% \\
                    & categories & 94\% & [85, 100] & 67\% & 89\% \\
                    & policy & 94\% & [85, 100] & 71\% & 90\% \\
 \addlinespace
-Llama-3.1-8B       & permissive & 97\% & [92, 100] & 81\% & 93\% \\
+\modellogo{meta}Llama-3.1-8B       & permissive & 97\% & [92, 100] & 81\% & 93\% \\
                    & no invitation & 99\% & [96, 100] & 83\% & 89\% \\
                    & categories & 46\% & [31, 60] & 22\% & 46\% \\
                    & policy & 47\% & [33, 62] & 36\% & 42\% \\
 \addlinespace
-Gemma2-9B          & permissive & 99\% & [96, 100] & 92\% & 94\% \\
+\modellogo{gemma}Gemma2-9B          & permissive & 99\% & [96, 100] & 92\% & 94\% \\
                    & no invitation & 100\% & [95, 100] & 88\% & 94\% \\
                    & categories & 86\% & [74, 96] & 49\% & 86\% \\
                    & policy & 74\% & [58, 88] & 42\% & 54\% \\
 \addlinespace
-Qwen2.5-14B        & permissive & 100\% & [95, 100] & 88\% & 93\% \\
+\modellogo{qwen}Qwen2.5-14B        & permissive & 100\% & [95, 100] & 88\% & 93\% \\
                    & no invitation & 100\% & [95, 100] & 90\% & 92\% \\
                    & categories & 92\% & [82, 99] & 60\% & 86\% \\
                    & policy & 81\% & [67, 92] & 38\% & 72\% \\
 \addlinespace
-Phi-4-14B          & permissive & 100\% & [95, 100] & 76\% & 96\% \\
+\modellogo{microsoft}Phi-4-14B          & permissive & 100\% & [95, 100] & 76\% & 96\% \\
                    & no invitation & 100\% & [95, 100] & 76\% & 96\% \\
                    & categories & 93\% & [83, 100] & 21\% & 93\% \\
                    & policy & 75\% & [60, 88] & 21\% & 71\% \\
 \addlinespace
-Mistral-Small-24B  & permissive & 100\% & [95, 100] & 75\% & 93\% \\
+\bottomrule
+\end{tabular*}
+\caption{Instruction sweep for the first seven model configurations. Each cell contains 72 trials. Logos identify model families or providers. The remaining configurations and interval definitions appear in Table~\ref{tab:permodel}.}
+\end{table}
+\begin{table}[htbp]\centering\small
+\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.08}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}p{36mm}p{31mm}rrrr@{}}
+\toprule
+Model & condition & leak & 95\% CI & ident. & attrib. \\
+\midrule
+\modellogo{mistral}Mistral-Small-24B  & permissive & 100\% & [95, 100] & 75\% & 93\% \\
                    & no invitation & 100\% & [95, 100] & 83\% & 90\% \\
                    & categories & 92\% & [81, 100] & 19\% & 90\% \\
                    & policy & 75\% & [62, 86] & 26\% & 64\% \\
 \addlinespace
-Qwen2.5-32B        & permissive & 100\% & [95, 100] & 83\% & 93\% \\
+\modellogo{qwen}Qwen2.5-32B        & permissive & 100\% & [95, 100] & 83\% & 93\% \\
                    & no invitation & 100\% & [95, 100] & 90\% & 93\% \\
                    & categories & 86\% & [74, 96] & 19\% & 86\% \\
                    & policy & 74\% & [58, 86] & 26\% & 64\% \\
 \addlinespace
-GPT-4o             & permissive & 99\% & [96, 100] & 72\% & 96\% \\
+\modellogo{openai}GPT-4o             & permissive & 99\% & [96, 100] & 72\% & 96\% \\
                    & no invitation & 99\% & [96, 100] & 74\% & 96\% \\
                    & categories & 78\% & [62, 90] & 15\% & 78\% \\
                    & policy & 14\% & [4, 25] & 0\% & 14\% \\
 \addlinespace
-Claude Opus 4.8    & permissive & 67\% & [49, 83] & 44\% & 40\% \\
+\modellogo{claude}Claude (alias)    & permissive & 67\% & [49, 83] & 44\% & 40\% \\
                    & no invitation & 78\% & [62, 92] & 51\% & 47\% \\
                    & categories & 46\% & [28, 64] & 0\% & 46\% \\
                    & policy & 36\% & [21, 53] & 1\% & 36\% \\
 \bottomrule
-\end{tabular}}
-\caption{The instruction sweep, per model ($72$ trials per cell), ordered by size; every cell re-derived from the saved hand-offs under the final ground truth by \texttt{a2a\_pool.py}. Intervals are cluster bootstraps over the 24 workflows (Wilson where a cell is at $0$ or $72$). The three largest open-weight models were served with vLLM (Phi-4 in bf16, the other two AWQ-INT4), the rest with Ollama Q4. Read down the identifier column under \emph{policy}: the three largest open-weight models reach $21$--$26\%$ and both frontier models $\le\!1\%$, while the attribute column stays at $64$--$72\%$ for every open-weight model from 14B up and $36\%$ for Opus; GPT-4o, at $14\%$, is the exception discussed in \S\ref{sec:instr}.}
+\end{tabular*}
+\caption{The instruction sweep, continued ($72$ trials per cell); every cell re-derived from the saved hand-offs under the final ground truth by \texttt{a2a\_pool.py}. Intervals are cluster bootstraps over the 24 workflows (Wilson where a cell is at $0$ or $72$). The three largest open-weight models were served with vLLM (Phi-4 in bf16, the other two AWQ-INT4), the rest with Ollama Q4. Brand marks identify families or providers, not verified backend versions. These historical configuration comparisons are exploratory; see Appendix~\ref{app:historical}.}
 \label{tab:permodel}
 \label{tab:app-permodel}
 \end{table}
 
-\begin{table}[h]\centering\small
+\begin{table}[htbp]\centering\small
 \begin{tabular}{lcccc}
 \toprule
 Model & hop 1 & hop 2 & hop 3 & hop 4 \\
 \midrule
-Qwen2.5-7B   & 100\% & 100\% & 100\% & \textbf{100\%} \\
-Mistral-7B   & 100\% & 100\% & 100\% & \textbf{100\%} \\
-Llama-3.1-8B & 94\% & 88\% & 81\% & \textbf{79\%} \\
+\modellogo{qwen}Qwen2.5-7B   & 100\% & 100\% & 100\% & \textbf{100\%} \\
+\modellogo{mistral}Mistral-7B   & 100\% & 100\% & 100\% & \textbf{100\%} \\
+\modellogo{meta}Llama-3.1-8B & 94\% & 88\% & 81\% & \textbf{79\%} \\
 \bottomrule
 \end{tabular}
 \caption{Relay chain: the subject's identifiers or attributes still present after
@@ -166,7 +179,7 @@ regenerate Table~\ref{tab:permodel}, with no model calls, via
 \item held-out benchmark --- \texttt{a2a\_heldout\_gen.py -{}-n 12 -{}-batches 6}
 \item tagger ceiling --- \texttt{a2a\_tagger\_ceiling.py -{}-tagger-model <a
 different family>}
-\item cost and the measured form of Lemma~\ref{lem:blind} ---
+\item empirical payload size and runtime cost ---
 \texttt{a2a\_cost.py} (deterministic, no model calls)
 \end{itemize}
 

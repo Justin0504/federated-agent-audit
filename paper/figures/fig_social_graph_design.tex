@@ -1,0 +1,31 @@
+% Proposed graph-view ablation, not evaluated controls.
+\begin{widefigure}[htbp]\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1mm,y=1mm]
+\node[figtitle,anchor=west] at (0,93) {REMOVE THE NAME. THE RELATIONSHIP FINGERPRINT CAN REMAIN.};
+\node[figchip=figamber,anchor=west] at (0,86) {PROPOSED VIEW ABLATION / NO RESULTS};
+\foreach \xx/\ttl/\tone in {0/Stable aliases/figrose,63/Window aliases/figindigo,126/Aggregate view/figemerald}{
+\draw[figzone,fill=\tone!4,draw=\tone!40] (\xx,24) rectangle (\xx+58,79);
+\node[figtitle,anchor=west] at (\xx+3,74) {\ttl};}
+\node[fignote,anchor=west] at (3,68) {Group / DM links, names replaced};
+\foreach \x/\y/\id in {9/53/u1,28/59/u2,48/53/u3,17/40/u4,40/40/u5}{\node[circle,draw=figrose,fill=white,font=\scriptsize,minimum size=5mm] (n\id) at (\x,\y) {\id};}
+\foreach \a/\b in {u1/u2,u2/u3,u2/u4,u2/u5,u4/u5}{\draw[figflow] (n\a)--(n\b);}
+\draw[figamber,line width=.9pt,dashed] (28,59) circle (4mm);
+\node[fignote,align=center] at (29,29) {Hub degree 4 + triangle\\Candidate linkage to auxiliary graph};
+\node[fignote,anchor=west] at (66,68) {Purpose / time-scoped joins};
+\node[figlabel] at (77,59) {$t$};\node[figlabel] at (108,59) {$t+1$};
+\foreach \x/\y/\id in {73/53/p1,87/48/p2,73/39/p3,103/53/q1,116/43/q2}{\node[circle,draw=figindigo,fill=white,font=\scriptsize,minimum size=5mm] (w\id) at (\x,\y) {\id};}
+\draw[figflow] (wp1)--(wp2);\draw[figflow] (wq1)--(wq2);
+\draw[figbound] (95,35)--(95,62);
+\node[fignote,align=center] at (92,29) {Cross-window links omitted\\Less linkage; less audit continuity};
+\node[fignote,anchor=west] at (129,68) {Exact counts / no individual paths};
+\foreach \x in {133,142,151,160,169}{\fill[figemerald!25,rounded corners=.5mm] (\x,51) rectangle (\x+6,57);}
+\node[figlabel] at (155,43) {5 participants / 5 edges};
+\node[fignote,align=center] at (155,29) {Event evidence is lost\\Exact aggregates are not DP};
+\draw[figzone,fill=figwash] (0,0) rectangle (184,18);
+\node[figtitle,anchor=west] at (3,14) {Matched future design: 120 workflows $\times$ 3 membership states $\times$ 4 views = 1,440 episodes};
+\node[figlabel,anchor=west] at (3,8) {Recipient inference\quad Auditor re-identification\quad Task utility\quad Audit coverage\quad Unknown\quad Cost};
+\node[fignote,anchor=west] at (3,3) {Raw identities are the fourth reference view. Episodes are clustered by workflow; none have been executed.};
+\end{tikzpicture}}
+\caption{Proposed graph-view comparison using one invented five-node relationship graph. Stable pseudonyms retain the same hub and triangle; an auxiliary graph may provide linkage clues. Window-scoped aliases suppress cross-window joins, while aggregates remove individual paths. Reduced visibility may weaken both attacks and auditing: no winner or privacy guarantee is assumed. This future design is separate from the completed authored-task, archived-replay and live evaluations.}\label{fig:social-design}
+\end{widefigure}
